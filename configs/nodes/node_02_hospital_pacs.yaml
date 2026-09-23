@@ -1,0 +1,24 @@
+node:
+  identifier: "Edge-Hospital-PACS-02"
+  site_identifier: "Metro-General-Hospital"
+  hardware:
+    type: "DEVICE_VIRTUAL_TPM"
+    hypervisor: "VMware Workstation Pro"
+    primary_backend: "NVIDIA_TENSORRT"
+    kernel_version: "6.8.0-45-generic"
+    xdp_driver_mode: "SKB"
+
+nexus:
+  enabled: true
+  host: "172.28.0.10"
+  port: 50051
+  nexus_http_port: 9443
+  sentinel_local_api_port: 8443
+  heartbeat_interval_sec: 5
+  active_model_name: "network_threat_v1.onnx"
+  local_models_dir: "/etc/sentinel/models"
+
+subsystems:
+  medical_iot_validator: true
+  monitored_protocols: ["DICOM_PACS", "HL7_V2"]
+  ebpf_line_rate_drop: true
