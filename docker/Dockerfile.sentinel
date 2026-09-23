@@ -1,0 +1,27 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    libssl3 \
+    libprotobuf32t64 \
+    libgrpc++1.51 \
+    libelf1 \
+    iproute2 \
+    iptables \
+    ethtool \
+    bpftool \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/sentinel
+
+# Copy Sentinel binary and entrypoint
+COPY shared/bin/sentinel /usr/local/bin/sentinel
+COPY docker/entrypoints/sentinel_entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh /usr/local/bin/sentinel 2>/dev/null || true
+
+ENTRYPOINT ["/entrypoint.sh"]
