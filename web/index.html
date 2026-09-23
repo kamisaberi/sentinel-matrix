@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentinel Nexus | Autonomous Fleet Command Plane</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/topology_map.css">
+
+</head>
+<body>
+    <header class="navbar">
+        <div class="brand">
+            <span class="logo-text">SENTINEL<strong>NEXUS</strong></span>
+            <span class="badge tier-badge">TIER 6 FLEET GRID</span>
+        </div>
+        <div class="system-status">
+            <span class="pulse-dot"></span>
+            <span id="fleet-summary-text">Fleet: Synchronizing...</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Top Statistics Cards -->
+        <section class="stat-grid">
+            <div class="card stat-card">
+                <span class="label">ACTIVE APPLIANCES</span>
+                <div class="value" id="val-nodes">0</div>
+                <span class="subtext">TPM 2.0 Hardware Attested</span>
+            </div>
+            <div class="card stat-card">
+                <span class="label">KERNEL DROPS (eBPF)</span>
+                <div class="value accent" id="val-drops">0</div>
+                <span class="subtext">&lt; 1.0 ms Mitigation SLA</span>
+            </div>
+            <div class="card stat-card">
+                <span class="label">FORGE CANDIDATE SAMPLES</span>
+                <div class="value warning" id="val-samples">0</div>
+                <span class="subtext">Active Continuous Learning</span>
+            </div>
+            <div class="card stat-card">
+                <span class="label">ACTIVE ONNX MODEL</span>
+                <div class="value info" id="val-model">Loading...</div>
+                <span class="subtext" id="val-model-stage">Stage: FLEET_WIDE</span>
+            </div>
+        </section>
+
+        <!-- Main Workspace -->
+        <div class="main-columns">
+            <!-- Left: Fleet Node Matrix -->
+            <section class="card node-section">
+                <div class="card-header">
+                    <h2>CONNECTED SENTINEL APPLIANCES</h2>
+                    <span class="refresh-note">Auto-refresh: 2s</span>
+                </div>
+                <div class="table-container">
+                    <table class="nexus-table">
+                        <thead>
+                            <tr>
+                                <th>Node ID</th>
+                                <th>Site</th>
+                                <th>Hostname</th>
+                                <th>Status</th>
+                                <th>CPU / Temp</th>
+                                <th>eBPF Drops</th>
+                                <th>Mitigation Latency</th>
+                            </tr>
+                        </thead>
+                        <tbody id="node-table-body">
+                            <tr><td colspan="7" class="empty-state">Awaiting appliance heartbeats via gRPC...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Right: Interactive Controls -->
+            <section class="action-column">
+                <!-- Collective Defense Tool -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>COLLECTIVE DEFENSE INJECTOR</h3>
+                    </div>
+                    <p class="card-desc">Injects a zero-day IoC into all edge nodes' eBPF <code>blocked_ip_map</code> within 50ms.</p>
+                    <div class="input-group">
+                        <input type="text" id="broadcast-ip" placeholder="Attacker IP (e.g. 192.168.1.100)">
+                        <button class="btn btn-danger" onclick="broadcastThreat()">Broadcast Drop</button>
+                    </div>
+                    <div id="broadcast-result" class="console-feedback"></div>
+                </div>
+
+                <!-- Model OTA Canary Controls -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>MODEL OTA & CANARY STAGING</h3>
+                    </div>
+                    <p class="card-desc">Continuous retraining deployment pipeline from <code>xinfer-forge</code>.</p>
+                    <div class="ota-btn-row">
+                        <button class="btn btn-outline" onclick="stageModel()">1. Stage v2 (Shadow)</button>
+                        <button class="btn btn-warning" onclick="advanceModel()">2. Advance (5% Canary)</button>
+                        <button class="btn btn-danger" onclick="rollbackModel()">Emergency Rollback</button>
+                    </div>
+                    <div id="ota-status-log" class="console-feedback"></div>
+                </div>
+            </section>
+            <!-- MITRE ATT&CK Heatmap Section -->
+            <section class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <h2>AGGREGATED MITRE ATT&CK TACTICAL HEATMAP</h2>
+                    <span class="refresh-note">Cross-Fleet Event Correlation</span>
+                </div>
+                <div id="mitre-matrix-container" class="mitre-grid">
+                    <div class="empty-state">Loading MITRE telemetry...</div>
+                </div>
+            </section>
+
+             <section class="card topology-card">
+            <div class="card-header">
+                <h2>FLEET TOPOLOGY & HARDWARE ATTESTATION GRAPH</h2>
+                <span class="refresh-note">Real-Time Radial Link Matrix</span>
+            </div>
+            <div class="topology-canvas-container">
+                <canvas id="topology-canvas"></canvas>
+            </div>
+        </section>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+        <script src="js/ws_client.js"></script>
+
+    <script src="js/threat_matrix.js"></script>
+    <script src="js/fleet_topology.js"></script>
+
+
+</body>
+</html>

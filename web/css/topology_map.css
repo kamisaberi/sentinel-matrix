@@ -1,0 +1,20 @@
+/* Fleet Topology Canvas Styling */
+.topology-card {
+    margin-top: 1.5rem;
+    overflow: hidden;
+}
+
+.topology-canvas-container {
+    width: 100%;
+    height: 340px;
+    background: radial-gradient(circle at center, #101622 0%, #090c10 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    position: relative;
+}
+
+#topology-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
