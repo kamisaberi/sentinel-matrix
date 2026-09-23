@@ -1,0 +1,15 @@
+scenario:
+  name: "SCADA Valve Override Attack"
+  type: "ADVERSARIAL_WAVE"
+  duration_seconds: 15
+  traffic_eps: 15000
+  target_nodes: ["Edge-Substation-01"]
+  mitre_tactic: "T0855"
+  mitre_name: "Unauthorized Command Message"
+  attacker_ip: "198.51.100.44"
+  target_port: 502
+  payload_pattern: "MODBUS_FC05_FORCE_COIL_PRESSURE_OVERRIDE"
+  expected_outcome:
+    edge_ebpf_drop_us: 0.84
+    nexus_collective_fanout_ms: 45.0
+    threat_broadcast_verified: true
