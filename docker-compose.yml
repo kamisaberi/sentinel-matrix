@@ -1,0 +1,235 @@
+version: '3.9'
+
+networks:
+  sentinel-grid-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1
+
+volumes:
+  shared-models:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/shared/models
+  shared-datasets:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/shared/datasets
+  shared-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/shared/logs
+
+services:
+  # ============================================================================
+  # TIER 6: SENTINEL NEXUS (Master Command Plane)
+  # ============================================================================
+  nexus:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nexus
+    container_name: matrix-nexus
+    hostname: nexus.matrix.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 172.28.0.10
+    ports:
+      - "${NEXUS_GRPC_PORT:-50051}:50051"
+      - "${NEXUS_REST_PORT:-9443}:9443"
+      - "${NEXUS_STREAM_PORT:-9444}:9444"
+    volumes:
+      - ./configs/matrix.yaml:/opt/sentinel-nexus/configs/nexus.yaml:ro
+      - shared-models:/opt/sentinel-nexus/models
+      - shared-datasets:/var/lib/sentinel-nexus/forge_datasets
+      - shared-logs:/var/log/sentinel-nexus
+      - /sys/fs/bpf:/sys/fs/bpf:rw
+    environment:
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9443/api/v1/fleet/nodes"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ============================================================================
+  # TIER 4: XINFER FORGE (Continuous Learning Daemon)
+  # ============================================================================
+  forge:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.forge
+    container_name: matrix-forge
+    hostname: forge.matrix.internal
+    restart: unless-stopped
+    depends_on:
+      nexus:
+        condition: service_healthy
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 172.28.0.20
+    volumes:
+      - shared-datasets:/var/lib/sentinel-nexus/forge_datasets:ro
+      - shared-models:/opt/sentinel-nexus/models:rw
+      - shared-logs:/var/log/xinfer-forge
+    environment:
+      - NEXUS_REST_URL=http://172.28.0.10:9443
+      - NEXUS_DATASET_DIR=/var/lib/sentinel-nexus/forge_datasets
+      - NEXUS_MODELS_DIR=/opt/sentinel-nexus/models
+      - VMWARE_CONTAINER=true
+
+  # ============================================================================
+  # TIER 3: EDGE APPLIANCE 01 (Industrial Substation - OpenVINO)
+  # ============================================================================
+  sentinel-edge-01:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sentinel
+    container_name: matrix-edge-substation-01
+    hostname: substation-01.matrix.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - BPF
+    depends_on:
+      nexus:
+        condition: service_healthy
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 172.28.0.101
+    volumes:
+      - ./configs/nodes/node_01_substation_alpha.yaml:/etc/sentinel/sentinel.yaml:ro
+      - shared-models:/etc/sentinel/models:rw
+      - shared-logs:/var/log/sentinel
+      - /sys/fs/bpf:/sys/fs/bpf:rw
+    environment:
+      - NODE_IDENTIFIER=Edge-Substation-01
+      - NODE_SITE=PowerGrid-North-01
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - VMWARE_VIRTUAL_NIC=true
+      - XDP_MODE=SKB
+
+  # ============================================================================
+  # TIER 3: EDGE APPLIANCE 02 (Hospital PACS - TensorRT Emulation)
+  # ============================================================================
+  sentinel-edge-02:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sentinel
+    container_name: matrix-edge-hospital-02
+    hostname: hospital-02.matrix.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - BPF
+    depends_on:
+      nexus:
+        condition: service_healthy
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 172.28.0.102
+    volumes:
+      - ./configs/nodes/node_02_hospital_pacs.yaml:/etc/sentinel/sentinel.yaml:ro
+      - shared-models:/etc/sentinel/models:rw
+      - shared-logs:/var/log/sentinel
+      - /sys/fs/bpf:/sys/fs/bpf:rw
+    environment:
+      - NODE_IDENTIFIER=Edge-Hospital-PACS-02
+      - NODE_SITE=Metro-General-Hospital
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - VMWARE_VIRTUAL_NIC=true
+      - XDP_MODE=SKB
+
+  # ============================================================================
+  # TIER 3: EDGE APPLIANCE 03 (Refinery SCADA - RKNN Emulation)
+  # ============================================================================
+  sentinel-edge-03:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sentinel
+    container_name: matrix-edge-refinery-03
+    hostname: refinery-03.matrix.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - BPF
+    depends_on:
+      nexus:
+        condition: service_healthy
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 172.28.0.103
+    volumes:
+      - ./configs/nodes/node_03_refinery_plc.yaml:/etc/sentinel/sentinel.yaml:ro
+      - shared-models:/etc/sentinel/models:rw
+      - shared-logs:/var/log/sentinel
+      - /sys/fs/bpf:/sys/fs/bpf:rw
+    environment:
+      - NODE_IDENTIFIER=Edge-Refinery-PLC-03
+      - NODE_SITE=Coastal-Refinery-ZoneB
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - VMWARE_VIRTUAL_NIC=true
+      - XDP_MODE=SKB
+
+  # ============================================================================
+  # SYNTHETIC WIRE TRAFFIC & ATTACK WAVE GENERATOR
+  # ============================================================================
+  traffic-gen:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.traffic
+    container_name: matrix-traffic-gen
+    hostname: traffic.matrix.internal
+    restart: unless-stopped
+    depends_on:
+      nexus:
+        condition: service_healthy
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 172.28.0.50
+    volumes:
+      - ./configs:/configs:ro
+      - shared-logs:/var/log/traffic-gen
+    environment:
+      - NEXUS_ENDPOINT=172.28.0.10:50051
+      - TARGET_NODES=172.28.0.101,172.28.0.102,172.28.0.103
+      - VMWARE_SIMULATION_MODE=true
+
+  # ============================================================================
+  # TERMINAL REAL-TIME DASHBOARD (TUI)
+  # ============================================================================
+  monitor:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.monitor
+    container_name: matrix-monitor
+    restart: unless-stopped
+    depends_on:
+      nexus:
+        condition: service_healthy
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 172.28.0.60
+    environment:
+      - NEXUS_REST_URL=http://172.28.0.10:9443
+      - NEXUS_STREAM_URL=http://172.28.0.10:9444
+      - TERM=xterm-256color
+    stdin_open: true
+    tty: true
