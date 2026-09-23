@@ -6,8 +6,8 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     libssl3 \
-    libprotobuf32t64 \
-    libgrpc++1.51 \
+    libprotobuf-dev \
+    libgrpc++-dev \
     procps \
     iproute2 \
     iptables \

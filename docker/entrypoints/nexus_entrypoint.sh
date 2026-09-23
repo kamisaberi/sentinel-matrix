@@ -4,6 +4,10 @@ set -e
 echo "=== [NEXUS CONTAINER] Initializing Command Plane ==="
 mkdir -p /var/lib/sentinel-nexus/forge_datasets /opt/sentinel-nexus/models /var/log/sentinel-nexus /sys/fs/bpf
 
+# Export dynamic library paths for host-compiled dependencies
+export LD_LIBRARY_PATH=/usr/local/lib/matrix-deps:/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
+ldconfig /usr/local/lib/matrix-deps 2>/dev/null || true
+
 # Mount bpffs if not already mounted
 if ! mount | grep -q "/sys/fs/bpf"; then
     mount -t bpf bpf /sys/fs/bpf 2>/dev/null || true

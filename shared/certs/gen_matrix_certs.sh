@@ -24,7 +24,7 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = nexus.matrix.internal
 DNS.2 = localhost
-IP.1 = 172.28.0.10
+IP.1 = 10.240.0.10
 IP.2 = 127.0.0.1
 EOF
 

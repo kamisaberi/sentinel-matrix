@@ -7,7 +7,7 @@ import hashlib
 import urllib.request
 import urllib.error
 
-NEXUS_REST_URL = os.environ.get("NEXUS_REST_URL", "http://172.28.0.10:9443")
+NEXUS_REST_URL = os.environ.get("NEXUS_REST_URL", "http://10.240.0.10:9443")
 DATASET_DIR = os.environ.get("NEXUS_DATASET_DIR", "/var/lib/sentinel-nexus/forge_datasets")
 MODELS_DIR = os.environ.get("NEXUS_MODELS_DIR", "/opt/sentinel-nexus/models")
 

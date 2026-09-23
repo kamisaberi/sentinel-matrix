@@ -5,7 +5,7 @@ help:
 	@echo "=========================================================================="
 	@echo "  SENTINEL-MATRIX: VMWARE AUTONOMOUS SIMULATION MESH CONTROLLER"
 	@echo "=========================================================================="
-	@echo "  make init           - Prepare shared directories, certs, and default env"
+	@echo "  make init           - Prepare shared directories, binaries, certs, and libs"
 	@echo "  make build          - Build all container images (Nexus, Sentinel, Forge)"
 	@echo "  make up             - Launch infinite autonomous simulation mesh"
 	@echo "  make down           - Graceful shutdown of all appliances and services"
@@ -21,11 +21,20 @@ help:
 	@echo "=========================================================================="
 
 init:
-	@mkdir -p shared/certs shared/datasets shared/models shared/logs/nexus shared/logs/nodes shared/logs/forge
-	@chmod +x shared/certs/gen_matrix_certs.sh 2>/dev/null || true
+	@mkdir -p shared/certs shared/datasets shared/models shared/logs/nexus shared/logs/nodes shared/logs/forge shared/bin shared/proto shared/lib web
 	@if [ ! -f .env ]; then cp .env.example .env; fi
-	@echo "[+] Environment initialized for VMware virtualization."
+	@if [ -f /home/kami/sentinel-nexus/build/sentinel-nexus ]; then cp /home/kami/sentinel-nexus/build/sentinel-nexus shared/bin/; fi
+	@if [ -f /home/kami/sentinel-nexus/build/nexus-ctl ]; then cp /home/kami/sentinel-nexus/build/nexus-ctl shared/bin/; fi
+	@if [ -f /home/kami/blackbox-sentinel/build/sentinel ]; then cp /home/kami/blackbox-sentinel/build/sentinel shared/bin/; fi
+	@if [ -d /home/kami/sentinel-nexus/web ]; then cp -r /home/kami/sentinel-nexus/web/* web/ 2>/dev/null || true; fi
+	@if [ -d /home/kami/sentinel-nexus/proto ]; then cp /home/kami/sentinel-nexus/proto/*.proto shared/proto/ 2>/dev/null || true; fi
+	@chmod +x shared/certs/gen_matrix_certs.sh 2>/dev/null || true
+	@echo "[*] Bundling all host dynamic libraries..."
+	@ldd shared/bin/sentinel-nexus shared/bin/sentinel 2>/dev/null | grep "=> /" | awk '{print $$3}' | grep -vE "libc\.so|libm\.so|libpthread|ld-linux|libdl" | sort -u | xargs -I {} cp -L -u {} shared/lib/ 2>/dev/null || true
+	@echo "[+] Environment initialized and host artifacts synchronized."
 
+
+	
 build: init
 	docker compose build
 
@@ -36,7 +45,7 @@ up: init
 	@echo "    - Web Command Center : http://localhost:9443"
 	@echo "    - gRPC Nexus Service : localhost:50051"
 	@echo "    - Real-Time SSE Stream: http://localhost:9444"
-	@echo "    - Nodes Online       : 5 Heterogeneous Appliances (Substation, Hospital, Refinery, DMZ, Naval)"
+	@echo "    - Nodes Online       : 3 Heterogeneous Appliances (Substation, Hospital, Refinery)"
 	@echo ""
 
 down:

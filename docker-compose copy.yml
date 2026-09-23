@@ -52,8 +52,9 @@ services:
       - shared-datasets:/var/lib/sentinel-nexus/forge_datasets
       - shared-logs:/var/log/sentinel-nexus
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - /usr/local/lib:/usr/local/lib:ro
+      - /sys/fs/bpf:/sys/fs/bpf:rw
     environment:
-      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - VMWARE_ENVIRONMENT=true
       - NEXUS_ENV=simulation
     healthcheck:
@@ -61,7 +62,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-      start_period: 10s
 
   # ============================================================================
   # TIER 4: XINFER FORGE (Continuous Learning Daemon)
@@ -115,9 +115,9 @@ services:
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
-
+      - /usr/local/lib:/usr/local/lib:ro
+      - /sys/fs/bpf:/sys/fs/bpf:rw
     environment:
-      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - NODE_IDENTIFIER=Edge-Substation-01
       - NODE_SITE=PowerGrid-North-01
       - PRIMARY_BACKEND=INTEL_OPENVINO
@@ -150,8 +150,9 @@ services:
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - /usr/local/lib:/usr/local/lib:ro
+      - /sys/fs/bpf:/sys/fs/bpf:rw
     environment:
-      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - NODE_IDENTIFIER=Edge-Hospital-PACS-02
       - NODE_SITE=Metro-General-Hospital
       - PRIMARY_BACKEND=NVIDIA_TENSORRT
@@ -184,8 +185,9 @@ services:
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - /usr/local/lib:/usr/local/lib:ro
+      - /sys/fs/bpf:/sys/fs/bpf:rw
     environment:
-      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - NODE_IDENTIFIER=Edge-Refinery-PLC-03
       - NODE_SITE=Coastal-Refinery-ZoneB
       - PRIMARY_BACKEND=ROCKCHIP_RKNN

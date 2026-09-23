@@ -8,7 +8,7 @@ def main():
     parser.add_argument("--type", choices=["latency_spike", "false_positive_surge", "sever_node"], required=True)
     parser.add_argument("--node", default="Edge-Substation-01")
     parser.add_argument("--latency", type=float, default=1500.0)
-    parser.add_argument("--nexus-url", default="http://172.28.0.10:9443")
+    parser.add_argument("--nexus-url", default="http://10.240.0.10:9443")
     args = parser.parse_args()
 
     if args.type == "latency_spike":

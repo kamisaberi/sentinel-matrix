@@ -8,7 +8,7 @@ from rich.panel import Panel
 from rich.layout import Layout
 from rich.text import Text
 
-NEXUS_REST_URL = os.environ.get("NEXUS_REST_URL", "http://172.28.0.10:9443")
+NEXUS_REST_URL = os.environ.get("NEXUS_REST_URL", "http://10.240.0.10:9443")
 
 def generate_dashboard():
     layout = Layout()

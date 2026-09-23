@@ -10,7 +10,7 @@ def main():
     print("  SENTINEL-MATRIX: AUTONOMOUS FLYWHEEL ORCHESTRATOR")
     print("==================================================================")
 
-    nexus_endpoint = os.environ.get("NEXUS_ENDPOINT", "172.28.0.10:50051")
+    nexus_endpoint = os.environ.get("NEXUS_ENDPOINT", "10.240.0.10:50051")
     ambient = AmbientFlowGenerator(nexus_endpoint)
     attacker = AttackGenerator(nexus_endpoint)
 

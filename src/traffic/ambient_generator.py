@@ -13,7 +13,7 @@ import telemetry_pb2
 import telemetry_pb2_grpc
 
 class AmbientFlowGenerator:
-    def __init__(self, nexus_endpoint="172.28.0.10:50051"):
+    def __init__(self, nexus_endpoint="10.240.0.10:50051"):
         self.channel = grpc.insecure_channel(nexus_endpoint)
         self.stub = telemetry_pb2_grpc.TelemetryServiceStub(self.channel)
 

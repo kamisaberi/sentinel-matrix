@@ -6,13 +6,12 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     libssl3 \
-    libprotobuf32t64 \
-    libgrpc++1.51 \
+    libprotobuf-dev \
+    libgrpc++-dev \
     libelf1 \
     iproute2 \
     iptables \
     ethtool \
-    bpftool \
     procps \
     && rm -rf /var/lib/apt/lists/*
 

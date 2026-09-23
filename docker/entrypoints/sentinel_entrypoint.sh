@@ -5,6 +5,10 @@ echo "=== [SENTINEL CONTAINER] Initializing Edge Appliance: ${NODE_IDENTIFIER} =
 
 mkdir -p /etc/sentinel/models /var/log/sentinel /sys/fs/bpf
 
+# Export dynamic library paths for host-compiled dependencies
+export LD_LIBRARY_PATH=/usr/local/lib/matrix-deps:/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
+ldconfig /usr/local/lib/matrix-deps 2>/dev/null || true
+
 # Ensure Generic SKB mode for VMware veth / virtual NIC
 if command -v ip >/dev/null 2>&1; then
     ip link set dev eth0 promisc on 2>/dev/null || true
@@ -21,7 +25,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
     cat << EOF > "$CONFIG_FILE"
 nexus:
   enabled: true
-  host: "172.28.0.10"
+  host: "10.240.0.10"
   port: 50051
   nexus_http_port: 9443
   sentinel_local_api_port: 8443

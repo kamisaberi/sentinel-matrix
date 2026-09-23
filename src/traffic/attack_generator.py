@@ -12,7 +12,7 @@ import intelligence_pb2
 import intelligence_pb2_grpc
 
 class AttackGenerator:
-    def __init__(self, nexus_endpoint="172.28.0.10:50051"):
+    def __init__(self, nexus_endpoint="10.240.0.10:50051"):
         self.channel = grpc.insecure_channel(nexus_endpoint)
         self.intel_stub = intelligence_pb2_grpc.IntelligenceServiceStub(self.channel)
 
@@ -56,7 +56,7 @@ class AttackGenerator:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--scenario", required=True, help="Path to scenario YAML")
-    parser.add_argument("--endpoint", default="172.28.0.10:50051")
+    parser.add_argument("--endpoint", default="10.240.0.10:50051")
     args = parser.parse_args()
 
     gen = AttackGenerator(args.endpoint)
