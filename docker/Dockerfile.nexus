@@ -1,0 +1,32 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    libssl3 \
+    libprotobuf32t64 \
+    libgrpc++1.51 \
+    procps \
+    iproute2 \
+    iptables \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/sentinel-nexus
+
+# Copy Nexus binary and web command center assets
+COPY shared/bin/sentinel-nexus /usr/local/bin/sentinel-nexus
+COPY shared/bin/nexus-ctl /usr/local/bin/nexus-ctl
+COPY configs/matrix.yaml ./configs/nexus.yaml
+COPY docker/entrypoints/nexus_entrypoint.sh /entrypoint.sh
+
+# Web assets
+COPY web ./web
+
+RUN chmod +x /entrypoint.sh /usr/local/bin/sentinel-nexus /usr/local/bin/nexus-ctl 2>/dev/null || true
+
+EXPOSE 50051 9443 9444
+
+ENTRYPOINT ["/entrypoint.sh"]
