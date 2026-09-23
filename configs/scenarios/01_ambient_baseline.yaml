@@ -1,0 +1,10 @@
+scenario:
+  name: "Ambient Site Telemetry"
+  type: "BASELINE_NORMAL"
+  duration_seconds: 40
+  traffic_eps: 8000
+  target_nodes: ["ALL"]
+  uncertainty_injection:
+    ratio: 0.05 # 5% high uncertainty vectors [0.40 - 0.60] to continuously feed Forge
+    novelty_loss_mean: 0.15
+  attacks: []
