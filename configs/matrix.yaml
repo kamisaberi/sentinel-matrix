@@ -1,0 +1,38 @@
+# Sentinel Matrix: Master Configuration (VMware Virtualization Profile)
+server:
+  bind_address: "0.0.0.0"
+  grpc_port: 50051
+  rest_api_port: 9443
+  ws_stream_port: 9444
+  worker_threads: 16
+
+hypervisor:
+  target_environment: "VMWARE"
+  virtual_nic_prefix: ["ens", "eth", "vmxnet"]
+  xdp_force_skb_mode: true
+  allow_vtpm_emulation: true
+
+fleet:
+  heartbeat_timeout_seconds: 15
+  prune_offline_after_hours: 24
+  expected_node_count: 5
+
+forge_bridge:
+  enabled: true
+  forge_ingest_path: "/var/lib/sentinel-nexus/forge_datasets/"
+  uncertainty_threshold_min: 0.40
+  uncertainty_threshold_max: 0.60
+  max_buffer_vectors: 200000
+  batch_flush_size: 500
+
+intelligence:
+  ioc_propagation_enabled: true
+  default_block_ttl_seconds: 86400
+  fanout_latency_target_ms: 50.0
+
+simulation_timeline:
+  infinite_loop: true
+  ambient_phase_duration_sec: 45
+  attack_wave_duration_sec: 15
+  canary_evaluation_duration_sec: 30
+  auto_advance_canary: true
