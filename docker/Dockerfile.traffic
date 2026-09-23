@@ -1,0 +1,35 @@
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    procps \
+    iproute2 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir \
+    grpcio \
+    grpcio-tools \
+    pyyaml \
+    requests \
+    rich
+
+# Compile protobuf stubs
+COPY shared/proto /app/proto
+RUN mkdir -p /app/generated && \
+    python3 -m grpc_tools.protoc \
+    -I/app/proto \
+    --python_out=/app/generated \
+    --grpc_python_out=/app/generated \
+    /app/proto/*.proto
+
+COPY docker/entrypoints/traffic_entrypoint.sh /entrypoint.sh
+COPY src /app/src
+COPY tools /app/tools
+
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
