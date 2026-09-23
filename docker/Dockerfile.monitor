@@ -1,0 +1,20 @@
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1
+ENV TERM=xterm-256color
+
+RUN apt-get update && apt-get install -y curl procps && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir \
+    rich \
+    requests \
+    sseclient-py
+
+COPY docker/entrypoints/monitor_entrypoint.sh /entrypoint.sh
+COPY src/monitor /app/src/monitor
+
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
