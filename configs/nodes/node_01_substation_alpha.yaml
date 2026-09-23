@@ -1,0 +1,24 @@
+node:
+  identifier: "Edge-Substation-01"
+  site_identifier: "PowerGrid-North-01"
+  hardware:
+    type: "DEVICE_VIRTUAL_TPM"
+    hypervisor: "VMware vSphere / ESXi"
+    primary_backend: "INTEL_OPENVINO"
+    kernel_version: "6.8.0-45-generic"
+    xdp_driver_mode: "SKB"
+
+nexus:
+  enabled: true
+  host: "172.28.0.10"
+  port: 50051
+  nexus_http_port: 9443
+  sentinel_local_api_port: 8443
+  heartbeat_interval_sec: 5
+  active_model_name: "network_threat_v1.onnx"
+  local_models_dir: "/etc/sentinel/models"
+
+subsystems:
+  scada_constraint_validator: true
+  monitored_protocols: ["MODBUS_TCP", "DNP3"]
+  ebpf_line_rate_drop: true
