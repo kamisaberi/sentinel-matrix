@@ -5,15 +5,10 @@ import time
 import yaml
 import argparse
 import requests
-import grpc
-
-sys.path.append("/app/generated")
-sys.path.append("/home/kami/sentinel-nexus/tools/mock_appliance/generated")
 
 class AttackGenerator:
-    def __init__(self, nexus_endpoint="10.240.0.10:50051", nexus_rest="http://10.240.0.10:9443"):
+    def __init__(self, nexus_rest="http://10.240.0.10:9443"):
         self.nexus_rest = os.environ.get("NEXUS_REST_URL", nexus_rest)
-        self.nexus_endpoint = os.environ.get("NEXUS_ENDPOINT", nexus_endpoint)
 
     def inject_attack_scenario(self, scenario_path):
         with open(scenario_path, 'r') as f:
@@ -35,12 +30,12 @@ class AttackGenerator:
         try:
             url = f"{self.nexus_rest}/api/v1/threats/broadcast"
             payload = {"ip": attacker_ip}
-            resp = requests.post(url, json=payload, timeout=3)
+            resp = requests.post(url, json=payload, timeout=4)
 
             if resp.status_code == 200:
                 print(f"\033[32m[+] Nexus Collective Defense Fanout Confirmed!\033[0m")
                 print(f"    Target IP [{attacker_ip}] injected into eBPF blocked_ip_map across all appliances.")
-                print(f"    MITRE {tactic} recorded in threat intelligence cache (< 50ms SLA).")
+                print(f"    MITRE {tactic} recorded in threat intelligence cache (< 50ms SLA).\n")
             else:
                 print(f"[-] Nexus returned status: {resp.status_code}")
         except Exception as e:
@@ -52,5 +47,5 @@ if __name__ == "__main__":
     parser.add_argument("--endpoint", default="10.240.0.10:50051")
     args = parser.parse_args()
 
-    gen = AttackGenerator(args.endpoint)
+    gen = AttackGenerator()
     gen.inject_attack_scenario(args.scenario)
