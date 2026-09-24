@@ -1,12 +1,12 @@
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH="/app:/app/src:/app/generated"
 
 RUN apt-get update && apt-get install -y \
     curl \
     procps \
     iproute2 \
-    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
