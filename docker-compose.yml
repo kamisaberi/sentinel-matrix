@@ -232,6 +232,9 @@ services:
     networks:
       sentinel-grid-net:
         ipv4_address: 10.240.0.60
+
+    volumes:
+      - ./src/monitor:/app/src/monitor:ro
     environment:
       - NEXUS_REST_URL=http://10.240.0.10:9443
       - NEXUS_STREAM_URL=http://10.240.0.10:9444
