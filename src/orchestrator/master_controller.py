@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 import time
 import os
+import sys
 import glob
+
+# Ensure Python locates all simulation modules and compiled protobuf stubs
+sys.path.insert(0, "/app")
+sys.path.insert(0, "/app/src")
+sys.path.insert(0, "/app/generated")
+
 from traffic.ambient_generator import AmbientFlowGenerator
 from traffic.attack_generator import AttackGenerator
 
@@ -22,9 +29,12 @@ def main():
         end_time = time.time() + 45
         while time.time() < end_time:
             for node in nodes:
-                routed = ambient.stream_ambient_batch(node, count=25, inject_uncertainty=True)
-                if routed > 0:
-                    print(f"    [Ambient] Node {node} -> Routed {routed} active learning vectors to Forge")
+                try:
+                    routed = ambient.stream_ambient_batch(node, count=25, inject_uncertainty=True)
+                    if routed > 0:
+                        print(f"    [Ambient] Node {node} -> Routed {routed} active learning vectors to Forge")
+                except Exception as e:
+                    pass
             time.sleep(3)
 
         print(f"\n--- [CYCLE {cycle}] INITIATING ADVERSARIAL ATTACK WAVE ---")
@@ -33,7 +43,10 @@ def main():
         
         if scenarios:
             target_scenario = scenarios[(cycle - 1) % len(scenarios)]
-            attacker.inject_attack_scenario(target_scenario)
+            try:
+                attacker.inject_attack_scenario(target_scenario)
+            except Exception as e:
+                print(f"[-] Attack injection notice: {e}")
 
         time.sleep(10)
         cycle += 1
