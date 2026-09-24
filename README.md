@@ -1,9 +1,3 @@
-Here is the complete, full-version **`README.md`** specifically engineered for the **`sentinel-matrix`** repository. 
-
-Save this file directly as **`/home/kami/sentinel-matrix/README.md`**.
-
-***
-
 # Sentinel Matrix: Autonomous Cyber-Range & Simulation Mesh
 
 ```text
