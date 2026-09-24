@@ -18,19 +18,16 @@ def generate_dashboard():
         Layout(name="footer", size=3)
     )
 
-    # Header
     layout["header"].update(Panel(
         Text("SENTINEL-MATRIX: AUTONOMOUS CYBER-PHYSICAL RANGE (VMWARE MESH)", style="bold cyan", justify="center"),
         border_style="cyan"
     ))
 
-    # Split main area into Fleet Nodes and MITRE Matrix
     layout["main"].split_row(
         Layout(name="fleet", ratio=6),
         Layout(name="mitre", ratio=4)
     )
 
-    # 1. Fetch Fleet Data
     try:
         nodes = requests.get(f"{NEXUS_REST_URL}/api/v1/fleet/nodes", timeout=1).json()
         comp = requests.get(f"{NEXUS_REST_URL}/api/v1/reports/compliance", timeout=1).json()
@@ -60,7 +57,7 @@ def generate_dashboard():
         )
     layout["fleet"].update(Panel(node_table, border_style="blue"))
 
-    # MITRE ATT&CK Matrix Table
+    # MITRE Matrix Table
     mitre_table = Table(title="MITRE ATT&CK DETECTIONS", expand=True)
     mitre_table.add_column("Tactic ID", style="bold red")
     mitre_table.add_column("Technique Name", style="white")
@@ -70,15 +67,15 @@ def generate_dashboard():
         mitre_table.add_row("-", "Listening for adversarial waves...", "0")
     else:
         for m in mitre:
-            count_style = "bold red" if m['count'] > 0 else "dim"
+            count = m.get('count', 0)
+            count_style = "bold red" if count > 0 else "dim"
             mitre_table.add_row(
                 m.get('technique_id', 'T1000'),
                 m.get('name', 'Generic Threat'),
-                Text(str(m.get('count', 0)), style=count_style)
+                Text(str(count), style=count_style)
             )
     layout["mitre"].update(Panel(mitre_table, border_style="red"))
 
-    # Footer
     stages = ["DISABLED", "SHADOW_MODE", "CANARY_5_PCT", "FLEET_WIDE"]
     stage_name = stages[ota.get('stage', 0)] if ota else "UNKNOWN"
     footer_text = f"Active Model: {comp.get('stable_model', 'N/A')}  |  Rollout Stage: {stage_name}  |  Forge Buffered Samples: {comp.get('forge_buffered_samples', 0)}  |  Total Grid Drops: {comp.get('ebpf_drops', 0)}"
