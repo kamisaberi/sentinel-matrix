@@ -324,29 +324,3 @@ class LatencyAggregator:
 If the calculated 99th percentile ($p99$) exceeds **$1.0\,\mu\text{s}$**, the TUI changes the SLA metric label from cyan to bold red (`SLA BREACH: 1.42 µs`), indicating that edge nodes are experiencing CPU starvation or scheduling delays.
 ```
 
----
-
-### Complete in Part 7
-- `sentinel-matrix/docs/observability-and-tui/observability-overview.md`
-- `sentinel-matrix/docs/observability-and-tui/terminal-dashboard-tui.md`
-- `sentinel-matrix/docs/observability-and-tui/split-panel-layout.md`
-- `sentinel-matrix/docs/observability-and-tui/real-time-xai-panel.md`
-- `sentinel-matrix/docs/observability-and-tui/web-command-center-integration.md`
-- `sentinel-matrix/docs/observability-and-tui/streaming-sse-events.md`
-- `sentinel-matrix/docs/observability-and-tui/metrics-aggregation.md`
-
-All 7 Real-Time Observability files for `sentinel-matrix` are now generated.
-
----
-
-### Files to be Generated in Part 8
-
-The next phase covers **Closed-Loop Active Learning Flywheel Integration** (`closed-loop-active-learning/` - 5 files):
-
-1. `closed-loop-active-learning/flywheel-lifecycle.md` (Ingestion $\to$ Curate CSV $\to$ MAE Retrain $\to$ Canary OTA $\to$ Hot-Reload)
-2. `closed-loop-active-learning/forge-watcher-daemon.md` (Automated dataset detection in `/shared/datasets/`, `forge_watcher.py`)
-3. `closed-loop-active-learning/staged-rollout-progression.md` (Validating model evolution: `SHADOW_MODE` $\to$ `CANARY_5_PCT` $\to$ `FLEET_WIDE`)
-4. `closed-loop-active-learning/zero-downtime-hot-reload-validation.md` (Proving edge nodes hot-reload new weights without dropping packets)
-5. `closed-loop-active-learning/continuous-drift-adaptation.md` (Maintaining $> 98\%$ accuracy under changing simulated site patterns)
-
-Confirm when you are ready to proceed with Part 8.
