@@ -355,31 +355,3 @@ docker compose restart adversary
 ```
 ```
 
----
-
-### Complete in Part 6
-- `sentinel-matrix/docs/live-adversary-node/adversary-node-architecture.md`
-- `sentinel-matrix/docs/live-adversary-node/live-adversary-daemon.md`
-- `sentinel-matrix/docs/live-adversary-node/nmap-tcp-syn-sweeps.md`
-- `sentinel-matrix/docs/live-adversary-node/mbpoll-scada-overrides.md`
-- `sentinel-matrix/docs/live-adversary-node/curl-api-abuse-bursts.md`
-- `sentinel-matrix/docs/live-adversary-node/observing-wire-ebpf-drops.md`
-- `sentinel-matrix/docs/live-adversary-node/custom-adversary-tooling.md`
-
-All 7 Live Adversary Node files for `sentinel-matrix` are now generated.
-
----
-
-### Files to be Generated in Part 7
-
-The next phase covers **Real-Time Observability & Consoles** (`observability-and-tui/` - 7 files):
-
-1. `observability-and-tui/observability-overview.md` (Dual-console monitoring: Terminal TUI vs. Web Command Center)
-2. `observability-and-tui/terminal-dashboard-tui.md` (High-density curses/rich dashboard architecture, `live_dashboard.py`)
-3. `observability-and-tui/split-panel-layout.md` (Screen design: Connected Appliances + MITRE Heatmap + XAI Panel)
-4. `observability-and-tui/real-time-xai-panel.md` (Live inspection of top-3 physical deviations and audit notes)
-5. `observability-and-tui/web-command-center-integration.md` (Connecting browser to localhost:9443 HTML5 Canvas Topology)
-6. `observability-and-tui/streaming-sse-events.md` (Server-Sent Events multiplexing on port 9444)
-7. `observability-and-tui/metrics-aggregation.md` (Calculating live microsecond latency percentiles p50, p95, p99)
-
-Confirm when you are ready to proceed with Part 7.
