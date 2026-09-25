@@ -302,28 +302,3 @@ To prove that `xinfer-forge` maintains detection accuracy over extended timeline
 The testbed proves that without continual active learning, baseline drift degrades static models, whereas `xinfer-forge` preserves high accuracy ($> 98\%$) throughout operational shifts.
 ```
 
----
-
-### Complete in Part 8
-- `sentinel-matrix/docs/closed-loop-active-learning/flywheel-lifecycle.md`
-- `sentinel-matrix/docs/closed-loop-active-learning/forge-watcher-daemon.md`
-- `sentinel-matrix/docs/closed-loop-active-learning/staged-rollout-progression.md`
-- `sentinel-matrix/docs/closed-loop-active-learning/zero-downtime-hot-reload-validation.md`
-- `sentinel-matrix/docs/closed-loop-active-learning/continuous-drift-adaptation.md`
-
-All 5 Closed-Loop Active Learning Flywheel files for `sentinel-matrix` are now generated.
-
----
-
-### Files to be Generated in Part 9
-
-The next phase covers **Chaos & Resilience Testing** (`chaos-and-resilience/` - 6 files):
-
-1. `chaos-and-resilience/chaos-engineering-overview.md` (Testing edge resilience and automated safety circuits under stress)
-2. `chaos-and-resilience/latency-spike-injection.md` (Injecting $> 1000\,\mu\text{s}$ SLA latency breach via `make chaos-latency`)
-3. `chaos-and-resilience/automated-rollback-verification.md` (Proving Nexus `RollbackGuard` aborts candidate models in milliseconds)
-4. `chaos-and-resilience/node-sever-testing.md` (Killing edge containers via `make chaos-sever`)
-5. `chaos-and-resilience/instant-0ms-disconnect-validation.md` (Proving nodes turn `OFFLINE` in 0ms via `DeregistrationRequest`)
-6. `chaos-and-resilience/automated-recovery-testing.md` (Validating seamless appliance re-registration after network recovery)
-
-Confirm when you are ready to proceed with Part 9.
