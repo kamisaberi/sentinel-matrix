@@ -295,30 +295,3 @@ ssh -N -L 9443:10.240.0.10:9443 -L 9444:10.240.0.10:9444 user@esxi-guest-ip
 Open `https://localhost:9443` in your desktop browser to manage the range.
 ```
 
----
-
-### Complete in Part 11
-- `sentinel-matrix/docs/tutorials/full-closed-loop-walkthrough.md`
-- `sentinel-matrix/docs/tutorials/simulating-substation-blackout-attack.md`
-- `sentinel-matrix/docs/tutorials/simulating-hospital-ransomware-wave.md`
-- `sentinel-matrix/docs/tutorials/adding-custom-malware-pcap.md`
-- `sentinel-matrix/docs/tutorials/running-matrix-in-esxi-headless.md`
-
-All 5 Hands-On Simulation Walkthroughs are now generated.
-
----
-
-### Files to be Generated in Part 12 (Final Phase for Project 7)
-
-The final phase covers **Troubleshooting & Help Desk Diagnostics** (`troubleshooting/` - 8 files), completing the entire documentation tree for `sentinel-matrix`:
-
-1. `troubleshooting/docker-subnet-pool-overlaps.md` (Resolving "Pool overlaps with other one" via `10.240.0.0/24`)
-2. `troubleshooting/glibc-version-not-found-errors.md` (Resolving `GLIBC_2.43 not found` via `FROM ubuntu:devel`)
-3. `troubleshooting/missing-host-libraries-absl-re2.md` (Resolving missing dynamic libraries via `make init` & `shared/lib/`)
-4. `troubleshooting/container-restarting-loops.md` (Debugging Python import paths and entrypoint script execution)
-5. `troubleshooting/tui-empty-appliances-debugging.md` (Fixing edge appliance registration and `NEXUS_HOST` routing)
-6. `troubleshooting/pcap-lfs-pointer-corruption.md` (Detecting and resolving 130-byte Git LFS text pointer files)
-7. `troubleshooting/faq.md` (Technical Frequently Asked Questions)
-8. `troubleshooting/support.md` (Issue tracking, community channels, and enterprise support SLAs)
-
-Confirm when you are ready to proceed with Part 12.
