@@ -346,28 +346,3 @@ tail -f shared/logs/nexus_stdout.log | grep "CollectiveDefense"
 ```
 ```
 
----
-
-### Complete in Part 10
-- `sentinel-matrix/docs/operations-and-makefile/makefile-reference.md`
-- `sentinel-matrix/docs/operations-and-makefile/common-workflows.md`
-- `sentinel-matrix/docs/operations-and-makefile/configuring-matrix-yaml.md`
-- `sentinel-matrix/docs/operations-and-makefile/configuring-node-templates.md`
-- `sentinel-matrix/docs/operations-and-makefile/configuring-scenario-profiles.md`
-- `sentinel-matrix/docs/operations-and-makefile/log-inspection-and-debugging.md`
-
-All 6 Operations & Makefile documentation files for `sentinel-matrix` are now generated.
-
----
-
-### Files to be Generated in Part 11
-
-The next phase covers **Hands-On Simulation Walkthroughs & Tutorials** (`tutorials/` - 5 files):
-
-1. `tutorials/full-closed-loop-walkthrough.md` (End-to-end demonstration: Attack $\to$ Mitigation $\to$ Retrain $\to$ Hot-Reload)
-2. `tutorials/simulating-substation-blackout-attack.md` (Replaying Industroyer against simulated electrical protection relays)
-3. `tutorials/simulating-hospital-ransomware-wave.md` (Injecting DICOM exfiltration and high-entropy encryption bursts)
-4. `tutorials/adding-custom-malware-pcap.md` (Importing your own Wireshark capture into the replay streamer)
-5. `tutorials/running-matrix-in-esxi-headless.md` (Headless deployment on enterprise VMware ESXi clusters)
-
-Confirm when you are ready to proceed with Part 11.
