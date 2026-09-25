@@ -1,23 +1,376 @@
-# Docker Subnet Pool Overlaps
+### Part 12: Troubleshooting & Help Desk System (`troubleshooting/*`)
 
-> **Status:** Draft — placeholder content. Final technical prose is forthcoming.
+This final section covers troubleshooting Docker and VMware subnet route overlaps, resolving GLIBC 2.43 forward-compatibility mismatches, harvesting missing dynamic libraries, debugging container restarting loops, fixing TUI fleet discovery, repairing Git LFS pointer files, technical FAQs, and enterprise support escalation protocols for `sentinel-matrix`.
 
+---
 
-Resolving "Pool overlaps with other one" via 10.240.0.0/24.
+### File: `sentinel-matrix/docs/troubleshooting/docker-subnet-pool-overlaps.md`
 
-## Cause
+```markdown
+# Resolving Docker Subnet Overlaps & VMware Routing Collisions
 
-Default pools collide with VMware VMnet adapters.
+When launching the simulation mesh via `docker compose up` inside a VMware virtual machine, Docker may fail during network creation with an overlapping pool error.
 
-## Fix
+---
 
-Pinned /24 in compose; prune stale networks after.
+## 1. Symptom & Error Trace
 
-```bash
-$ docker network prune
-$ docker compose up   # 10.240.0.0/24, no overlaps
+```text
+ERROR: for sentinel-nexus  Cannot create container for service nexus: 
+failed to create network matrix_net: Error response from daemon: 
+Pool overlaps with other one on this address space
 ```
 
 ---
 
-*Part of the sentinel-matrix documentation set. See mkdocs.yml for navigation.*
+## 2. Root Cause Analysis
+
+By default, Docker allocates subnets dynamically from `172.17.0.0/16` through `172.31.0.0/16`. Concurrently, VMware Workstation / Fusion assigns default virtual network adapters to `172.16.x.0/24` (`VMnet1`) and `172.28.x.0/24` (`VMnet8`).
+
+If an existing Docker network or VMware adapter already claims `172.28.0.0/16`, Docker rejects creating `matrix_net`.
+
+---
+
+## 3. Permanent Remediation: The `10.240.0.0/24` Isolated Subnet
+
+`sentinel-matrix` specifies an isolated Class C subnet block in `docker-compose.yml`:
+
+```yaml
+networks:
+  matrix_net:
+    name: matrix_net
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.240.0.0/24
+          gateway: 10.240.0.1
+```
+
+### Clearing Conflicting Networks on the Host:
+```bash
+# 1. Stop any orphaned containers
+docker kill $(docker ps -q) 2>/dev/null || true
+
+# 2. Prune unused Docker network bridges
+docker network prune -f
+
+# 3. Verify that 10.240.0.0/24 is clean
+ip route show | grep 10.240.0
+```
+
+Relaunch the mesh using `make up`.
+```
+
+---
+
+### File: `sentinel-matrix/docs/troubleshooting/glibc-version-not-found-errors.md`
+
+```markdown
+# Resolving `GLIBC_2.43 not found` Dynamic Linker Errors
+
+When building native C++20 binaries on an Ubuntu 26.04 (Devel) host and executing them inside containers built from older base images (such as `ubuntu:22.04` or `ubuntu:24.04`), the container's dynamic linker aborts immediately on launch.
+
+---
+
+## 1. Symptom & Error Trace
+
+```text
+/usr/local/bin/sentinel: /lib/x86_64-linux-gnu/libm.so.6: version 'GLIBC_2.43' not found (required by /usr/local/bin/sentinel)
+/usr/local/bin/sentinel: /lib/x86_64-linux-gnu/libc.so.6: version 'GLIBC_2.43' not found (required by /usr/local/bin/sentinel)
+```
+
+---
+
+## 2. Root Cause
+
+Binaries compiled on Ubuntu 26.04 link against GNU C Library version **`GLIBC 2.43`**. Stock `ubuntu:24.04` container images only provide symbols up to `GLIBC 2.39`. The dynamic linker (`ld.so`) will refuse to execute the binary.
+
+---
+
+## 3. Permanent Remediation: Updating Base Images to `ubuntu:devel`
+
+Update the `FROM` directives across all container Dockerfiles in `docker/`:
+
+```dockerfile
+# Correct Dockerfile base:
+FROM ubuntu:devel
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y libelf1 libssl3 iproute2 && rm -rf /var/lib/apt/lists/*
+```
+
+Rebuild the container images:
+
+```bash
+make build
+```
+
+Verify that the container's glibc matches the host:
+
+```bash
+docker run --rm ubuntu:devel ldd --version | head -n 1
+# Output: ldd (Ubuntu GLIBC 2.43-...) 2.43
+```
+```
+
+---
+
+### File: `sentinel-matrix/docs/troubleshooting/missing-host-libraries-absl-re2.md`
+
+```markdown
+# Resolving Missing Host Libraries (`libabsl`, `libre2`, `libgrpc`)
+
+`sentinel-nexus` and `blackbox-sentinel` link against modern shared libraries compiled on the host, such as **`libabsl_synchronization.so.20260107`**, **`libre2.so.11`**, and **`libgrpc++.so`**. Missing these libraries inside containers causes immediate startup crashes.
+
+---
+
+## 1. Symptom
+
+```text
+/usr/local/bin/sentinel-nexus: error while loading shared libraries: 
+libabsl_synchronization.so.20260107: cannot open shared object file: No such file or directory
+```
+
+---
+
+## 2. Automated Library Harvesting via `make init`
+
+`sentinel-matrix` provides an automated dependency resolver. When you run `make init`, `scripts/bundle_host_libs.sh` executes `ldd` against the host binaries and extracts all matching dependencies into `shared/lib/`:
+
+```bash
+make init
+```
+
+### Verifying Harvested Libraries
+```bash
+ls -lh shared/lib/
+```
+
+### Expected Output:
+```text
+-rwxr-xr-x 1 root root  284K libabsl_synchronization.so.20260107
+-rwxr-xr-x 1 root root  412K libre2.so.11
+-rwxr-xr-x 1 root root  3.8M libgrpc++.so.1.62
+-rwxr-xr-x 1 root root  4.1M libprotobuf.so.32
+```
+
+---
+
+## 3. Container Path Verification
+
+Confirm that `docker-compose.yml` mounts `shared/lib/` and configures `LD_LIBRARY_PATH`:
+
+```yaml
+    volumes:
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps:/usr/local/lib:$LD_LIBRARY_PATH
+```
+```
+
+---
+
+### File: `sentinel-matrix/docs/troubleshooting/container-restarting-loops.md`
+
+```markdown
+# Debugging Container Crash Loops & Exit Codes
+
+If a container in the mesh enters an immediate `Restarting (1)` loop, inspect its exit code and stdout logs before attempting to rebuild.
+
+---
+
+## 1. Inspecting Container Exit Codes
+
+```bash
+docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.State}}"
+```
+
+### Common Exit Codes
+
+| Exit Code | Meaning | Common Cause in `sentinel-matrix` | Remediation |
+| :--- | :--- | :--- | :--- |
+| **`127`** | Command Not Found | Missing shared library or broken binary entrypoint path. | Run `ldd` on binary; verify `shared/lib` mount. |
+| **`139`** | Segmentation Fault | Missing BPF bytecode file or unhandled null pointer. | Check `/usr/local/lib/bpf/xdp_filter.o` existence. |
+| **`1`** | Application Exception | Configuration file syntax error or missing certificate. | Check `docker logs <container_name>`. |
+
+---
+
+## 2. Debugging Entrypoint Shell Scripts
+
+Inspect the direct logs of the crashing container:
+
+```bash
+docker logs --tail 50 sentinel-traffic
+```
+
+If debugging an entrypoint script, override the command to drop into an interactive shell:
+
+```bash
+docker run --rm -it --network matrix_net --entrypoint /bin/bash aryorithm/traffic:2.4.0
+```
+```
+
+---
+
+### File: `sentinel-matrix/docs/troubleshooting/tui-empty-appliances-debugging.md`
+
+```markdown
+# Troubleshooting Empty TUI Appliance Lists
+
+When launching `make tui`, the dashboard may initialize properly but display **`Connected Appliances: 0`** despite containers running in `docker ps`.
+
+---
+
+## 1. Diagnosis Sequence
+
+```text
+ TUI Displays: "Connected Appliances: 0"
+                      │
+                      ▼ Check 1: Is sentinel-nexus healthy on port 50051?
+ [ nc -zv 10.240.0.10 50051 ] ────────── FAILED ──► Restart Nexus container
+                      │ SUCCESS
+                      ▼ Check 2: Are edge nodes connecting to Nexus?
+ [ docker logs sentinel-node-01 ] ────── ERROR ───► Check NEXUS_HOST routing
+                      │ NO ERRORS
+                      ▼ Check 3: Is sentinel-monitor polling port 9444?
+ [ curl -N http://10.240.0.10:9444/stream ] ──────► Verify SSE event stream
+```
+
+---
+
+## 2. Verifying Edge Appliance Environment Variables
+
+Ensure that `sentinel-node-01` through `node-03` are configured with the static IP of `sentinel-nexus`:
+
+```bash
+docker exec -it sentinel-node-01 env | grep NEXUS_HOST
+# Expected Output: NEXUS_HOST=10.240.0.10
+```
+
+If `NEXUS_HOST` is set to `localhost` or `127.0.0.1`, the containerized node attempts to connect to itself rather than the Nexus hub. Update `docker-compose.yml` to set:
+
+```yaml
+environment:
+  - NEXUS_HOST=10.240.0.10
+  - NEXUS_PORT=50051
+```
+```
+
+---
+
+### File: `sentinel-matrix/docs/troubleshooting/pcap-lfs-pointer-corruption.md`
+
+```markdown
+# Resolving 130-Byte Git LFS Pointer File Corruption
+
+When cloning `sentinel-matrix` on systems without `git-lfs` pre-installed, raw PCAP files in `shared/pcaps/` may be populated with small text pointer files rather than real binary captures.
+
+---
+
+## 1. Symptom
+
+Streaming a PCAP causes the Python streamer to crash:
+
+```text
+AssertionError: Invalid PCAP magic bytes! Expected 0xa1b2c3d4, found 0x76657273 ('vers')
+```
+
+Inspecting the file reveals Git LFS pointer text:
+
+```bash
+cat shared/pcaps/industroyer_iec104.pcap
+# Output:
+# version https://git-lfs.github.com/spec/v1
+# oid sha256:e9a2c31e847b2c94b13a7b41e2d9010000000000000000000000000000000000
+# size 14820352
+```
+
+---
+
+## 2. Remediation via Automated LFS Resolver
+
+Run the built-in LFS download tool:
+
+```bash
+python3 tools/download_real_pcaps.py --target-dir shared/pcaps
+```
+
+The script queries the GitHub LFS Batch API, resolves pre-signed AWS S3 binary URLs, verifies the binary magic bytes (`0xa1b2c3d4`), and replaces the text pointers with genuine binary packet captures.
+```
+
+---
+
+### File: `sentinel-matrix/docs/troubleshooting/faq.md`
+
+```markdown
+# Technical Frequently Asked Questions (FAQ)
+
+---
+
+### Q1: Can I run `sentinel-matrix` on macOS or Windows?
+`sentinel-matrix` requires a native 64-bit Linux kernel supporting eBPF, BTF, and raw socket injection. To run on macOS or Windows, install **VMware Workstation Pro** or **VMware Fusion**, provision an Ubuntu 24.04/26.04 virtual machine with **"Virtualize Intel VT-x/EPT"** enabled, and execute `sentinel-matrix` inside the Linux guest.
+
+---
+
+### Q2: Why does the matrix mesh use `10.240.0.0/24` instead of standard Docker defaults?
+Docker's default bridge pools (`172.17.0.0/16` - `172.28.0.0/16`) conflict with VMware's host-only (`VMnet1`) and NAT (`VMnet8`) adapters, causing routing loops and dropped gRPC packets. Migrating to an isolated Class C subnet (`10.240.0.0/24`) guarantees collision-free execution across all hypervisors.
+
+---
+
+### Q3: Does `sentinel-adversary` generate real network traffic?
+**Yes.** `sentinel-adversary` (`10.240.0.99`) uses real Linux networking utilities (`nmap`, `mbpoll`, `curl`, `hping3`) transmitting live frames over the `matrix_net` bridge. When an edge appliance detects an attack, it drops subsequent packets directly in the kernel via eBPF/XDP.
+
+---
+
+### Q4: How much RAM is required to run all 7 containers concurrently?
+The minimum recommended RAM allocation is **16 GB** for the VMware virtual machine. Under active simulation, all 7 containers consume approximately **$8.5\text{ GB}$ of physical RAM**.
+```
+
+---
+
+### File: `sentinel-matrix/docs/troubleshooting/support.md`
+
+```markdown
+# Enterprise Support SLAs & Issue Escalation
+
+---
+
+## 1. Automated Matrix Diagnostic Bundle
+
+When reporting an issue with container grid orchestration, PCAP streaming, or eBPF drops, generate an automated diagnostic bundle:
+
+```bash
+make diag
+```
+
+This bundle packages:
+* Host kernel environment and Docker daemon versions.
+* Container network inspection records (`docker inspect matrix_net`).
+* Active service stdout logs from `shared/logs/`.
+* Git LFS PCAP header magic byte verifications.
+
+---
+
+## 2. Commercial Support & Custom Range Scenarios
+
+Aryorithm Technologies B.V. provides commercial engineering support for enterprise cyber-ranges, digital twin testbeds, and defense red/blue exercises:
+
+| Support Tier | Target Response Time | Availability | Scope |
+| :--- | :--- | :--- | :--- |
+| **Standard Support** | 8 Business Hours | Mon–Fri 08:00–18:00 CET | Docker Compose debugging, PCAP stream updates. |
+| **Mission-Critical Defense**| **1 Hour (24/7/365)** | Round-the-Clock | Custom malware replay engineering, hardware-in-the-loop ESXi cluster tuning, on-site exercise support. |
+
+For technical inquiries and enterprise SLA contracts:
+* **Customer Portal:** `https://app.aryorithm.com/support`
+* **Email:** `support@aryorithm.com`
+
+---
+
+## 3. Coordinated Security Vulnerability Disclosure
+
+If you identify an isolation escape or vulnerability in `sentinel-matrix`:
+* Send an encrypted PGP message to **`security@aryorithm.com`**.
+* We acknowledge disclosures within **48 hours** and provide CVE assignment, risk remediation, and backported security patches according to coordinated disclosure guidelines.
+```
+
