@@ -1,0 +1,13 @@
+scenario:
+  expected_outcome:
+    edge_ebpf_drop_us: 0.84
+    threat_broadcast_verified: true
+  mitre_name: Manipulation of Control (Siemens S7Comm)
+  mitre_tactic: T0831
+  name: Real Siemens S7Comm Industrial PLC Capture
+  pcap_file: /configs/pcaps/downloaded/real_s7comm_plc.pcap
+  port: 102
+  protocol: S7COMM_ISO_ON_TCP
+  target_nodes:
+  - Edge-Refinery-PLC-03
+  type: REAL_WORLD_PCAP_REPLAY
