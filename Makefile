@@ -78,3 +78,24 @@ tui:
 clean: down
 	@rm -rf shared/datasets/* shared/logs/nexus/* shared/logs/nodes/* shared/logs/forge/*
 	@echo "[+] Purged shared temporary datasets and logs."
+
+attack-industroyer:
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /configs/pcaps/industroyer_iec104.pcap \
+		--node Edge-Substation-01 \
+		--tactic T0855 \
+		--name "Industroyer IEC-104 High-Voltage Breaker Trip"
+
+attack-triton:
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /configs/pcaps/triton_tristation.pcap \
+		--node Edge-Hospital-PACS-02 \
+		--tactic T0843 \
+		--name "Triton/Trisis TriStation 1131 Safety System Override"
+
+attack-stuxnet:
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /configs/pcaps/stuxnet_s7comm.pcap \
+		--node Edge-Refinery-PLC-03 \
+		--tactic T0831 \
+		--name "Stuxnet Siemens S7Comm Centrifuge Frequency Tamper"
