@@ -154,6 +154,21 @@ attack-stuxnet: generate-pcaps
 		--name "Stuxnet Siemens S7Comm Frequency Tamper"
 
 
+# ------------------------------------------------------------------------------
+# LIVE ADVERSARY (Real Network Tool Execution)
+# ------------------------------------------------------------------------------
+adversary-logs:
+	docker compose logs -f adversary
+
+live-nmap:
+	docker compose exec adversary nmap -sS -Pn -p 80,443,502,102,2404 10.240.0.101
+
+live-scada:
+	docker compose exec adversary mbpoll -m tcp -a 1 -r 105 -t 0 10.240.0.101 1
+
+live-api:
+	docker compose exec adversary curl -v -X POST http://10.240.0.101:8443/api/v1/auth/login -d '{"user":"admin","token":"test"}'
+
 # attack-industroyer:
 # 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
 # 		--pcap /configs/pcaps/industroyer_iec104.pcap \
