@@ -249,3 +249,28 @@ services:
       - TERM=xterm-256color
     stdin_open: true
     tty: true
+
+
+  # ============================================================================
+  # LIVE ADVERSARY & ACTIVE WIRE THREAT CONTAINER (10.240.0.99)
+  # ============================================================================
+  adversary:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.adversary
+    container_name: matrix-adversary
+    hostname: adversary.matrix.internal
+    restart: unless-stopped
+    depends_on:
+      nexus:
+        condition: service_healthy
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 10.240.0.99
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+      - shared-logs:/var/log/adversary
+    environment:
+      - NEXUS_REST_URL=http://10.240.0.10:9443
+      - TARGET_NODES=10.240.0.101,10.240.0.102,10.240.0.103
