@@ -1,0 +1,12 @@
+scenario:
+  name: "Stuxnet Centrifuge Frequency Tamper Attack"
+  type: "PCAP_MALWARE_REPLAY"
+  pcap_file: "/configs/pcaps/stuxnet_s7comm.pcap"
+  target_nodes: ["Edge-Refinery-PLC-03"]
+  mitre_tactic: "T0831"
+  mitre_name: "Manipulation of Control (Siemens S7Comm Stop PLC)"
+  protocol: "S7COMM_ISO_ON_TCP"
+  port: 102
+  expected_outcome:
+    edge_ebpf_drop_us: 0.88
+    threat_broadcast_verified: true
