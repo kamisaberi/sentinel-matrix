@@ -79,23 +79,89 @@ clean: down
 	@rm -rf shared/datasets/* shared/logs/nexus/* shared/logs/nodes/* shared/logs/forge/*
 	@echo "[+] Purged shared temporary datasets and logs."
 
-attack-industroyer:
+
+# ------------------------------------------------------------------------------
+# PCAP TOOLS (Download Real Captures vs Generate Offline)
+# ------------------------------------------------------------------------------
+download-pcaps:
+	python3 tools/download_real_pcaps.py
+
+generate-pcaps:
+	python3 tools/generate_real_pcaps.py
+
+# ------------------------------------------------------------------------------
+# REAL-WORLD DOWNLOADED PCAP ATTACK STREAMS
+# ------------------------------------------------------------------------------
+attack-real-iec104: download-pcaps
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /configs/pcaps/downloaded/real_iec104_scada.pcap \
+		--node Edge-Substation-01 \
+		--tactic T0855 \
+		--name "Real-World IEC 60870-5-104 Substation Command Stream"
+
+attack-real-modbus: download-pcaps
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /configs/pcaps/downloaded/real_modbus_ics.pcap \
+		--node Edge-Substation-01 \
+		--tactic T0855 \
+		--name "Real-World Modbus TCP Industrial SCADA Stream"
+
+attack-real-s7: download-pcaps
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /configs/pcaps/downloaded/real_s7comm_plc.pcap \
+		--node Edge-Refinery-PLC-03 \
+		--tactic T0831 \
+		--name "Real-World Siemens S7Comm PLC Memory Stream"
+
+attack-real-dnp3: download-pcaps
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /configs/pcaps/downloaded/real_dnp3_grid.pcap \
+		--node Edge-Substation-01 \
+		--tactic T0855 \
+		--name "Real-World DNP3 Electrical Substation SCADA Stream"
+
+# ------------------------------------------------------------------------------
+# OFFLINE GENERATED PCAP ATTACK STREAMS (Zero-Network)
+# ------------------------------------------------------------------------------
+attack-industroyer: generate-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
 		--pcap /configs/pcaps/industroyer_iec104.pcap \
 		--node Edge-Substation-01 \
 		--tactic T0855 \
-		--name "Industroyer IEC-104 High-Voltage Breaker Trip"
+		--name "Industroyer IEC-104 Circuit Breaker Trip"
 
-attack-triton:
+attack-triton: generate-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
 		--pcap /configs/pcaps/triton_tristation.pcap \
 		--node Edge-Hospital-PACS-02 \
 		--tactic T0843 \
-		--name "Triton/Trisis TriStation 1131 Safety System Override"
+		--name "Triton/Trisis TriStation Safety Override"
 
-attack-stuxnet:
+attack-stuxnet: generate-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
 		--pcap /configs/pcaps/stuxnet_s7comm.pcap \
 		--node Edge-Refinery-PLC-03 \
 		--tactic T0831 \
-		--name "Stuxnet Siemens S7Comm Centrifuge Frequency Tamper"
+		--name "Stuxnet Siemens S7Comm Frequency Tamper"
+
+
+# attack-industroyer:
+# 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+# 		--pcap /configs/pcaps/industroyer_iec104.pcap \
+# 		--node Edge-Substation-01 \
+# 		--tactic T0855 \
+# 		--name "Industroyer IEC-104 High-Voltage Breaker Trip"
+
+# attack-triton:
+# 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+# 		--pcap /configs/pcaps/triton_tristation.pcap \
+# 		--node Edge-Hospital-PACS-02 \
+# 		--tactic T0843 \
+# 		--name "Triton/Trisis TriStation 1131 Safety System Override"
+
+# attack-stuxnet:
+# 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+# 		--pcap /configs/pcaps/stuxnet_s7comm.pcap \
+# 		--node Edge-Refinery-PLC-03 \
+# 		--tactic T0831 \
+# 		--name "Stuxnet Siemens S7Comm Centrifuge Frequency Tamper"
