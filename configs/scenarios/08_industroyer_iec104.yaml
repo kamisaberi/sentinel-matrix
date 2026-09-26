@@ -1,0 +1,12 @@
+scenario:
+  name: "Industroyer / CrashOverride Electrical Grid Attack"
+  type: "PCAP_MALWARE_REPLAY"
+  pcap_file: "/configs/pcaps/industroyer_iec104.pcap"
+  target_nodes: ["Edge-Substation-01"]
+  mitre_tactic: "T0855"
+  mitre_name: "Unauthorized Command Message (IEC-104 Circuit Trip)"
+  protocol: "IEC_60870_5_104"
+  port: 2404
+  expected_outcome:
+    edge_ebpf_drop_us: 0.84
+    threat_broadcast_verified: true
