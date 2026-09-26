@@ -1,8 +1,0 @@
-{
-  "dataset_file": "/var/lib/sentinel-nexus/forge_datasets/forge_dataset_1790210517739.csv",
-  "total_samples": 90,
-  "high_uncertainty_samples": 90,
-  "kernel_drop_samples": 90,
-  "feature_dim": 32,
-  "ready_for_forge": true
-}
