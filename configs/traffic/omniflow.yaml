@@ -1,0 +1,59 @@
+omniflow:
+  engine_name: "Sentinel OmniFlow Multi-Modal Simulator"
+  version: "1.0.0"
+  nexus_endpoint: "10.240.0.10:50051"
+  nexus_rest_url: "http://10.240.0.10:9443"
+  burst_interval_sec: 15
+
+  channels:
+    channel_1_scada_ot:
+      enabled: true
+      rate_eps: 50
+      target_node: "Edge-Substation-01"
+      protocols: ["MODBUS_TCP", "DNP3", "PROFINET"]
+      scada_slave_id: 1
+      coil_address_range: [100, 250]
+      anomalous_override_probability: 0.15
+
+    channel_2_vision_camera:
+      enabled: true
+      target_fps: 15
+      resolution: [640, 480, 3] # Standard YOLO tensor dimensions
+      synthetic_classes: ["person", "vehicle", "thermal_hotspot", "nominal_background"]
+      intrusion_event_probability: 0.10
+
+    channel_3_web_api_bot:
+      enabled: true
+      rate_eps: 80
+      target_node: "Edge-Hospital-PACS-02"
+      user_agent_pool_size: 20
+      bot_linear_kinematics_ratio: 0.20 # Simulates non-human kinematic trajectory (Module 10)
+      test_payload_ratio: 0.15
+
+    channel_4_identity_ato:
+      enabled: true
+      rate_eps: 25
+      geo_locations: ["Amsterdam_NL", "Helsinki_FI", "Tallinn_EE", "Singapore_SG"]
+      impossible_velocity_ratio: 0.10 # Simulates geographic impossible travel (Module 14)
+      credential_burst_ratio: 0.15
+
+    channel_5_host_process:
+      enabled: true
+      rate_eps: 40
+      target_node: "Edge-Refinery-PLC-03"
+      simulated_entropy_mean: 4.2 # Normal file entropy
+      ransomware_burst_entropy: 7.95 # High entropy simulating encryption (Module 07)
+      anomalous_syscall_ratio: 0.10
+
+    channel_6_specialized_iot:
+      enabled: true
+      rate_eps: 30
+      modalities: ["DICOM_PACS", "MAVLINK_UAV", "AIS_MARITIME"]
+      mavlink_system_id: 42
+      anomalous_telemetry_ratio: 0.10
+
+    channel_7_netflow_blaster:
+      enabled: true
+      rate_eps: 1500
+      target_nodes: ["Edge-Substation-01", "Edge-Hospital-PACS-02", "Edge-Refinery-PLC-03"]
+      active_learning_uncertainty_ratio: 0.20 # Feeds xinfer-forge [0.40 - 0.60]
