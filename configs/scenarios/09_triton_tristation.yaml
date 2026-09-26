@@ -1,0 +1,12 @@
+scenario:
+  name: "Triton / Trisis SIS Safety Override Attack"
+  type: "PCAP_MALWARE_REPLAY"
+  pcap_file: "/configs/pcaps/triton_tristation.pcap"
+  target_nodes: ["Edge-Hospital-PACS-02"]
+  mitre_tactic: "T0843"
+  mitre_name: "Program Download (TriStation Safety Memory Alteration)"
+  protocol: "TRISTATION_1131"
+  port: 19999
+  expected_outcome:
+    edge_ebpf_drop_us: 0.92
+    threat_broadcast_verified: true
