@@ -92,34 +92,43 @@ generate-pcaps:
 # ------------------------------------------------------------------------------
 # REAL-WORLD DOWNLOADED PCAP ATTACK STREAMS
 # ------------------------------------------------------------------------------
-attack-real-iec104: download-pcaps
+download-pcaps:
+	python3 tools/download_real_pcaps.py
+
+attack-real-triton: download-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
-		--pcap /configs/pcaps/downloaded/real_iec104_scada.pcap \
-		--node Edge-Substation-01 \
-		--tactic T0855 \
-		--name "Real-World IEC 60870-5-104 Substation Command Stream"
+		--pcap /configs/pcaps/downloaded/real_triton_trisis.pcap \
+		--node Edge-Hospital-PACS-02 \
+		--tactic T0843 \
+		--name "Nozomi Networks Real TRITON/Trisis Safety Controller Attack"
 
 attack-real-modbus: download-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
 		--pcap /configs/pcaps/downloaded/real_modbus_ics.pcap \
 		--node Edge-Substation-01 \
 		--tactic T0855 \
-		--name "Real-World Modbus TCP Industrial SCADA Stream"
+		--name "University of Illinois Real Modbus TCP SCADA Capture"
+
+attack-real-dnp3: download-pcaps
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /configs/pcaps/downloaded/real_dnp3_scada.pcap \
+		--node Edge-Substation-01 \
+		--tactic T0855 \
+		--name "University of Illinois Real DNP3 Substation SCADA Capture"
 
 attack-real-s7: download-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
 		--pcap /configs/pcaps/downloaded/real_s7comm_plc.pcap \
 		--node Edge-Refinery-PLC-03 \
 		--tactic T0831 \
-		--name "Real-World Siemens S7Comm PLC Memory Stream"
+		--name "CISA (US DHS) Real Siemens S7Comm PLC Capture"
 
-attack-real-dnp3: download-pcaps
+attack-real-iec104: download-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
-		--pcap /configs/pcaps/downloaded/real_dnp3_grid.pcap \
+		--pcap /configs/pcaps/downloaded/real_iec104_grid.pcap \
 		--node Edge-Substation-01 \
 		--tactic T0855 \
-		--name "Real-World DNP3 Electrical Substation SCADA Stream"
-
+		--name "Real IEC 60870-5-104 High-Voltage Grid Telecontrol Capture"
 # ------------------------------------------------------------------------------
 # OFFLINE GENERATED PCAP ATTACK STREAMS (Zero-Network)
 # ------------------------------------------------------------------------------

@@ -1,0 +1,13 @@
+scenario:
+  expected_outcome:
+    edge_ebpf_drop_us: 0.84
+    threat_broadcast_verified: true
+  mitre_name: 'Application Layer Protocol: C2 Egress Beacon'
+  mitre_tactic: T1071
+  name: Wireshark Official Real HTTP Egress Communication Capture
+  pcap_file: /configs/pcaps/downloaded/real_c2_http_beacon.pcap
+  port: 80
+  protocol: HTTP_C2
+  target_nodes:
+  - Edge-Hospital-PACS-02
+  type: REAL_WORLD_PCAP_REPLAY

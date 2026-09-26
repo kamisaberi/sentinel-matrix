@@ -1,0 +1,13 @@
+scenario:
+  expected_outcome:
+    edge_ebpf_drop_us: 0.84
+    threat_broadcast_verified: true
+  mitre_name: Program Download (TriStation SIS Override)
+  mitre_tactic: T0843
+  name: Nozomi Networks Genuine TRITON / Trisis SIS Attack Capture
+  pcap_file: /configs/pcaps/downloaded/real_triton_trisis.pcap
+  port: 19999
+  protocol: TRISTATION_1131
+  target_nodes:
+  - Edge-Hospital-PACS-02
+  type: REAL_WORLD_PCAP_REPLAY

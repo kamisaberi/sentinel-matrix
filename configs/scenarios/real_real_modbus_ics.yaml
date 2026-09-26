@@ -1,0 +1,13 @@
+scenario:
+  expected_outcome:
+    edge_ebpf_drop_us: 0.84
+    threat_broadcast_verified: true
+  mitre_name: Unauthorized Command (Modbus TCP)
+  mitre_tactic: T0855
+  name: University of Illinois Real Modbus TCP SCADA Capture
+  pcap_file: /configs/pcaps/downloaded/real_modbus_ics.pcap
+  port: 502
+  protocol: MODBUS_TCP
+  target_nodes:
+  - Edge-Substation-01
+  type: REAL_WORLD_PCAP_REPLAY

@@ -1,0 +1,13 @@
+scenario:
+  expected_outcome:
+    edge_ebpf_drop_us: 0.84
+    threat_broadcast_verified: true
+  mitre_name: Unauthorized Command (DNP3 Substation)
+  mitre_tactic: T0855
+  name: University of Illinois Real DNP3 Substation SCADA Capture
+  pcap_file: /configs/pcaps/downloaded/real_dnp3_scada.pcap
+  port: 20000
+  protocol: DNP3
+  target_nodes:
+  - Edge-Substation-01
+  type: REAL_WORLD_PCAP_REPLAY

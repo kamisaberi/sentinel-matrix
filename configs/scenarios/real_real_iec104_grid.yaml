@@ -1,0 +1,13 @@
+scenario:
+  expected_outcome:
+    edge_ebpf_drop_us: 0.84
+    threat_broadcast_verified: true
+  mitre_name: Unauthorized Command (IEC-104 Telecontrol)
+  mitre_tactic: T0855
+  name: Real IEC 60870-5-104 High-Voltage Grid Telecontrol Capture
+  pcap_file: /configs/pcaps/downloaded/real_iec104_grid.pcap
+  port: 2404
+  protocol: IEC_60870_5_104
+  target_nodes:
+  - Edge-Substation-01
+  type: REAL_WORLD_PCAP_REPLAY
