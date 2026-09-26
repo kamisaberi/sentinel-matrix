@@ -123,6 +123,8 @@ services:
       - PRIMARY_BACKEND=INTEL_OPENVINO
       - VMWARE_VIRTUAL_NIC=true
       - XDP_MODE=SKB
+      - NEXUS_HOST=10.240.0.10
+      - NEXUS_PORT=50051
 
   # ============================================================================
   # TIER 3: EDGE APPLIANCE 02 (Hospital PACS - TensorRT Emulation)
@@ -157,6 +159,9 @@ services:
       - PRIMARY_BACKEND=NVIDIA_TENSORRT
       - VMWARE_VIRTUAL_NIC=true
       - XDP_MODE=SKB
+      - NEXUS_HOST=10.240.0.10
+      - NEXUS_PORT=50051
+
 
   # ============================================================================
   # TIER 3: EDGE APPLIANCE 03 (Refinery SCADA - RKNN Emulation)
@@ -191,6 +196,9 @@ services:
       - PRIMARY_BACKEND=ROCKCHIP_RKNN
       - VMWARE_VIRTUAL_NIC=true
       - XDP_MODE=SKB
+      - NEXUS_HOST=10.240.0.10
+      - NEXUS_PORT=50051
+
 
   # ============================================================================
   # SYNTHETIC WIRE TRAFFIC & ATTACK WAVE GENERATOR
