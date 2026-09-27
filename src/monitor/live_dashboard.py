@@ -14,27 +14,32 @@ def generate_dashboard():
     layout = Layout()
     layout.split_column(
         Layout(name="header", size=3),
-        Layout(name="main", ratio=1),
+        Layout(name="main", ratio=5),
+        Layout(name="xai", ratio=4),
         Layout(name="footer", size=3)
     )
 
+    # 1. Header
     layout["header"].update(Panel(
-        Text("SENTINEL-MATRIX: OMNIFLOW MULTI-MODAL RANGE (7 CONCURRENT CHANNELS)", style="bold cyan", justify="center"),
+        Text("SENTINEL-MATRIX: XAI EDGE EXPLAINABILITY & CYBER-PHYSICAL RANGE", style="bold cyan", justify="center"),
         border_style="cyan"
     ))
 
+    # Split Main row into Fleet Nodes and MITRE Heatmap
     layout["main"].split_row(
         Layout(name="fleet", ratio=6),
         Layout(name="mitre", ratio=4)
     )
 
+    # Fetch live data from Nexus REST API
     try:
         nodes = requests.get(f"{NEXUS_REST_URL}/api/v1/fleet/nodes", timeout=1).json()
         comp = requests.get(f"{NEXUS_REST_URL}/api/v1/reports/compliance", timeout=1).json()
         ota = requests.get(f"{NEXUS_REST_URL}/api/v1/ota/status", timeout=1).json()
         mitre = requests.get(f"{NEXUS_REST_URL}/api/v1/threats/mitre", timeout=1).json()
+        xai_events = requests.get(f"{NEXUS_REST_URL}/api/v1/threats/xai", timeout=1).json()
     except Exception:
-        nodes, comp, ota, mitre = [], {}, {}, []
+        nodes, comp, ota, mitre, xai_events = [], {}, {}, [], []
 
     # Fleet Table
     node_table = Table(title="CONNECTED CYBER-PHYSICAL APPLIANCES", expand=True)
@@ -58,13 +63,13 @@ def generate_dashboard():
     layout["fleet"].update(Panel(node_table, border_style="blue"))
 
     # MITRE ATT&CK Matrix Table
-    mitre_table = Table(title="ACTIVE THREAT DETECTIONS", expand=True)
+    mitre_table = Table(title="ACTIVE MITRE DETECTIONS", expand=True)
     mitre_table.add_column("Tactic ID", style="bold red")
-    mitre_table.add_column("Modality / Technique", style="white")
+    mitre_table.add_column("Technique Name", style="white")
     mitre_table.add_column("Hits", justify="right", style="bold yellow")
 
     if not mitre:
-        mitre_table.add_row("-", "Listening on 7 channels...", "0")
+        mitre_table.add_row("-", "Listening on wire...", "0")
     else:
         for m in mitre:
             count = m.get('count', 0)
@@ -76,6 +81,32 @@ def generate_dashboard():
             )
     layout["mitre"].update(Panel(mitre_table, border_style="red"))
 
+    # XAI EXPLAINABILITY JUSTIFICATION PANEL
+    xai_table = Table(title="REAL-TIME XAI FEATURE ATTRIBUTION & AUDIT PROOF (IEC 62443 / CMMC 2.0)", expand=True)
+    xai_table.add_column("Target IP", style="bold red")
+    xai_table.add_column("MITRE Tactic", style="white")
+    xai_table.add_column("Top-1 Anomaly Factor", style="bold yellow")
+    xai_table.add_column("Observed Value", style="white")
+    xai_table.add_column("Baseline (Nominal)", style="dim")
+    xai_table.add_column("Auditor Technical Justification", style="cyan")
+
+    if not xai_events:
+        xai_table.add_row("-", "-", "Awaiting anomalous execution...", "-", "-", "-")
+    else:
+        for ev in xai_events[:4]:
+            attrs = ev.get("attributions", [])
+            top1 = attrs[0] if attrs else {}
+            xai_table.add_row(
+                ev.get("attacker_ip", "0.0.0.0"),
+                f"{ev.get('mitre_id')} ({ev.get('mitre_name')})",
+                f"{top1.get('feature', 'N/A')} [{top1.get('contribution_pct', 0)}%]",
+                top1.get("observed", "N/A"),
+                top1.get("baseline", "N/A"),
+                top1.get("audit_note", "Standard baseline anomaly")
+            )
+    layout["xai"].update(Panel(xai_table, border_style="yellow"))
+
+    # Footer
     stages = ["DISABLED", "SHADOW_MODE", "CANARY_5_PCT", "FLEET_WIDE"]
     stage_name = stages[ota.get('stage', 0)] if ota else "UNKNOWN"
     footer_text = f"Active Model: {comp.get('stable_model', 'N/A')}  |  Rollout Stage: {stage_name}  |  Forge Curated Batches: {comp.get('forge_buffered_samples', 0)}  |  Total Grid Drops: {comp.get('ebpf_drops', 0)}"
