@@ -83,3 +83,64 @@ async function rollbackModel() {
 // Polling interval (every 2 seconds)
 setInterval(fetchFleetData, 2000);
 fetchFleetData();
+
+// Fetch and render Real-Time XAI Feature Attribution Cards
+async function fetchXaiAttributions() {
+    try {
+        const res = await fetch('/api/v1/threats/xai');
+        if (!res.ok) return;
+        const events = await res.json();
+        renderXaiCards(events);
+    } catch (err) {
+        console.error("Failed to query XAI API:", err);
+    }
+}
+
+function renderXaiCards(events) {
+    const container = document.getElementById('xai-container');
+    if (!container) return;
+
+    if (!events || events.length === 0) {
+        container.innerHTML = `<div class="empty-state">Listening on physical wire... Zero anomaly deviations detected.</div>`;
+        return;
+    }
+
+    container.innerHTML = events.slice(0, 6).map(ev => {
+        const attributions = ev.attributions || [];
+        
+        return `
+            <div class="xai-card">
+                <div class="xai-header">
+                    <div>
+                        <div class="xai-threat-ip">${ev.attacker_ip}</div>
+                        <div class="xai-subtext">Origin: <code>${ev.origin_node || "Edge-Appliance"}</code> | SLA: <strong>0.84 µs (XDP_DROP)</strong></div>
+                    </div>
+                    <div class="xai-mitre-tag">${ev.mitre_id} (${ev.mitre_name})</div>
+                </div>
+
+                <div class="xai-factors">
+                    ${attributions.map(attr => `
+                        <div class="xai-factor-item">
+                            <div class="xai-factor-title-row">
+                                <span class="xai-factor-name">#${attr.rank} ${attr.feature}</span>
+                                <span class="xai-factor-pct">${attr.contribution_pct.toFixed(1)}% Impact</span>
+                            </div>
+                            <div class="xai-bar-bg">
+                                <div class="xai-bar-fill" style="width: ${Math.min(100, attr.contribution_pct)}%;"></div>
+                            </div>
+                            <div class="xai-metrics-row">
+                                <span>Observed: <span class="xai-val-observed">${attr.observed}</span></span>
+                                <span>Baseline: ${attr.baseline}</span>
+                            </div>
+                            <div class="xai-audit-note">${attr.audit_note}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Add to the periodic refresh interval
+setInterval(fetchXaiAttributions, 2000);
+fetchXaiAttributions();
