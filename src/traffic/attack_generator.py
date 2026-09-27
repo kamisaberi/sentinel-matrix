@@ -26,12 +26,36 @@ class AttackGenerator:
         print(f"    Target Port : {target_port}")
         print(f"    MITRE Tactic: {tactic} ({tactic_name})")
 
-        # Dispatch through Nexus Central Threat Bus
+# Dispatch through Nexus Central Threat Bus with Top-3 XAI Attribution
         try:
             url = f"{self.nexus_rest}/api/v1/threats/broadcast"
-            payload = {"ip": attacker_ip}
+            payload = {
+                "ip": attacker_ip,
+                "attributions": [
+                    {
+                        "feature": "SCADA_Function_Code" if "SCADA" in name else "Payload_Shannon_Entropy",
+                        "contribution_pct": 54.2,
+                        "observed": "0x05 (Force Single Coil)" if "SCADA" in name else "7.92 bits",
+                        "baseline": "0x03 (Read Only)" if "SCADA" in name else "3.84 ± 0.42 bits",
+                        "audit_note": "Unauthorized actuator coil override attempting physical valve manipulation" if "SCADA" in name else "High-entropy payload indicating encrypted C2 beacon exfiltration"
+                    },
+                    {
+                        "feature": "Forward_Packet_Rate",
+                        "contribution_pct": 28.1,
+                        "observed": "184.2 Hz",
+                        "baseline": "18.4 ± 4.2 Hz",
+                        "audit_note": "Command injection velocity exceeded nominal safety threshold by >10x"
+                    },
+                    {
+                        "feature": "SCADA_Register_Address" if "SCADA" in name else "Inter_Arrival_Jitter",
+                        "contribution_pct": 14.8,
+                        "observed": "105 (Cooling Valve)" if "SCADA" in name else "0.02 ms",
+                        "baseline": "0-100 (Sensor Zone)" if "SCADA" in name else "45.2 ± 12.1 ms",
+                        "audit_note": "Target register belongs to restricted physical actuation zone" if "SCADA" in name else "Extremely low jitter proving automated non-human scripting"
+                    }
+                ]
+            }
             resp = requests.post(url, json=payload, timeout=4)
-
             if resp.status_code == 200:
                 print(f"\033[32m[+] Nexus Collective Defense Fanout Confirmed!\033[0m")
                 print(f"    Target IP [{attacker_ip}] injected into eBPF blocked_ip_map across all appliances.")
