@@ -1,0 +1,108 @@
+site_name: Sentinel-Matrix Docs
+site_description: Encapsulated VMware cyber-range with live adversary and closed-loop retraining.
+repo_url: https://github.com/kamisaberi/sentinel-matrix
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.suggest
+    - content.code.copy
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+nav:
+  - Home: index.md
+  - Getting Started:
+  - Getting Started:
+    - "Architecture at a Glance": getting-started/architecture-at-a-glance.md
+    - "Overview": getting-started/overview.md
+    - "One-Command Launch": getting-started/quickstart-one-command-launch.md
+    - "System Requirements": getting-started/system-requirements.md
+    - "Verifying Container Grid": getting-started/verifying-container-grid.md
+  - Architecture:
+    - "Container Topology Matrix": architecture/container-topology-matrix.md
+    - "Shared Volumes & IPC": architecture/shared-volumes-and-ipc.md
+    - "Simulation Mesh Architecture": architecture/simulation-mesh-architecture.md
+    - "The Infinite Flywheel": architecture/the-infinite-flywheel.md
+    - "VMware Hypervisor Optimization": architecture/vmware-hypervisor-optimization.md
+  - VMware & Networking:
+    - "10.240.0.0/24 Subnet Design": vmware-and-networking/10-240-0-subnet-design.md
+    - "glibc Alignment (ubuntu:devel)": vmware-and-networking/glibc-alignment-ubuntu-devel.md
+    - "Host Dynamic Library Bundling": vmware-and-networking/host-dynamic-library-bundling.md
+    - "Internal mTLS PKI": vmware-and-networking/internal-mtls-pki.md
+    - "vTPM & DMI Emulation": vmware-and-networking/vtpm-and-dmi-emulation.md
+    - "XDP Generic SKB Mode": vmware-and-networking/xdp-generic-skb-mode.md
+  - OmniFlow Traffic Engine:
+    - "Channel 1: SCADA / OT": omniflow-traffic-engine/channel-1-scada-ot.md
+    - "Channel 2: Edge Vision": omniflow-traffic-engine/channel-2-edge-vision.md
+    - "Channel 3: Web, API & Bots": omniflow-traffic-engine/channel-3-web-api-bot.md
+    - "Channel 4: Identity & ATO": omniflow-traffic-engine/channel-4-identity-ato.md
+    - "Channel 5: Host Syscalls": omniflow-traffic-engine/channel-5-host-syscalls.md
+    - "Channel 6: Medical & IoT": omniflow-traffic-engine/channel-6-medical-iot.md
+    - "Channel 7: NetFlow Blaster": omniflow-traffic-engine/channel-7-netflow-blaster.md
+    - "Declarative Traffic Tuning": omniflow-traffic-engine/declarative-traffic-tuning.md
+    - "OmniFlow Architecture": omniflow-traffic-engine/omniflow-architecture.md
+  - Real PCAP Replay:
+    - "Git LFS Downloader": real-pcap-replay/git-lfs-downloader.md
+    - "Offline Binary Generator": real-pcap-replay/offline-binary-generator.md
+    - "Catalog: Industroyer IEC-104": real-pcap-replay/pcap-catalog-industroyer-iec104.md
+    - "Catalog: Modbus SCADA": real-pcap-replay/pcap-catalog-modbus-scada.md
+    - "Catalog: Stuxnet S7Comm": real-pcap-replay/pcap-catalog-stuxnet-s7comm.md
+    - "Catalog: Triton TriStation": real-pcap-replay/pcap-catalog-triton-tristation.md
+    - "PCAP Replay Pipeline Overview": real-pcap-replay/pcap-replay-pipeline-overview.md
+    - "PCAP Streamer Engine": real-pcap-replay/pcap-streamer-engine.md
+    - "Rate Pacing & Wire Injection": real-pcap-replay/rate-pacing-and-wire-injection.md
+  - Live Adversary Node:
+    - "Adversary Node Architecture": live-adversary-node/adversary-node-architecture.md
+    - "curl API Abuse Bursts": live-adversary-node/curl-api-abuse-bursts.md
+    - "Custom Adversary Tooling": live-adversary-node/custom-adversary-tooling.md
+    - "Live Adversary Daemon": live-adversary-node/live-adversary-daemon.md
+    - "mbpoll SCADA Overrides": live-adversary-node/mbpoll-scada-overrides.md
+    - "nmap TCP SYN Sweeps": live-adversary-node/nmap-tcp-syn-sweeps.md
+    - "Observing Wire eBPF Drops": live-adversary-node/observing-wire-ebpf-drops.md
+  - Observability & TUI:
+    - "Metrics Aggregation": observability-and-tui/metrics-aggregation.md
+    - "Observability Overview": observability-and-tui/observability-overview.md
+    - "Real-Time XAI Panel": observability-and-tui/real-time-xai-panel.md
+    - "Split-Panel Layout": observability-and-tui/split-panel-layout.md
+    - "Streaming SSE Events": observability-and-tui/streaming-sse-events.md
+    - "Terminal Dashboard TUI": observability-and-tui/terminal-dashboard-tui.md
+    - "Web Command Center Integration": observability-and-tui/web-command-center-integration.md
+  - Closed-Loop Active Learning:
+    - "Continuous Drift Adaptation": closed-loop-active-learning/continuous-drift-adaptation.md
+    - "Flywheel Lifecycle": closed-loop-active-learning/flywheel-lifecycle.md
+    - "Forge Watcher Daemon": closed-loop-active-learning/forge-watcher-daemon.md
+    - "Staged Rollout Progression": closed-loop-active-learning/staged-rollout-progression.md
+    - "Zero-Downtime Hot-Reload Validation": closed-loop-active-learning/zero-downtime-hot-reload-validation.md
+  - Chaos & Resilience:
+    - "Automated Recovery Testing": chaos-and-resilience/automated-recovery-testing.md
+    - "Automated Rollback Verification": chaos-and-resilience/automated-rollback-verification.md
+    - "Chaos Engineering Overview": chaos-and-resilience/chaos-engineering-overview.md
+    - "Instant 0ms Disconnect Validation": chaos-and-resilience/instant-0ms-disconnect-validation.md
+    - "Latency Spike Injection": chaos-and-resilience/latency-spike-injection.md
+    - "Node Sever Testing": chaos-and-resilience/node-sever-testing.md
+  - Operations & Makefile:
+    - "Common Workflows": operations-and-makefile/common-workflows.md
+    - "Configuring matrix.yaml": operations-and-makefile/configuring-matrix-yaml.md
+    - "Configuring Node Templates": operations-and-makefile/configuring-node-templates.md
+    - "Configuring Scenario Profiles": operations-and-makefile/configuring-scenario-profiles.md
+    - "Log Inspection & Debugging": operations-and-makefile/log-inspection-and-debugging.md
+    - "Makefile Reference": operations-and-makefile/makefile-reference.md
+  - Tutorials:
+    - "Adding Custom Malware PCAP": tutorials/adding-custom-malware-pcap.md
+    - "Full Closed-Loop Walkthrough": tutorials/full-closed-loop-walkthrough.md
+    - "Running Matrix in ESXi Headless": tutorials/running-matrix-in-esxi-headless.md
+    - "Hospital Ransomware Wave": tutorials/simulating-hospital-ransomware-wave.md
+    - "Substation Blackout Attack": tutorials/simulating-substation-blackout-attack.md
+  - Troubleshooting:
+    - "Container Restarting Loops": troubleshooting/container-restarting-loops.md
+    - "Docker Subnet Pool Overlaps": troubleshooting/docker-subnet-pool-overlaps.md
+    - "Technical FAQ": troubleshooting/faq.md
+    - "glibc Version Errors": troubleshooting/glibc-version-not-found-errors.md
+    - "Missing Host Libraries": troubleshooting/missing-host-libraries-absl-re2.md
+    - "PCAP LFS Pointer Corruption": troubleshooting/pcap-lfs-pointer-corruption.md
+    - "Support Channels": troubleshooting/support.md
+    - "TUI Empty Appliances": troubleshooting/tui-empty-appliances-debugging.md
