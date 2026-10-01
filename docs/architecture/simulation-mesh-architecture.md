@@ -256,28 +256,3 @@ If testing multi-NIC bridging or Promiscuous taps:
 3. This allows `sentinel-adversary` and `sentinel-traffic` to inject synthetic packets with diverse source IP and MAC addresses without hypervisor dropping.
 ```
 
----
-
-### Complete in Part 2
-- `sentinel-matrix/docs/architecture/simulation-mesh-architecture.md`
-- `sentinel-matrix/docs/architecture/the-infinite-flywheel.md`
-- `sentinel-matrix/docs/architecture/container-topology-matrix.md`
-- `sentinel-matrix/docs/architecture/shared-volumes-and-ipc.md`
-- `sentinel-matrix/docs/architecture/vmware-hypervisor-optimization.md`
-
-All 5 Deep Systems Design files for `sentinel-matrix` are now generated.
-
----
-
-### Files to be Generated in Part 3
-
-The next phase covers **VMware & Network Engineering** (`vmware-and-networking/` - 6 files):
-
-1. `vmware-and-networking/10-240-0-subnet-design.md` (Avoiding 172.x Docker and VMnet1/VMnet8 route collisions)
-2. `vmware-and-networking/xdp-generic-skb-mode.md` (Running eBPF/XDP over virtual veth interfaces and virtual NICs)
-3. `vmware-and-networking/vtpm-and-dmi-emulation.md` (Emulating physical TPM 2.0 PCRs and VMware-DMI product UUIDs)
-4. `vmware-and-networking/glibc-alignment-ubuntu-devel.md` (Aligning host Ubuntu 26.04 GLIBC 2.43 with container images)
-5. `vmware-and-networking/host-dynamic-library-bundling.md` (Harvesting `libabsl`, `libre2`, and `libgrpc` into `/shared/lib/`)
-6. `vmware-and-networking/internal-mtls-pki.md` (Generating container Root CA and internal certificates)
-
-Confirm when you are ready to proceed with Part 3.
