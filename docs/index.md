@@ -522,29 +522,3 @@ The diagram below details the private subnet routing, shared storage mount point
 ```
 ```
 
----
-
-### Complete in Part 1
-- `sentinel-matrix/docs/mkdocs.yml`
-- `sentinel-matrix/docs/index.md`
-- `sentinel-matrix/docs/getting-started/overview.md`
-- `sentinel-matrix/docs/getting-started/system-requirements.md`
-- `sentinel-matrix/docs/getting-started/quickstart-one-command-launch.md`
-- `sentinel-matrix/docs/getting-started/verifying-container-grid.md`
-- `sentinel-matrix/docs/getting-started/architecture-at-a-glance.md`
-
-All 7 root configuration and onboarding files are now generated.
-
----
-
-### Files to be Generated in Part 2
-
-The next phase covers **Deep Systems Design** (`architecture/` - 5 files):
-
-1. `architecture/simulation-mesh-architecture.md` (Multi-container digital twin architecture and lifecycle)
-2. `architecture/the-infinite-flywheel.md` (Continuous loop: Ambient $\to$ Exploit $\to$ Drop $\to$ Retrain $\to$ Hot-Reload)
-3. `architecture/container-topology-matrix.md` (Master service inventory: Nexus, Forge, Nodes, Traffic, Adversary)
-4. `architecture/shared-volumes-and-ipc.md` (Shared storage architecture: `/shared/models`, datasets, and logs)
-5. `architecture/vmware-hypervisor-optimization.md` (Solving virtualization constraints inside VMware Linux guests)
-
-Confirm when you are ready to proceed with Part 2.
