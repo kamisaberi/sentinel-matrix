@@ -1,0 +1,155 @@
+site_name: Sentinel-Matrix Documentation
+site_description: Autonomous Cyber-Range Digital Twin, OmniFlow Multi-Modal Traffic Engine, and Malware PCAP Replay Mesh (Tier 7)
+site_author: Aryorithm Technologies B.V.
+site_url: https://docs.aryorithm.com/matrix/
+repo_name: kamisaberi/sentinel-matrix
+repo_url: https://github.com/kamisaberi/sentinel-matrix
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: slate
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - scheme: default
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - attr_list
+  - md_in_html
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Overview: getting-started/overview.md
+      - System Requirements: getting-started/system-requirements.md
+      - One-Command Quickstart: getting-started/quickstart-one-command-launch.md
+      - Verifying Container Grid: getting-started/verifying-container-grid.md
+      - Architecture at a Glance: getting-started/architecture-at-a-glance.md
+  - Architecture:
+      - Simulation Mesh Architecture: architecture/simulation-mesh-architecture.md
+      - The Infinite Flywheel: architecture/the-infinite-flywheel.md
+      - Container Topology Matrix: architecture/container-topology-matrix.md
+      - Shared Volumes & IPC: architecture/shared-volumes-and-ipc.md
+      - VMware Hypervisor Optimization: architecture/vmware-hypervisor-optimization.md
+  - VMware & Networking:
+      - 10.240.0.0/24 Subnet Design: vmware-and-networking/10-240-0-subnet-design.md
+      - XDP Generic SKB Mode: vmware-and-networking/xdp-generic-skb-mode.md
+      - vTPM & DMI Emulation: vmware-and-networking/vtpm-and-dmi-emulation.md
+      - GLIBC 2.43 Alignment: vmware-and-networking/glibc-alignment-ubuntu-devel.md
+      - Dynamic Library Bundling: vmware-and-networking/host-dynamic-library-bundling.md
+      - Internal mTLS PKI: vmware-and-networking/internal-mtls-pki.md
+  - OmniFlow Traffic Engine:
+      - OmniFlow Architecture: omniflow-traffic-engine/omniflow-architecture.md
+      - Channel 1 SCADA OT: omniflow-traffic-engine/channel-1-scada-ot.md
+      - Channel 2 Edge Vision: omniflow-traffic-engine/channel-2-edge-vision.md
+      - Channel 3 Web API & Bot: omniflow-traffic-engine/channel-3-web-api-bot.md
+      - Channel 4 Identity & ATO: omniflow-traffic-engine/channel-4-identity-ato.md
+      - Channel 5 Host Syscalls: omniflow-traffic-engine/channel-5-host-syscalls.md
+      - Channel 6 Medical IoT: omniflow-traffic-engine/channel-6-medical-iot.md
+      - Channel 7 NetFlow Blaster: omniflow-traffic-engine/channel-7-netflow-blaster.md
+      - Declarative Tuning: omniflow-traffic-engine/declarative-traffic-tuning.md
+  - Real Malware PCAP Replay:
+      - Pipeline Overview: real-pcap-replay/pcap-replay-pipeline-overview.md
+      - PCAP Streamer Engine: real-pcap-replay/pcap-streamer-engine.md
+      - Git LFS Downloader: real-pcap-replay/git-lfs-downloader.md
+      - Offline Binary Generator: real-pcap-replay/offline-binary-generator.md
+      - Industroyer IEC-104: real-pcap-replay/pcap-catalog-industroyer-iec104.md
+      - Triton TriStation: real-pcap-replay/pcap-catalog-triton-tristation.md
+      - Stuxnet S7Comm: real-pcap-replay/pcap-catalog-stuxnet-s7comm.md
+      - Modbus SCADA Replay: real-pcap-replay/pcap-catalog-modbus-scada.md
+      - Rate Pacing & Injection: real-pcap-replay/rate-pacing-and-wire-injection.md
+  - Live Adversary Node (10.240.0.99):
+      - Adversary Node Architecture: live-adversary-node/adversary-node-architecture.md
+      - Live Adversary Daemon: live-adversary-node/live-adversary-daemon.md
+      - Nmap TCP SYN Sweeps: live-adversary-node/nmap-tcp-syn-sweeps.md
+      - Mbpoll SCADA Overrides: live-adversary-node/mbpoll-scada-overrides.md
+      - cURL API Abuse Bursts: live-adversary-node/curl-api-abuse-bursts.md
+      - Observing Wire eBPF Drops: live-adversary-node/observing-wire-ebpf-drops.md
+      - Custom Adversary Tooling: live-adversary-node/custom-adversary-tooling.md
+  - Observability & TUI:
+      - Observability Overview: observability-and-tui/observability-overview.md
+      - Terminal Dashboard TUI: observability-and-tui/terminal-dashboard-tui.md
+      - Split-Panel Layout: observability-and-tui/split-panel-layout.md
+      - Real-Time XAI Panel: observability-and-tui/real-time-xai-panel.md
+      - Web Command Center: observability-and-tui/web-command-center-integration.md
+      - Streaming SSE Events: observability-and-tui/streaming-sse-events.md
+      - Metrics Aggregation: observability-and-tui/metrics-aggregation.md
+  - Closed-Loop Active Learning:
+      - Flywheel Lifecycle: closed-loop-active-learning/flywheel-lifecycle.md
+      - Forge Watcher Daemon: closed-loop-active-learning/forge-watcher-daemon.md
+      - Staged Rollout Progression: closed-loop-active-learning/staged-rollout-progression.md
+      - Zero-Downtime Hot Reload: closed-loop-active-learning/zero-downtime-hot-reload-validation.md
+      - Continuous Drift Adaptation: closed-loop-active-learning/continuous-drift-adaptation.md
+  - Chaos & Resilience:
+      - Chaos Engineering Overview: chaos-and-resilience/chaos-engineering-overview.md
+      - Latency Spike Injection: chaos-and-resilience/latency-spike-injection.md
+      - Automated Rollback Verification: chaos-and-resilience/automated-rollback-verification.md
+      - Node Sever Testing: chaos-and-resilience/node-sever-testing.md
+      - Instant 0ms Disconnect: chaos-and-resilience/instant-0ms-disconnect-validation.md
+      - Automated Recovery Testing: chaos-and-resilience/automated-recovery-testing.md
+  - Operations & Makefile:
+      - Makefile Reference: operations-and-makefile/makefile-reference.md
+      - Common Workflows: operations-and-makefile/common-workflows.md
+      - Configuring matrix.yaml: operations-and-makefile/configuring-matrix-yaml.md
+      - Node Templates: operations-and-makefile/configuring-node-templates.md
+      - Scenario Profiles: operations-and-makefile/configuring-scenario-profiles.md
+      - Log Inspection: operations-and-makefile/log-inspection-and-debugging.md
+  - Tutorials:
+      - Full Closed-Loop Walkthrough: tutorials/full-closed-loop-walkthrough.md
+      - Simulating Substation Blackout: tutorials/simulating-substation-blackout-attack.md
+      - Simulating Hospital Ransomware: tutorials/simulating-hospital-ransomware-wave.md
+      - Adding Custom Malware PCAP: tutorials/adding-custom-malware-pcap.md
+      - Running Headless in ESXi: tutorials/running-matrix-in-esxi-headless.md
+  - Troubleshooting:
+      - Docker Subnet Overlaps: troubleshooting/docker-subnet-pool-overlaps.md
+      - GLIBC Version Not Found: troubleshooting/glibc-version-not-found-errors.md
+      - Missing Dynamic Libraries: troubleshooting/missing-host-libraries-absl-re2.md
+      - Container Restarting Loops: troubleshooting/container-restarting-loops.md
+      - TUI Empty Appliances: troubleshooting/tui-empty-appliances-debugging.md
+      - PCAP LFS Pointer Corruption: troubleshooting/pcap-lfs-pointer-corruption.md
+      - FAQ: troubleshooting/faq.md
+      - Support & SLAs: troubleshooting/support.md
