@@ -234,32 +234,3 @@ echo "[+] Internal PKI generated successfully in ${CERT_DIR}."
 * **Strict Validation:** If a node attempts connection with an invalid or expired certificate, `sentinel-nexus` rejects the gRPC handshake with code `UNAUTHENTICATED (16)`.
 ```
 
----
-
-### Complete in Part 3
-- `sentinel-matrix/docs/vmware-and-networking/10-240-0-subnet-design.md`
-- `sentinel-matrix/docs/vmware-and-networking/xdp-generic-skb-mode.md`
-- `sentinel-matrix/docs/vmware-and-networking/vtpm-and-dmi-emulation.md`
-- `sentinel-matrix/docs/vmware-and-networking/glibc-alignment-ubuntu-devel.md`
-- `sentinel-matrix/docs/vmware-and-networking/host-dynamic-library-bundling.md`
-- `sentinel-matrix/docs/vmware-and-networking/internal-mtls-pki.md`
-
-All 6 VMware & Network Engineering files for `sentinel-matrix` are now generated.
-
----
-
-### Files to be Generated in Part 4
-
-The next phase covers the **OmniFlow Traffic Engine** (`omniflow-traffic-engine/` - 9 files):
-
-1. `omniflow-traffic-engine/omniflow-architecture.md` (Concurrent multi-threaded engine design, `omniflow_engine.py`)
-2. `omniflow-traffic-engine/channel-1-scada-ot.md` (Modbus TCP FC03/FC05 & DNP3 actuator override stream)
-3. `omniflow-traffic-engine/channel-2-edge-vision.md` (30 FPS video tensor frames & YOLO perimeter intrusion stream)
-4. `omniflow-traffic-engine/channel-3-web-api-bot.md` (L7 REST API queries, SQLi, and non-human bot kinematics)
-5. `omniflow-traffic-engine/channel-4-identity-ato.md` (Impossible geographic travel velocity & Kerberos SPN abuse)
-6. `omniflow-traffic-engine/channel-5-host-syscalls.md` (Container eBPF breakouts & ransomware Shannon entropy 7.95 bits)
-7. `omniflow-traffic-engine/channel-6-medical-iot.md` (DICOM PACS radiology images & MAVLink drone waypoint spoofing)
-8. `omniflow-traffic-engine/channel-7-netflow-blaster.md` (High-rate directional NetFlow stream with $[0.40, 0.60]$ uncertainty)
-9. `omniflow-traffic-engine/declarative-traffic-tuning.md` (Customizing rates, targets, and distributions in `omniflow.yaml`)
-
-Confirm when you are ready to proceed with Part 4.
