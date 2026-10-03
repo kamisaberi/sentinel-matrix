@@ -416,33 +416,3 @@ python3 pcap_streamer.py --pcap attack.pcap --pps-limit 10000
 ```
 ```
 
----
-
-### Complete in Part 5
-- `sentinel-matrix/docs/real-pcap-replay/pcap-replay-pipeline-overview.md`
-- `sentinel-matrix/docs/real-pcap-replay/pcap-streamer-engine.md`
-- `sentinel-matrix/docs/real-pcap-replay/git-lfs-downloader.md`
-- `sentinel-matrix/docs/real-pcap-replay/offline-binary-generator.md`
-- `sentinel-matrix/docs/real-pcap-replay/pcap-catalog-industroyer-iec104.md`
-- `sentinel-matrix/docs/real-pcap-replay/pcap-catalog-triton-tristation.md`
-- `sentinel-matrix/docs/real-pcap-replay/pcap-catalog-stuxnet-s7comm.md`
-- `sentinel-matrix/docs/real-pcap-replay/pcap-catalog-modbus-scada.md`
-- `sentinel-matrix/docs/real-pcap-replay/rate-pacing-and-wire-injection.md`
-
-All 9 Real Malware PCAP Replay files for `sentinel-matrix` are now generated.
-
----
-
-### Files to be Generated in Part 6
-
-The next phase covers the **Live Red-Team Adversary Node (`10.240.0.99`)** (`live-adversary-node/` - 7 files):
-
-1. `live-adversary-node/adversary-node-architecture.md` (Containerized Red-Team workstation design & network routing)
-2. `live-adversary-node/live-adversary-daemon.md` (Autonomous testing loop, `src/traffic/live_adversary_daemon.py`)
-3. `live-adversary-node/nmap-tcp-syn-sweeps.md` (Executing live `nmap -sS` port discovery sweeps on the wire)
-4. `live-adversary-node/mbpoll-scada-overrides.md` (Executing live Modbus FC05 coil overrides via `mbpoll`)
-5. `live-adversary-node/curl-api-abuse-bursts.md` (Executing high-velocity HTTP/REST endpoint fuzzing)
-6. `live-adversary-node/observing-wire-ebpf-drops.md` (Real-time feedback: Watching nmap ports transition from open to filtered)
-7. `live-adversary-node/custom-adversary-tooling.md` (Adding custom tools like `hping3`, `scapy`, and `hydra` to `Dockerfile.adversary`)
-
-Confirm when you are ready to proceed with Part 6.
