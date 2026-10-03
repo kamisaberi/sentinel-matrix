@@ -495,35 +495,3 @@ channels:
 ```
 ```
 
----
-
-### Complete in Part 4
-- `sentinel-matrix/docs/omniflow-traffic-engine/omniflow-architecture.md`
-- `sentinel-matrix/docs/omniflow-traffic-engine/channel-1-scada-ot.md`
-- `sentinel-matrix/docs/omniflow-traffic-engine/channel-2-edge-vision.md`
-- `sentinel-matrix/docs/omniflow-traffic-engine/channel-3-web-api-bot.md`
-- `sentinel-matrix/docs/omniflow-traffic-engine/channel-4-identity-ato.md`
-- `sentinel-matrix/docs/omniflow-traffic-engine/channel-5-host-syscalls.md`
-- `sentinel-matrix/docs/omniflow-traffic-engine/channel-6-medical-iot.md`
-- `sentinel-matrix/docs/omniflow-traffic-engine/channel-7-netflow-blaster.md`
-- `sentinel-matrix/docs/omniflow-traffic-engine/declarative-traffic-tuning.md`
-
-All 9 OmniFlow Multi-Modal Traffic Engine files for `sentinel-matrix` are now generated.
-
----
-
-### Files to be Generated in Part 5
-
-The next phase covers the **Real Malware PCAP Replay Pipeline** (`real-pcap-replay/` - 9 files):
-
-1. `real-pcap-replay/pcap-replay-pipeline-overview.md` (Replaying genuine raw byte captures vs. synthetic mocking)
-2. `real-pcap-replay/pcap-streamer-engine.md` (Binary parser and wire injection engine, `src/traffic/pcap_streamer.py`)
-3. `real-pcap-replay/git-lfs-downloader.md` (Automated GitHub LFS pointer resolution, `tools/download_real_pcaps.py`)
-4. `real-pcap-replay/offline-binary-generator.md` (Air-gapped self-contained generator, `tools/generate_real_pcaps.py`)
-5. `real-pcap-replay/pcap-catalog-industroyer-iec104.md` (IEC 60870-5-104 power grid switchgear trip replay)
-6. `real-pcap-replay/pcap-catalog-triton-tristation.md` (Schneider Triconex TriStation safety override replay)
-7. `real-pcap-replay/pcap-catalog-stuxnet-s7comm.md` (Siemens S7Comm PLC centrifuge frequency tamper replay)
-8. `real-pcap-replay/pcap-catalog-modbus-scada.md` (University of Illinois genuine Modbus TCP SCADA replay)
-9. `real-pcap-replay/rate-pacing-and-wire-injection.md` (Rate-limiting replay pace and flow dissection)
-
-Confirm when you are ready to proceed with Part 5.
