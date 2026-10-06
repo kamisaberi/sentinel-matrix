@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/chaos-and-resilience/automated-rollback-verification.md`
-
-```markdown
 # Verifying Automated RollbackGuard Aborts
 
 This test validates that when a candidate model breaches line-rate SLAs during the Canary phase, `sentinel-nexus` reverts the Canary cohort back to the verified baseline model in **under $50\,\text{milliseconds}$**.
@@ -51,6 +46,5 @@ python3 tests/test_rollback_guard.py
 [+] [t=15.3s] Verified node-01 active model reverted to network_threat_v1.onnx
 [+] [t=15.4s] Observed node-01 latency restored to 0.81 µs (< 0.84 µs SLA).
 [PASS] Automated RollbackGuard Circuit Fully Validated!
-```
 ```
 

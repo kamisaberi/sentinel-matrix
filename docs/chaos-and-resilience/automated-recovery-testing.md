@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/chaos-and-resilience/automated-recovery-testing.md`
-
-```markdown
 # Automated Recovery & Re-Enrollment Testing (`make recover`)
 
 This test verifies that severed or rebooted edge appliances automatically re-establish communication, re-authenticate their TPM 2.0 hardware identity, and resume line-rate threat mitigation without human intervention.
@@ -51,4 +46,3 @@ docker exec -it sentinel-nexus nexus-ctl fleet list --status ONLINE
 ```
 
 `sentinel-node-02` appears as `ONLINE` with all historical drop counters preserved.
-```

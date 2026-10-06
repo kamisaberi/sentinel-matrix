@@ -1,12 +1,3 @@
-### Part 9: Chaos & Resilience Testing (`chaos-and-resilience/*`)
-
-This section contains 6 technical implementation guides detailing the automated chaos engineering and fault-tolerance validation framework in `sentinel-matrix`: the chaos engineering overview, injecting sub-millisecond SLA latency breaches, verifying automated Canary rollbacks via `RollbackGuard`, abrupt node termination testing, validating 0ms instant graceful disconnects, and testing automated network recovery.
-
----
-
-### File: `sentinel-matrix/docs/chaos-and-resilience/chaos-engineering-overview.md`
-
-```markdown
 # Chaos Engineering & Resilience Testing in the Cyber-Range
 
 In critical infrastructure and defense deployments, automated safety mechanisms must be verified under adversarial stress conditions before being trusted on physical power grids or industrial pipelines. 
@@ -39,5 +30,4 @@ In critical infrastructure and defense deployments, automated safety mechanisms 
 1. **Deterministic Safety Tripping:** An operational latency breach ($> 1{,}000\,\mu\text{s}$) or drop surge must trigger an automated rollback without operator intervention.
 2. **Zero In-Kernel Leaks:** Terminating a user-space container must unhook eBPF filters from the host kernel (`xdp off`), preventing orphaned packet drops.
 3. **Cascading State Accuracy:** Killing a parent node must immediately transition all connected subordinate sensors to `INHERITED_OFFLINE` without phantom polling storms.
-```
 

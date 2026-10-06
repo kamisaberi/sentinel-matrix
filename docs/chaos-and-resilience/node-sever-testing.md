@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/chaos-and-resilience/node-sever-testing.md`
-
-```markdown
 # Node Sever Testing & Liveness Grace Expiration (`make chaos-sever`)
 
 This tutorial evaluates how the central fleet command plane handles abrupt network or hardware failure (e.g., power loss, cut fiber line, or host hypervisor crash).
@@ -50,6 +45,5 @@ NODE UUID          STATUS        DROPS   SLA
 sentinel-node-01   ONLINE        14,209  0.82 µs
 sentinel-node-02   UNREACHABLE    8,412  ---       <-- Marked UNREACHABLE!
 sentinel-node-03   ONLINE         1,094  0.84 µs
-```
 ```
 

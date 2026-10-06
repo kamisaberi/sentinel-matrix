@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/chaos-and-resilience/instant-0ms-disconnect-validation.md`
-
-```markdown
 # Validating 0ms Instant Graceful Disconnection
 
 Contrasting with abrupt failure (`SIGKILL`), this test proves that during routine administrative shutdowns (`SIGINT` / `systemctl stop sentinel`), the edge appliance executes an instant **0ms graceful disconnect**, eliminating the 15-second timeout delay on the central dashboard.
@@ -48,6 +43,5 @@ Verify in the Nexus log that the status changed immediately:
 ```bash
 docker logs --tail 20 sentinel-nexus | grep -i "disconnected"
 # Output: [INFO] FleetService: Appliance sentinel-node-01 disconnected gracefully (0ms delay).
-```
 ```
 

@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/chaos-and-resilience/latency-spike-injection.md`
-
-```markdown
 # Injecting $> 1{,}000\,\mu\text{s}$ SLA Latency Breaches (`make chaos-latency`)
 
 To verify that `RollbackGuard` on `sentinel-nexus` automatically aborts degraded neural network deployments, `sentinel-matrix` provides a command to inject artificial compute latency into the active Canary edge node.
@@ -45,5 +40,4 @@ docker exec -it sentinel-node-01 sentinel \
 ```
 
 When three consecutive heartbeat reports breach the $1{,}000\,\mu\text{s}$ ceiling, `RollbackGuard` trips the automated abort circuit.
-```
 
