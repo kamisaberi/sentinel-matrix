@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/closed-loop-active-learning/zero-downtime-hot-reload-validation.md`
-
-```markdown
 # Proving Zero-Downtime Hot-Reload Parity
 
 A critical requirement of active cyber-physical defense is that edge appliances must never pause packet inspection or drop network frames while updating neural network weights.
@@ -43,6 +38,5 @@ Packets Received by Kernel : 100,000
 Packets Dropped Unhandled  : 0 (0.00% Packet Loss)
 Max Observed Jitter Delta  : +0.04 µs
 Status: ZERO-DOWNTIME ATOMIC RELOAD FULLY VERIFIED!
-```
 ```
 

@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/closed-loop-active-learning/staged-rollout-progression.md`
-
-```markdown
 # Validating Staged Model Evolution: Shadow to Fleet-Wide
 
 Inside `sentinel-matrix`, researchers can validate the entire staged rollout progression using live container telemetry.
@@ -49,6 +44,5 @@ docker exec -it sentinel-node-01 sentinel --health | grep "Active Model"
 
 # Promote fleet-wide
 docker exec -it sentinel-nexus nexus-ctl ota advance --force
-```
 ```
 

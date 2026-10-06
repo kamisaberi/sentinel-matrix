@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/closed-loop-active-learning/continuous-drift-adaptation.md`
-
-```markdown
 # Maintaining $> 98\%$ Accuracy Under Changing Simulated Drift
 
 To prove that `xinfer-forge` maintains detection accuracy over extended timelines, `sentinel-matrix` simulates multi-week operational drift within a compressed 10-minute simulation scenario.
@@ -38,5 +33,4 @@ To prove that `xinfer-forge` maintains detection accuracy over extended timeline
 | **Minute 10** | Adversary Attack Wave | **$61.4\%$ (Exploit Missed)**| **$98.1\%$ (Attack Dropped)** |
 
 The testbed proves that without continual active learning, baseline drift degrades static models, whereas `xinfer-forge` preserves high accuracy ($> 98\%$) throughout operational shifts.
-```
 

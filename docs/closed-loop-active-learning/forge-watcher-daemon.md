@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/closed-loop-active-learning/forge-watcher-daemon.md`
-
-```markdown
 # Forge Dataset Watcher Daemon (`src/traffic/forge_watcher.py`)
 
 The `forge_watcher.py` daemon runs inside the `sentinel-forge` container (`10.240.0.20`), monitoring the `/shared/datasets/` volume mount for batches emitted by `sentinel-nexus`.
@@ -98,6 +93,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
 ```
 

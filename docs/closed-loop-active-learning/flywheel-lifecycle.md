@@ -1,12 +1,3 @@
-### Part 8: Closed-Loop Active Learning Flywheel Integration (`closed-loop-active-learning/*`)
-
-This section contains 5 technical implementation guides detailing the automated closed-loop active learning cycle inside `sentinel-matrix`: the complete flywheel lifecycle, the Forge dataset watcher daemon, staged rollout validation, zero-downtime hot-reload verification, and continuous drift adaptation.
-
----
-
-### File: `sentinel-matrix/docs/closed-loop-active-learning/flywheel-lifecycle.md`
-
-```markdown
 # Closed-Loop Active Learning Flywheel Lifecycle
 
 In `sentinel-matrix`, the entire continual learning lifecycle—from edge packet evaluation to active learning dataset curation, self-supervised retraining, safety validation, and canary hot-reloads—executes as an automated loop across the `10.240.0.0/24` mesh.
@@ -53,5 +44,4 @@ In `sentinel-matrix`, the entire continual learning lifecycle—from edge packet
 
 * **Autonomous Evolution:** Operates without data scientists manually labeling flows or engineering features.
 * **Non-Blocking Operation:** Edge packet mitigation ($< 0.84\,\mu\text{s}$) continues uninterrupted throughout training and deployment phases.
-```
 
