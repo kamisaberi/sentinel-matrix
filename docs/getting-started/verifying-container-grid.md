@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/getting-started/verifying-container-grid.md`
-
-```markdown
 # Verifying Container Health & Network Mappings
 
 Verify that all containers in the digital twin mesh are running, healthy, and communicating over the `10.240.0.0/24` subnet.
@@ -60,6 +55,5 @@ Verify that edge node 1 can reach the Nexus gRPC service:
 ```bash
 docker exec -it sentinel-node-01 nc -zv 10.240.0.10 50051
 # Output: Connection to 10.240.0.10 50051 port [tcp/*] succeeded!
-```
 ```
 

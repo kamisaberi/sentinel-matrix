@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/getting-started/quickstart-one-command-launch.md`
-
-```markdown
 # 3-Minute Quickstart: Launching the Simulation Mesh
 
 This walkthrough guides you through harvesting dependencies, building container images, launching the 7-node digital twin grid, and opening the real-time TUI dashboard.
@@ -70,5 +65,4 @@ make tui
 ```
 
 Press **`Ctrl+C`** or **`q`** at any time to exit the dashboard (containers remain running in the background).
-```
 

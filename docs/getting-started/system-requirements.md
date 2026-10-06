@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/getting-started/system-requirements.md`
-
-```markdown
 # System Requirements & Host Sizing
 
 `sentinel-matrix` is optimized for execution inside a single physical workstation or high-performance virtual machine running VMware.
@@ -45,6 +40,5 @@ sudo apt-get update && sudo apt-get install -y \
     libelf-dev \
     net-tools \
     iproute2
-```
 ```
 

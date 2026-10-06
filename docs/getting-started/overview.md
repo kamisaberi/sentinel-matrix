@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/getting-started/overview.md`
-
-```markdown
 # Autonomous Multi-Tier Cyber-Physical Range Introduction
 
 Security operations centers (SOCs) and industrial control engineers face a common dilemma: testing active threat mitigation on production networks risks plant outages, while synthetic testing inside Python unit tests fails to replicate line-rate network dynamics, driver descriptor allocations, and bus latencies.
@@ -46,5 +41,4 @@ Security operations centers (SOCs) and industrial control engineers face a commo
 | **Edge Appliance 1**| `sentinel-node-01` | `10.240.0.101`| High-Voltage Substation Node (IEC 104, DNP3, S7Comm). |
 | **Edge Appliance 2**| `sentinel-node-02` | `10.240.0.102`| Hospital Healthcare Enclave (DICOM PACS, HL7, MAVLink).|
 | **Edge Appliance 3**| `sentinel-node-03` | `10.240.0.103`| Refinery Chemical Process (Modbus TCP, BACnet, EtherNet/IP).|
-```
 

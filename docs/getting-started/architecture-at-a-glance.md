@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/getting-started/architecture-at-a-glance.md`
-
-```markdown
 # Architecture at a Glance
 
 The diagram below details the private subnet routing, shared storage mount points, traffic injection channels, and adversary attack vectors inside `sentinel-matrix`.
@@ -51,6 +46,5 @@ The diagram below details the private subnet routing, shared storage mount point
  │  │  └─────────────────────────────────────────────────────────────────────────────┘  │  │
  │  └────────────────────────────────────────────────────────────────────────────────────┘  │
  └──────────────────────────────────────────────────────────────────────────────────────────┘
-```
 ```
 
