@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/troubleshooting/faq.md`
-
-```markdown
 # Technical Frequently Asked Questions (FAQ)
 
 ---
@@ -24,5 +19,4 @@ Docker's default bridge pools (`172.17.0.0/16` - `172.28.0.0/16`) conflict with 
 
 ### Q4: How much RAM is required to run all 7 containers concurrently?
 The minimum recommended RAM allocation is **16 GB** for the VMware virtual machine. Under active simulation, all 7 containers consume approximately **$8.5\text{ GB}$ of physical RAM**.
-```
 

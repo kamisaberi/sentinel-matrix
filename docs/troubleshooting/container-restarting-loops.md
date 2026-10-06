@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/troubleshooting/container-restarting-loops.md`
-
-```markdown
 # Debugging Container Crash Loops & Exit Codes
 
 If a container in the mesh enters an immediate `Restarting (1)` loop, inspect its exit code and stdout logs before attempting to rebuild.
@@ -37,6 +32,5 @@ If debugging an entrypoint script, override the command to drop into an interact
 
 ```bash
 docker run --rm -it --network matrix_net --entrypoint /bin/bash aryorithm/traffic:2.4.0
-```
 ```
 

@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/troubleshooting/missing-host-libraries-absl-re2.md`
-
-```markdown
 # Resolving Missing Host Libraries (`libabsl`, `libre2`, `libgrpc`)
 
 `sentinel-nexus` and `blackbox-sentinel` link against modern shared libraries compiled on the host, such as **`libabsl_synchronization.so.20260107`**, **`libre2.so.11`**, and **`libgrpc++.so`**. Missing these libraries inside containers causes immediate startup crashes.
@@ -50,6 +45,5 @@ Confirm that `docker-compose.yml` mounts `shared/lib/` and configures `LD_LIBRAR
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
     environment:
       - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps:/usr/local/lib:$LD_LIBRARY_PATH
-```
 ```
 

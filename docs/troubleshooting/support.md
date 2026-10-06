@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/troubleshooting/support.md`
-
-```markdown
 # Enterprise Support SLAs & Issue Escalation
 
 ---
@@ -43,5 +38,4 @@ For technical inquiries and enterprise SLA contracts:
 If you identify an isolation escape or vulnerability in `sentinel-matrix`:
 * Send an encrypted PGP message to **`security@aryorithm.com`**.
 * We acknowledge disclosures within **48 hours** and provide CVE assignment, risk remediation, and backported security patches according to coordinated disclosure guidelines.
-```
 

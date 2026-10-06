@@ -1,12 +1,3 @@
-### Part 12: Troubleshooting & Help Desk System (`troubleshooting/*`)
-
-This final section covers troubleshooting Docker and VMware subnet route overlaps, resolving GLIBC 2.43 forward-compatibility mismatches, harvesting missing dynamic libraries, debugging container restarting loops, fixing TUI fleet discovery, repairing Git LFS pointer files, technical FAQs, and enterprise support escalation protocols for `sentinel-matrix`.
-
----
-
-### File: `sentinel-matrix/docs/troubleshooting/docker-subnet-pool-overlaps.md`
-
-```markdown
 # Resolving Docker Subnet Overlaps & VMware Routing Collisions
 
 When launching the simulation mesh via `docker compose up` inside a VMware virtual machine, Docker may fail during network creation with an overlapping pool error.
@@ -60,5 +51,4 @@ ip route show | grep 10.240.0
 ```
 
 Relaunch the mesh using `make up`.
-```
 

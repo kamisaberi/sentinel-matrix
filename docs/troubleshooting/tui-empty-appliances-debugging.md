@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/troubleshooting/tui-empty-appliances-debugging.md`
-
-```markdown
 # Troubleshooting Empty TUI Appliance Lists
 
 When launching `make tui`, the dashboard may initialize properly but display **`Connected Appliances: 0`** despite containers running in `docker ps`.
@@ -41,6 +36,5 @@ If `NEXUS_HOST` is set to `localhost` or `127.0.0.1`, the containerized node att
 environment:
   - NEXUS_HOST=10.240.0.10
   - NEXUS_PORT=50051
-```
 ```
 

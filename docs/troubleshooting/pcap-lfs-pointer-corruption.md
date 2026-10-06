@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/troubleshooting/pcap-lfs-pointer-corruption.md`
-
-```markdown
 # Resolving 130-Byte Git LFS Pointer File Corruption
 
 When cloning `sentinel-matrix` on systems without `git-lfs` pre-installed, raw PCAP files in `shared/pcaps/` may be populated with small text pointer files rather than real binary captures.
@@ -38,5 +33,4 @@ python3 tools/download_real_pcaps.py --target-dir shared/pcaps
 ```
 
 The script queries the GitHub LFS Batch API, resolves pre-signed AWS S3 binary URLs, verifies the binary magic bytes (`0xa1b2c3d4`), and replaces the text pointers with genuine binary packet captures.
-```
 

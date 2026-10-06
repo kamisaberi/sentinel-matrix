@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/troubleshooting/glibc-version-not-found-errors.md`
-
-```markdown
 # Resolving `GLIBC_2.43 not found` Dynamic Linker Errors
 
 When building native C++20 binaries on an Ubuntu 26.04 (Devel) host and executing them inside containers built from older base images (such as `ubuntu:22.04` or `ubuntu:24.04`), the container's dynamic linker aborts immediately on launch.
@@ -47,6 +42,5 @@ Verify that the container's glibc matches the host:
 ```bash
 docker run --rm ubuntu:devel ldd --version | head -n 1
 # Output: ldd (Ubuntu GLIBC 2.43-...) 2.43
-```
 ```
 
