@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/git-lfs-downloader.md`
-
-```markdown
 # Git LFS Pointer Resolution (`tools/download_real_pcaps.py`)
 
 When cloning repositories that host binary PCAP files via Git Large File Storage (LFS), standard Git clones often download **130-byte text pointer files** rather than binary payloads:
@@ -50,5 +45,4 @@ python3 tools/download_real_pcaps.py --target-dir shared/pcaps
 ```
 
 The script replaces all pointer files with verified binary PCAPs.
-```
 

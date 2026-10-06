@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/pcap-streamer-engine.md`
-
-```markdown
 # Binary PCAP Streamer Engine (`src/traffic/pcap_streamer.py`)
 
 `pcap_streamer.py` parses standard libpcap binary files, rewrites layer-3/layer-4 IP addresses to match the `10.240.0.0/24` digital twin topology, and injects frames onto the wire using raw sockets.
@@ -67,6 +62,5 @@ class PcapStreamer:
         s = (s >> 16) + (s & 0xffff)
         s += (s >> 16)
         return ~s & 0xffff
-```
 ```
 

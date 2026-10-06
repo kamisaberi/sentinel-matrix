@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/offline-binary-generator.md`
-
-```markdown
 # Air-Gapped Binary Generator (`tools/generate_real_pcaps.py`)
 
 In air-gapped testbeds without internet access to GitHub LFS servers, `tools/generate_real_pcaps.py` generates protocol-compliant binary PCAP files directly from raw hex dumps and Python definitions.
@@ -51,6 +46,5 @@ def generate_offline_industroyer_pcap(output_path: str):
 
 if __name__ == "__main__":
     generate_offline_industroyer_pcap("shared/pcaps/industroyer_iec104.pcap")
-```
 ```
 

@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/rate-pacing-and-wire-injection.md`
-
-```markdown
 # Microsecond Rate-Pacing & Packet Scheduling
 
 When replaying historical network captures, streaming packets too rapidly can overwhelm virtual queues, while streaming too slowly fails to simulate real-world line-rate pressure.
@@ -33,6 +28,5 @@ python3 pcap_streamer.py --pcap attack.pcap --speed 1.0
 
 # Replay at maximum wire saturation (10,000 packets/second burst)
 python3 pcap_streamer.py --pcap attack.pcap --pps-limit 10000
-```
 ```
 

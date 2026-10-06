@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/pcap-catalog-triton-tristation.md`
-
-```markdown
 # Attack Catalog: Triton (HatMan) Triconex TriStation
 
 * **Malware Name:** Triton / TRISIS / HatMan
@@ -35,5 +30,4 @@ docker exec -it sentinel-traffic python3 /app/src/traffic/pcap_streamer.py \
 ```
 
 Subsystem `18_cps_sec` traps the unexpected TSAP program upload sequence, enforcing an immediate kernel drop and preserving the Safety Instrumented System.
-```
 

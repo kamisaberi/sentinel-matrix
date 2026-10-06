@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/pcap-catalog-stuxnet-s7comm.md`
-
-```markdown
 # Attack Catalog: Stuxnet Siemens S7Comm Centrifuge Attack
 
 * **Malware Name:** Stuxnet
@@ -30,5 +25,4 @@ docker exec -it sentinel-traffic python3 /app/src/traffic/pcap_streamer.py \
 ```
 
 Subsystem `18_cps_sec` intercepts the write attempt against the protected `DB890` memory address, severing the session.
-```
 

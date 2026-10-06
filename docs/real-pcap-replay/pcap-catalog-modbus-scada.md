@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/pcap-catalog-modbus-scada.md`
-
-```markdown
 # Attack Catalog: Genuine Modbus SCADA Overrides (Univ. of Illinois)
 
 * **Dataset Origin:** University of Illinois Urbana-Champaign SCADA Lab
@@ -17,5 +12,4 @@
 The capture contains over $45{,}000$ packets of mixed normal polling interspersed with stealthy coil write bursts attempting to disable cooling water pumps. 
 
 Replaying this dataset verifies that the neural autoencoder (`libxinfer.so`) accurately differentiates between normal cyclic polls and malicious coil override instructions.
-```
 

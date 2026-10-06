@@ -1,12 +1,3 @@
-### Part 5: Real Malware PCAP Replay Pipeline (`real-pcap-replay/*`)
-
-This section contains 9 technical implementation guides detailing the authentic malware replay pipeline in `sentinel-matrix`: genuine byte captures vs. synthetic mocks, the binary streaming engine, Git LFS pointer resolution, air-gapped binary generation, the attack catalogs (**Industroyer**, **Triton**, **Stuxnet**, **Modbus SCADA**), and microsecond rate-pacing.
-
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/pcap-replay-pipeline-overview.md`
-
-```markdown
 # Real Malware PCAP Replay vs. Synthetic Mocking
 
 Most cybersecurity testbeds rely on synthetic mock generators that assemble superficial packet strings (e.g., passing `"DROP"` or mock regex strings). These mocks fail to replicate the complex protocol framing, fragmentation, and TCP window behaviors of real-world malware.
@@ -52,6 +43,5 @@ Most cybersecurity testbeds rely on synthetic mock generators that assemble supe
  │  - Evaluates live packet bytes                              │
  │  - Drops exploit in driver ring in < 0.84 µs                │
  └─────────────────────────────────────────────────────────────┘
-```
 ```
 

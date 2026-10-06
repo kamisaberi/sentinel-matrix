@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/real-pcap-replay/pcap-catalog-industroyer-iec104.md`
-
-```markdown
 # Attack Catalog: Industroyer (CrashOverride) IEC 60870-5-104
 
 * **Malware Name:** Industroyer / CrashOverride (CRASHOVERRIDE.v1 / v2)
@@ -42,6 +37,5 @@ docker exec -it sentinel-traffic python3 /app/src/traffic/pcap_streamer.py \
     Threat Class: T0855 (Industroyer2 Switchgear Open Command)
     Target IOA  : 1124 (Feeder Breaker)
     Reaction    : Frame dropped in driver ring in 0.81 µs.
-```
 ```
 
