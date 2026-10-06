@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/declarative-traffic-tuning.md`
-
-```markdown
 # Declarative Traffic Tuning via `omniflow.yaml`
 
 All OmniFlow channels are configured declaratively in `/etc/sentinel/omniflow.yaml`. Rates, targets, and anomaly ratios can be tuned without modifying Python source code.
@@ -54,5 +49,4 @@ channels:
     enabled: true
     rate_eps: 1500
     uncertainty_fraction: 0.15 # 15% within [0.40 - 0.60] window
-```
 ```

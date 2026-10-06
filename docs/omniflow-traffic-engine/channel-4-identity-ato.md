@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/channel-4-identity-ato.md`
-
-```markdown
 # Channel 4: Identity Abuse & Impossible Travel Geo-Velocity
 
 Channel 4 evaluates Subsystems `12_itdr` (Identity Threat Detection) and `14_ato` (Account Takeover) by streaming Kerberos authentication requests and impossible travel logins to **`sentinel-node-03` (`10.240.0.103`)**.
@@ -36,6 +31,5 @@ def run_identity_channel(config: dict, stop_event):
         mock_kerberos_tgs = b"\x6a\x82\x01\x14\x30\x82\x01\x10\xa0\x03\x02\x01\x05..."
         sock.sendto(mock_kerberos_tgs, (target_ip, 88))
         time.sleep(0.2)
-```
 ```
 

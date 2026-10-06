@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/channel-7-netflow-blaster.md`
-
-```markdown
 # Channel 7: High-Rate NetFlow Blaster ($[0.40 - 0.60]$ Uncertainty)
 
 Channel 7 is the primary data feeder for the active learning closed-loop flywheel. It blasts continuous 32-dimensional NetFlow vectors, purposefully introducing boundary flows in the **$[0.40 - 0.60]$ prediction uncertainty window** to trigger `DatasetCurator.cpp` on `sentinel-nexus`.
@@ -45,6 +40,5 @@ def run_netflow_channel(config: dict, stop_event):
 
         sock.sendto(vector.tobytes(), (target_ip, 9999))
         time.sleep(0.001) # ~1,000 flows/sec
-```
 ```
 

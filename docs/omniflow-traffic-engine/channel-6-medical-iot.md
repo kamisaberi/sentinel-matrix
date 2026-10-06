@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/channel-6-medical-iot.md`
-
-```markdown
 # Channel 6: Medical IoT DICOM PACS & MAVLink Drone Telemetry
 
 Channel 6 simulates specialized cyber-physical telemetry directed at **`sentinel-node-02` (`10.240.0.102`)**, testing hospital PACS defense (Subsystem `17_iot_sec`) and autonomous drone telemetry parsing (Dissector `mavlink-uav`).
@@ -38,6 +33,5 @@ def run_medical_channel(config: dict, stop_event):
         except Exception:
             time.sleep(2.0)
             sock_dicom = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-```
 ```
 

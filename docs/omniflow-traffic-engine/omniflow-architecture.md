@@ -1,12 +1,3 @@
-### Part 4: OmniFlow Multi-Modal Traffic Engine (`omniflow-traffic-engine/*`)
-
-This section contains 9 technical implementation guides detailing the 7-channel multi-modal traffic generation engine of `sentinel-matrix`: concurrent thread design, industrial SCADA feeds, edge video tensors, L7 web bot streams, identity geo-velocity attacks, host syscall ransomware bursts, medical IoT/MAVLink streams, high-rate uncertainty NetFlow generation, and declarative traffic tuning in `omniflow.yaml`.
-
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/omniflow-architecture.md`
-
-```markdown
 # OmniFlow Multi-Modal Traffic Engine Architecture (`omniflow_engine.py`)
 
 The OmniFlow traffic engine (`src/traffic/omniflow_engine.py`), hosted in the `sentinel-traffic` container (`10.240.0.50`), simulates realistic multi-modal network workloads across the `10.240.0.0/24` mesh. 
@@ -108,6 +99,5 @@ class OmniFlowEngine:
             self.stop_event.set()
             for t in self.threads:
                 t.join(timeout=2.0)
-```
 ```
 

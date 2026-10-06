@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/channel-1-scada-ot.md`
-
-```markdown
 # Channel 1: SCADA OT Modbus & DNP3 Telemetry Stream
 
 Channel 1 simulates industrial operations technology (OT) network communication, targeting **`sentinel-node-01` (`10.240.0.101`)** and **`sentinel-node-03` (`10.240.0.103`)**.
@@ -51,6 +46,5 @@ def run_scada_channel(config: dict, stop_event):
         except Exception:
             time.sleep(1.0)
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-```
 ```
 

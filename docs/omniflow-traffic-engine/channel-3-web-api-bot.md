@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/channel-3-web-api-bot.md`
-
-```markdown
 # Channel 3: L7 REST API Abuse & Non-Human Bot Kinematics
 
 Channel 3 targets Subsystems `05_waf` and `10_bad` running on **`sentinel-node-01` (`10.240.0.101:8443`)**, generating high-velocity HTTP API queries, SQL injections, and automated bot kinematics.
@@ -47,6 +42,5 @@ def run_web_channel(config: dict, stop_event):
             time.sleep(0.05)
         except Exception:
             time.sleep(0.5)
-```
 ```
 

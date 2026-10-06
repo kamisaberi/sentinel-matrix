@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/channel-2-edge-vision.md`
-
-```markdown
 # Channel 2: Edge Vision 30 FPS Video & YOLO Intrusions
 
 Channel 2 simulates physical security cameras streaming 30 FPS video tensor metadata to **`sentinel-node-02` (`10.240.0.102`)** to evaluate edge vision acceleration in `libxinfer.so` and Subsystem `05_waf` / `10_bad`.
@@ -41,6 +36,5 @@ def run_vision_channel(config: dict, stop_event):
         elapsed = time.perf_counter() - start
         if elapsed < frame_interval:
             time.sleep(frame_interval - elapsed)
-```
 ```
 

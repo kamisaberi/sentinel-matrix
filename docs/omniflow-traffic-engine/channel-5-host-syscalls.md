@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/omniflow-traffic-engine/channel-5-host-syscalls.md`
-
-```markdown
 # Channel 5: Container Breakouts & Ransomware Shannon Entropy
 
 Channel 5 exercises host-level security engines—specifically Subsystem `07_epp_ngav` (Entropy Wiper Blocker) and Subsystem `09_cwpp` (Container eBPF Syscall Guard).
@@ -32,6 +27,5 @@ def run_syscall_channel(config: dict, stop_event):
         high_entropy_payload = os.urandom(4096)
         sock.sendto(high_entropy_payload, (target_ip, 9995))
         time.sleep(0.1)
-```
 ```
 
