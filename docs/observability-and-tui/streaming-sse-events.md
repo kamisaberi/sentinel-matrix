@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/observability-and-tui/streaming-sse-events.md`
-
-```markdown
 # Server-Sent Events (SSE) Multiplexing on Port 9444
 
 Both the terminal TUI (`live_dashboard.py`) and the Web Command Center consume real-time telemetry from a unified **Server-Sent Events (SSE)** endpoint exposed on port **9444**.
@@ -44,6 +39,5 @@ def consume_matrix_sse_stream(stream_url: str, event_callback):
             elif line_str.startswith("data:"):
                 data_json = json.loads(line_str[5:].strip())
                 event_callback(event_type, data_json)
-```
 ```
 

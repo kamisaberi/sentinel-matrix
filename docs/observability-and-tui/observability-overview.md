@@ -1,12 +1,3 @@
-### Part 7: Real-Time Observability & Consoles (`observability-and-tui/*`)
-
-This section contains 7 technical implementation guides detailing the dual-console observability architecture of `sentinel-matrix`: the split between the headless terminal TUI and the Web Command Center, the `live_dashboard.py` architecture, split-panel screen layouts, real-time XAI attribution rendering, Web console integration, Server-Sent Events (SSE) multiplexing, and live microsecond metric aggregation.
-
----
-
-### File: `sentinel-matrix/docs/observability-and-tui/observability-overview.md`
-
-```markdown
 # Dual-Console Observability: Terminal TUI vs. Web Command Center
 
 `sentinel-matrix` provides two complementary observability consoles designed for different operational environments: the **Terminal Dashboard TUI (`make tui`)** for headless SSH sessions and bastion hosts, and the **Web Command Center (`https://localhost:9443`)** for graphical SOC displays.
@@ -44,5 +35,4 @@ This section contains 7 technical implementation guides detailing the dual-conso
 | **MITRE ATT&CK Matrix** | Condensed 4-Column View | Full Multi-Tactic Grid with Drilldown |
 | **Canary OTA Controls** | Display Status Only | Interactive 1-Click Promote / Rollback |
 | **Network Requirements** | Localhost or Internal SSH | HTTPS Port Forwarding (`-L 9443:localhost:9443`) |
-```
 

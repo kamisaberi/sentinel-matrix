@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/observability-and-tui/web-command-center-integration.md`
-
-```markdown
 # Accessing the Web Command Center from Host Browsers
 
 While `sentinel-matrix` executes inside a virtual machine or container mesh, its Web Command Center is exposed to host desktop browsers over port **9443**.
@@ -38,5 +33,4 @@ Then open `https://localhost:9443` in Chrome or Firefox.
 Because `sentinel-matrix` generates self-signed internal testing certificates during `make init`, modern browsers will present a certificate warning (`NET::ERR_CERT_AUTHORITY_INVALID`).
 
 Click **Advanced $\to$ Proceed to localhost (unsafe)** to open the console.
-```
 

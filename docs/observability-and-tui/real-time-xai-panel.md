@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/observability-and-tui/real-time-xai-panel.md`
-
-```markdown
 # Live XAI Residual Attribution Panel
 
 The upper-right panel of the TUI renders **Microsecond Residual Decomposition (MRD)** feature attributions in real time, explaining why an edge appliance's autoencoder flagged an anomaly and initiated a kernel drop.
@@ -46,5 +41,4 @@ def render_xai_panel(incident_data: dict) -> Panel:
 
 * **Root Cause Identification:** Operators instantly see which parameter (e.g., valve setpoint vs. packet rate) triggered the automated mitigation.
 * **Verification:** Proves that in-kernel drops are driven by physical process violations rather than arbitrary heuristic errors.
-```
 

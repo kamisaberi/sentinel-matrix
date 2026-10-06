@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/observability-and-tui/split-panel-layout.md`
-
-```markdown
 # TUI Split-Panel Screen Layout & Navigation
 
 The terminal dashboard uses a three-panel split design optimized for standard $80 \times 24$ terminal windows while expanding dynamically on high-resolution widescreen consoles.
@@ -34,5 +29,4 @@ The terminal dashboard uses a three-panel split design optimized for standard $8
 * **Left Lower (MITRE Threat Feed):** Scrolling log of live attacks, detailing attack timestamp, technique ID, target node, and mitigation action (`XDP_DROP`).
 * **Right Upper (XAI Explanations):** Renders the top-3 physical feature deviations for the most recent threat mitigation.
 * **Right Lower (Fleet KPIs):** Real-time summary displaying active nodes, cumulative fleet drops, and microsecond SLA compliance.
-```
 

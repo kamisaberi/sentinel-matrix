@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/observability-and-tui/terminal-dashboard-tui.md`
-
-```markdown
 # High-Density Terminal Dashboard Architecture (`live_dashboard.py`)
 
 The terminal monitoring interface (`src/monitor/live_dashboard.py`) runs inside the `sentinel-monitor` container (`10.240.0.60`) or directly on the host via `make tui`. It consumes the real-time SSE stream from `sentinel-nexus` and updates an interactive, multi-panel terminal display using the Python `rich` library.
@@ -42,6 +37,5 @@ To run against a remote Nexus hub instance:
 
 ```bash
 python3 src/monitor/live_dashboard.py --nexus-url http://10.240.0.10:9444
-```
 ```
 

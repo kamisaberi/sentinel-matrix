@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/observability-and-tui/metrics-aggregation.md`
-
-```markdown
 # Live Microsecond Latency Aggregation & Percentiles
 
 `sentinel-monitor` aggregates latency reports from all edge nodes into rolling 60-second sliding windows, calculating live microsecond latency percentiles ($p50$, $p90$, $p95$, $p99$).
@@ -48,5 +43,4 @@ class LatencyAggregator:
 ## 2. SLA Breach Detection
 
 If the calculated 99th percentile ($p99$) exceeds **$1.0\,\mu\text{s}$**, the TUI changes the SLA metric label from cyan to bold red (`SLA BREACH: 1.42 µs`), indicating that edge nodes are experiencing CPU starvation or scheduling delays.
-```
 
