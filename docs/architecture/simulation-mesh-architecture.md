@@ -1,12 +1,3 @@
-### Part 2: Deep Systems Design (`architecture/*`)
-
-This section contains 5 architectural specifications detailing the internal mechanics of `sentinel-matrix`: the multi-container digital twin lifecycle, the continuous active learning flywheel, the service inventory topology matrix, the shared volume and IPC file-exchange model, and VMware hypervisor performance optimizations.
-
----
-
-### File: `sentinel-matrix/docs/architecture/simulation-mesh-architecture.md`
-
-```markdown
 # Multi-Container Digital Twin Simulation Mesh Architecture
 
 `sentinel-matrix` encapsulates an entire enterprise and industrial defense ecosystem inside a multi-container Docker bridge (`matrix_net`) running within a single VMware virtual machine. It eliminates external physical testbed dependencies while preserving line-rate kernel execution fidelity.
@@ -73,6 +64,5 @@ Unlike traditional network simulators (e.g., Mininet or NS-3) that mock networki
  ┌─────────────────┐
  │   TERMINATED    │ 0ms instant disconnect sent to Nexus; interfaces unhooked
  └─────────────────┘
-```
 ```
 

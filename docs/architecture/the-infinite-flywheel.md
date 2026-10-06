@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/architecture/the-infinite-flywheel.md`
-
-```markdown
 # The Infinite Closed-Loop Adaptation Flywheel
 
 `sentinel-matrix` acts as an automated sandbox to validate the closed-loop continual learning flywheel of the Aryorithm ecosystem. The entire lifecycle—from zero-day attack injection to in-kernel drop, uncertainty curation, self-supervised retraining, safety validation, and hot-reload—runs continuously without human intervention.
@@ -50,5 +45,4 @@
 
 * **No Regression:** During Step 4, if candidate weights miss even a single historical attack, Forge's automated purge circuit deletes the weights, preserving edge fleet stability.
 * **Zero Downtime:** Edge nodes never stop inspecting packets; the in-kernel eBPF filter continues evaluating traffic while user-space models hot-reload.
-```
 

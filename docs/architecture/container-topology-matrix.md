@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/architecture/container-topology-matrix.md`
-
-```markdown
 # Container Topology Matrix & Resource Allocations
 
 Every service in the `sentinel-matrix` digital twin grid is statically mapped to avoid resource starvation, port collisions, or IP address drift.
@@ -25,5 +20,4 @@ Every service in the `sentinel-matrix` digital twin grid is statically mapped to
 $$\text{Total Host Allocation Budget} = 19.0\text{ vCPUs} \quad \mid \quad 36.0\text{ GB RAM}$$
 
 *(Note: On systems with 16GB RAM, Docker dynamic memory limits throttle smoothly without thrashing).*
-```
 

@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/architecture/vmware-hypervisor-optimization.md`
-
-```markdown
 # VMware Hypervisor Optimization & Nested Virtualization
 
 Running containerized eBPF filters, raw packet injection, and neural network compilation inside a Linux virtual machine hosted on VMware Workstation Pro or ESXi requires specific hypervisor configuration to avoid nested virtualization bottlenecks.
@@ -38,5 +33,4 @@ If testing multi-NIC bridging or Promiscuous taps:
 1. In VMware ESXi or Workstation Virtual Network Editor, locate the active virtual network bridge (`VMnet0` or Port Group).
 2. Set **Promiscuous Mode**, **MAC Address Changes**, and **Forged Transmits** to **`Accept`**.
 3. This allows `sentinel-adversary` and `sentinel-traffic` to inject synthetic packets with diverse source IP and MAC addresses without hypervisor dropping.
-```
 

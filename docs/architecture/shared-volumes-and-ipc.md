@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/architecture/shared-volumes-and-ipc.md`
-
-```markdown
 # Shared Storage Architecture & Inter-Process File Exchange
 
 `sentinel-matrix` uses high-speed host NVMe volume mounts (`/opt/sentinel-matrix/shared/`) to exchange large model weights, training datasets, and harvested shared libraries without network serialization overhead.
@@ -50,6 +45,5 @@ volumes:
   - ./shared/lib:/usr/local/lib/matrix-deps:ro
   # Mutual TLS certificates mounted read-only to all containers
   - ./shared/certs:/etc/sentinel/certs:ro
-```
 ```
 
