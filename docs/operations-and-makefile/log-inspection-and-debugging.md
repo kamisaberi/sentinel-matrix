@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/operations-and-makefile/log-inspection-and-debugging.md`
-
-```markdown
 # Centralized Log Inspection & Debugging (`shared/logs/`)
 
 All containers inside `sentinel-matrix` write unbuffered stdout streams and structured JSON log journals to the host mount `/opt/sentinel-matrix/shared/logs/`.
@@ -40,6 +35,5 @@ tail -f shared/logs/forge_stdout.log | grep -E 'Epoch|Loss'
 ### 3. Monitor Collective Defense Rule Broadcasts:
 ```bash
 tail -f shared/logs/nexus_stdout.log | grep "CollectiveDefense"
-```
 ```
 

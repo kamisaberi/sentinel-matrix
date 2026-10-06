@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/operations-and-makefile/configuring-scenario-profiles.md`
-
-```markdown
 # Authoring Attack Scenarios (`configs/scenarios/`)
 
 `sentinel-matrix` executes reproducible cyber-physical simulation scenarios defined as YAML profiles in `configs/scenarios/`.
@@ -57,6 +52,5 @@ Run a scenario using the testbed runner:
 
 ```bash
 python3 src/traffic/scenario_runner.py --scenario configs/scenarios/scenario_blackout.yaml
-```
 ```
 

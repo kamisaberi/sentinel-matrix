@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/operations-and-makefile/configuring-matrix-yaml.md`
-
-```markdown
 # Customizing the Grid Topology (`configs/matrix.yaml`)
 
 The primary simulation grid topology, container network parameters, and scenario timings are declared in `configs/matrix.yaml`.
@@ -64,6 +59,5 @@ simulation_parameters:
   tick_interval_ms: 100
   log_level: "INFO"
   evidence_retention_days: 7
-```
 ```
 

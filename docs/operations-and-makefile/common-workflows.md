@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/operations-and-makefile/common-workflows.md`
-
-```markdown
 # Common Operational Workflows
 
 This guide outlines routine operational workflows for developers, security researchers, and test engineers working within `sentinel-matrix`.
@@ -57,6 +52,5 @@ docker exec -it sentinel-traffic python3 /app/src/traffic/channels/netflow_chann
     --burst 5000 --uncertainty 1.0
 
 # Step 3: Observe Forge detecting the curated batch, training TabularMAE, passing the safety gate, and staging to Nexus
-```
 ```
 

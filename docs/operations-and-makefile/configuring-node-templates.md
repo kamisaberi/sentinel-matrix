@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/operations-and-makefile/configuring-node-templates.md`
-
-```markdown
 # Scaling the Mesh: Provisioning from 3 to 20 Nodes
 
 While `sentinel-matrix` boots with 3 edge appliances by default, researchers can scale the simulation mesh to **20 concurrent edge nodes** using modular node templates.
@@ -49,5 +44,4 @@ Use the scale script to expand the Docker Compose file:
    ```bash
    make up
    ```
-```
 

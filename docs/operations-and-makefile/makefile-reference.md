@@ -1,12 +1,3 @@
-### Part 10: Operations & Makefile Reference (`operations-and-makefile/*`)
-
-This section contains 6 technical reference manuals and operational configuration guides for `sentinel-matrix`: the comprehensive Makefile command cheat sheet, daily development and testing workflows, customizing `matrix.yaml`, scaling the mesh from 3 to 20 edge nodes, authoring scenario profile manifests, and centralized log inspection.
-
----
-
-### File: `sentinel-matrix/docs/operations-and-makefile/makefile-reference.md`
-
-```markdown
 # Makefile Command Reference & Automation Targets
 
 The `sentinel-matrix` `Makefile` automates environment provisioning, container compilation, live attack generation, and chaos testing across the digital twin mesh.
@@ -53,5 +44,4 @@ make help
 * **`make chaos-sever`**: Forcibly terminates `sentinel-node-02` (`SIGKILL`) to evaluate 15s liveness timeouts.
 * **`make chaos-disconnect`**: Gracefully terminates `sentinel-node-01` to verify 0ms instant disconnects.
 * **`make recover`**: Restarts severed edge nodes and verifies automated re-enrollment.
-```
 
