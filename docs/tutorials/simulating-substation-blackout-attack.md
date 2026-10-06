@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/tutorials/simulating-substation-blackout-attack.md`
-
-```markdown
 # Simulating an Electrical Substation Blackout Attack (Industroyer2)
 
 This tutorial demonstrates how `sentinel-matrix` simulates and neutralizes a high-voltage electrical grid sabotage attempt by replaying authentic **Industroyer2 (CrashOverride)** IEC 60870-5-104 packets targeting Substation Alpha (`sentinel-node-01`).
@@ -59,5 +54,4 @@ Target IP       Rule ID   Triggering Subsystem   Drop Count   Status
 ```
 
 The double-command trip frame was dropped in kernel driver memory; the virtual breaker never transitioned to open, preventing the simulated power outage.
-```
 

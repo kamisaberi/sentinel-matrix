@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/tutorials/running-matrix-in-esxi-headless.md`
-
-```markdown
 # Headless Deployment on Enterprise VMware ESXi Clusters
 
 For automated regression testing and CI/CD pipelines, `sentinel-matrix` can be deployed on a headless VMware ESXi virtual machine managed via SSH.
@@ -54,5 +49,4 @@ ssh -N -L 9443:10.240.0.10:9443 -L 9444:10.240.0.10:9444 user@esxi-guest-ip
 ```
 
 Open `https://localhost:9443` in your desktop browser to manage the range.
-```
 

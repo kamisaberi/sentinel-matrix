@@ -1,12 +1,3 @@
-### Part 11: Hands-On Simulation Walkthroughs & Tutorials (`tutorials/*`)
-
-This section contains 5 practical simulation walkthroughs for `sentinel-matrix`: the end-to-end closed-loop adaptation demonstration, simulating electrical substation blackout attacks (Industroyer), simulating hospital ransomware and DICOM exfiltration, importing custom Wireshark PCAPs, and deploying the testbed headlessly on enterprise VMware ESXi clusters.
-
----
-
-### File: `sentinel-matrix/docs/tutorials/full-closed-loop-walkthrough.md`
-
-```markdown
 # End-to-End Walkthrough: Attack $\to$ Mitigation $\to$ Retrain $\to$ Hot-Reload
 
 This tutorial demonstrates the complete closed-loop lifecycle of the Aryorithm ecosystem inside `sentinel-matrix`. Within **60 seconds**, an adversary launches a novel exploit, an edge appliance mitigates the attack in kernel space, Nexus curates training data, Forge retrains weights, and the edge fleet hot-reloads the updated model without packet loss.
@@ -68,5 +59,4 @@ make attack-modbus
 2. **At 15 Seconds:** The bottom status bar indicates: `DatasetCurator: Packaged 5,000 samples to /shared/datasets/`.
 3. **At 35 Seconds:** The TUI logs: `Forge: Candidate weights verified by Safety Gate (52/52). Compiled to ONNX Opset 17.`
 4. **At 45 Seconds:** Nexus promotes the model: `OTA Canary: Node 01 hot-reloaded to network_threat_v2.onnx (0.00ms downtime).`
-```
 

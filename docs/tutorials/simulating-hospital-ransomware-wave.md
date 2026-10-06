@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/tutorials/simulating-hospital-ransomware-wave.md`
-
-```markdown
 # Simulating a Hospital Enclave Ransomware & DICOM Exfiltration Wave
 
 This tutorial walks through testing multi-subsystem coordination under a composite attack scenario targeting **`sentinel-node-02` (`10.240.0.102`)**: simultaneous DICOM PACS patient data siphoning paired with a high-entropy ransomware encryption wave.
@@ -42,5 +37,4 @@ Open the Web Command Center:
 1. **IoT Security Card:** Subsystem `17_iot_sec` flags the unauthorized Calling AET (`ROGUE_CLIENT`), severing the DICOM association.
 2. **Antivirus Card:** Subsystem `07_epp_ngav` trips on the entropy burst ($7.98\text{ bits/byte}$), freezing simulated process write handles.
 3. Both attacks are mitigated in parallel without cross-subsystem deadlocks.
-```
 
