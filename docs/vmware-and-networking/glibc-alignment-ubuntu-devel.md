@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/vmware-and-networking/glibc-alignment-ubuntu-devel.md`
-
-```markdown
 # GLIBC 2.43 Host-Container Toolchain Alignment
 
 When building binaries on cutting-edge Linux host environments (e.g., Ubuntu 26.04 Devel running **GNU C Library `glibc 2.43`**), running those binaries inside standard stable container images (e.g., `ubuntu:24.04` with `glibc 2.39`) causes runtime linker failures:
@@ -57,5 +52,4 @@ ENTRYPOINT ["/usr/local/bin/sentinel"]
 ```
 
 Inheriting from `ubuntu:devel` ensures that the container's C runtime library matches `glibc 2.43`, allowing host-compiled binaries to execute inside containers without relinking.
-```
 

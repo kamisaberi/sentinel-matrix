@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/vmware-and-networking/internal-mtls-pki.md`
-
-```markdown
 # Internal Mesh mTLS PKI Generation (`scripts/gen_matrix_pki.sh`)
 
 All communication between the simulated edge nodes (`sentinel-node-01` through `node-03`) and the central command hub (`sentinel-nexus`) is authenticated via **Mutual TLS 1.3**.
@@ -68,5 +63,4 @@ echo "[+] Internal PKI generated successfully in ${CERT_DIR}."
 
 * **Shared Mount:** Mounted read-only (`:ro`) across all containers.
 * **Strict Validation:** If a node attempts connection with an invalid or expired certificate, `sentinel-nexus` rejects the gRPC handshake with code `UNAUTHENTICATED (16)`.
-```
 

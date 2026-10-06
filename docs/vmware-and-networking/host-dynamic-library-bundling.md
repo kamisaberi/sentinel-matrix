@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/vmware-and-networking/host-dynamic-library-bundling.md`
-
-```markdown
 # Dynamic Library Harvesting & Bundling (`shared/lib/`)
 
 `sentinel-nexus` and `blackbox-sentinel` link against specific shared libraries compiled on the host, including **`libabsl_synchronization`**, **`libre2`**, **`libgrpc++`**, and **`libprotobuf`**. 
@@ -59,5 +54,4 @@ In `docker-compose.yml`, the harvested directory is mounted read-only into `/usr
 ```
 
 This guarantees that every container resolves identical dependency versions to the host build environment.
-```
 

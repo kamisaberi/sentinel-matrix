@@ -1,12 +1,3 @@
-### Part 3: VMware & Network Engineering (`vmware-and-networking/*`)
-
-This section contains 6 technical engineering specifications detailing the networking and hypervisor solutions implemented in `sentinel-matrix`: resolving VMware subnet route collisions, operating eBPF in Generic SKB mode across virtual interfaces, emulating hardware identities, resolving GLIBC 2.43 toolchain divergence, harvesting host dynamic dependencies, and generating internal container mTLS credentials.
-
----
-
-### File: `sentinel-matrix/docs/vmware-and-networking/10-240-0-subnet-design.md`
-
-```markdown
 # Collision-Free Subnet Architecture: The `10.240.0.0/24` Design
 
 When running containerized network meshes inside virtualized Linux guests (such as VMware Workstation, Fusion, or ESXi), standard Docker network setups often conflict with host hypervisor routing tables.
@@ -72,6 +63,5 @@ Verify that the subnet does not conflict with host routes using `ip route`:
 ```bash
 ip route show | grep 10.240.0
 # Expected Output: 10.240.0.0/24 dev br-matrix_net proto kernel scope link src 10.240.0.1
-```
 ```
 

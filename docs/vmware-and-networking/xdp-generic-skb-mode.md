@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/vmware-and-networking/xdp-generic-skb-mode.md`
-
-```markdown
 # Running eBPF/XDP Over Virtual Interfaces (Generic SKB Mode)
 
 In physical bare-metal deployments, `blackbox-essential` attaches its in-kernel filter in **Native Driver Mode (`XDP_FLAGS_DRV_MODE`)** directly to physical NIC rings (e.g., `ixgbe`, `mlx5`). 
@@ -60,5 +55,4 @@ blackbox::XdpConfig get_matrix_xdp_config(const std::string& iface) {
 
 * **Real BPF Verifier Execution:** Bytecode passes through the full Linux in-kernel BPF verifier on the host kernel.
 * **Functional Parity:** The data plane executes the same map lookups, nanosecond TTL checks, and `XDP_DROP` instructions as on physical hardware.
-```
 

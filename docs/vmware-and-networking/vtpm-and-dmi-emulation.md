@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/vmware-and-networking/vtpm-and-dmi-emulation.md`
-
-```markdown
 # Hardware Identity Emulation: vTPM & DMI Serial Mapping
 
 `blackbox-sentinel` requires a verified hardware root of trust before arming its kernel mitigation filters. In containerized digital twins without physical discrete TPM chips, `sentinel-matrix` emulates **Tier 2 (vTPM)** and **Tier 3 (DMI Motherboard Hash)** identities.
@@ -36,5 +31,4 @@ swtpm socket \
 ```
 
 The resulting control socket is mapped into the container, exposing a functional `/dev/tpmrm0` interface that generates valid TPM 2.0 PCR quotes across PCR 0 and PCR 4.
-```
 

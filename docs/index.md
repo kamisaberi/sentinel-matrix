@@ -1,6 +1,3 @@
-### File: `sentinel-matrix/docs/index.md`
-
-```markdown
 # Sentinel-Matrix (`sentinel-matrix`)
 
 **Autonomous Cyber-Range Mesh, Digital Twin Simulator & OmniFlow Traffic Engine**  
@@ -57,5 +54,4 @@ It simulates a full enterprise and industrial critical infrastructure deployment
 3. **Hardware Library Harvesting:** Extracts and bundles host-compiled dynamic dependencies (`libabsl`, `libre2`, `libgrpc++`, `libprotobuf`) into `/shared/lib/` automatically via `make init`.
 4. **Authentic Binary Malware Replay:** Streams real packet payloads extracted from historical critical-infrastructure malware incidents, avoiding synthetic string-matching mocks.
 5. **Closed-Loop Adaptation Flywheel:** Validates the entire edge loop—from attack detection through in-kernel eBPF drop, uncertainty curation, MAE retraining, safety gating, and zero-downtime hot-reload—in under 60 seconds.
-```
 
