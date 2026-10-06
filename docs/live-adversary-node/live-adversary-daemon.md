@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/live-adversary-node/live-adversary-daemon.md`
-
-```markdown
 # Autonomous Adversary Daemon (`src/traffic/live_adversary_daemon.py`)
 
 The `live_adversary_daemon.py` script runs continuously inside `sentinel-adversary`. It cycles through automated attack phases—interleaving reconnaissance sweeps, SCADA overrides, and API bursts—to continuously test edge defenses.
@@ -79,6 +74,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
 ```
 

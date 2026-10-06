@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/live-adversary-node/custom-adversary-tooling.md`
-
-```markdown
 # Adding Custom Red-Team Tooling to `Dockerfile.adversary`
 
 Security researchers can extend `sentinel-adversary` with custom exploit frameworks, traffic blasters, or proprietary fuzzers.
@@ -47,6 +42,5 @@ Rebuild and restart the container:
 ```bash
 make build-adversary
 docker compose restart adversary
-```
 ```
 

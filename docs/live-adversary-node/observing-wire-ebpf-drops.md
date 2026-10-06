@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/live-adversary-node/observing-wire-ebpf-drops.md`
-
-```markdown
 # Real-Time Mitigation Verification: Open to Filtered Transition
 
 A key verification capability of `sentinel-matrix` is observing network port states transition from **`open`** to **`filtered`** under active attack conditions.
@@ -41,6 +36,5 @@ docker exec -it sentinel-node-01 sentinel --dump-drops
 ```text
 Target IP       Rule ID   Triggering Subsystem   Drop Count   TTL Left
 10.240.0.99     1802      18_cps_sec (Modbus)    42 pkts      58 seconds
-```
 ```
 

@@ -1,12 +1,3 @@
-### Part 6: Live Red-Team Adversary Node (`live-adversary-node/*`)
-
-This section contains 7 technical implementation guides detailing the active Red-Team adversary container in `sentinel-matrix`: the containerized attack workstation architecture, the autonomous attack loop daemon, live `nmap` port sweeps, live `mbpoll` SCADA coil overrides, high-velocity `curl` API fuzzing bursts, wire-level eBPF drop verification (ports transitioning from `open` to `filtered`), and custom adversary tooling integration.
-
----
-
-### File: `sentinel-matrix/docs/live-adversary-node/adversary-node-architecture.md`
-
-```markdown
 # Live Red-Team Adversary Node Architecture (`10.240.0.99`)
 
 In addition to playing back passive PCAP files, `sentinel-matrix` deploys an active, containerized Red-Team attacker node: **`sentinel-adversary`**, statically bound to **`10.240.0.99`** on the `10.240.0.0/24` network. 
@@ -43,5 +34,4 @@ Because the adversary executes against real network sockets:
 1. **Interactive State:** It initiates real three-way handshakes (`SYN` $\to$ `SYN-ACK` $\to$ `ACK`).
 2. **Immediate Feedback:** When `sentinel-node-01` detects an attack and adds `10.240.0.99` to `blocked_ip_map`, subsequent packets from the adversary receive zero response on the wire.
 3. **Observability:** Attack tools report connection timeouts or socket resets (`ECONNREFUSED` / `filtered`) in real time.
-```
 

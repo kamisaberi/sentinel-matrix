@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/live-adversary-node/mbpoll-scada-overrides.md`
-
-```markdown
 # Live Modbus Coil & Register Overrides via `mbpoll`
 
 Using the standard industrial utility `mbpoll`, the adversary attempts live write mutations against field controllers to evaluate Subsystem `18_cps_sec`.
@@ -36,5 +31,4 @@ Write failed: Connection timed out
 ```
 
 The connection times out because Subsystem `18_cps_sec` trapped the unauthorized coil override and executed `XDP_DROP` before the command reached the virtual PLC logic.
-```
 

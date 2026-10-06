@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/live-adversary-node/curl-api-abuse-bursts.md`
-
-```markdown
 # High-Velocity cURL API Abuse & SQL Injection Bursts
 
 The adversary targets the Web Command Center and REST endpoints on edge nodes using high-velocity HTTP request bursts and SQL injection strings to evaluate Subsystems `05_waf` and `10_bad`.
@@ -34,5 +29,4 @@ for i in range(50):
 * At Request 4, `05_waf` flags the repeated SQL syntax violation (`1 OR 1=1`).
 * The source IP `10.240.0.99` is added to `blocked_ip_map`.
 * Requests 5 through 50 time out immediately at the socket layer.
-```
 

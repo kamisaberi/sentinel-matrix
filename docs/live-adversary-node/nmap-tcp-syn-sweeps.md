@@ -1,8 +1,3 @@
----
-
-### File: `sentinel-matrix/docs/live-adversary-node/nmap-tcp-syn-sweeps.md`
-
-```markdown
 # Live `nmap -sS` TCP SYN Sweeps (MITRE T1046)
 
 The adversary executes live TCP SYN scans against edge nodes to simulate adversarial reconnaissance mapped to **MITRE ATT&CK T1046 (Network Service Discovery)**.
@@ -46,5 +41,4 @@ Nmap done: 1 IP address (1 host up) scanned in 2.12 seconds
 ```
 
 The transition to `filtered` provides direct visual confirmation that the kernel XDP drop gate engaged mid-scan.
-```
 
