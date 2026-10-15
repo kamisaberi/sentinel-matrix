@@ -200,3 +200,34 @@ chaos-latency:
 chaos-sever:
 	docker compose stop sentinel-edge-01
 	@echo -e "${YELLOW}[+] Node 01 severed. Check TUI/Web UI for instant 0ms OFFLINE transition.${RESET}"
+
+
+
+# -------------------------------------------------------------------
+# HUB ASSET INTEGRATION & SCENARIO MANAGEMENT
+# -------------------------------------------------------------------
+HUB_DIST_DIR ?= /home/kami/sentinel-hub/dist
+
+sync-hub-pcaps:
+	@echo "[+] Syncing certified malware PCAPs from sentinel-hub..."
+	@mkdir -p shared/datasets
+	@if [ -d "$(HUB_DIST_DIR)/pcaps" ]; then \
+		cp -v $(HUB_DIST_DIR)/pcaps/*.pcap shared/datasets/; \
+		echo "[SUCCESS] PCAPs synced to shared/datasets/"; \
+	else \
+		echo "[-] Error: sentinel-hub distribution not found at $(HUB_DIST_DIR)/pcaps"; \
+	fi
+
+scenario-pull:
+	@if [ -z "$(NAME)" ]; then \
+		echo "[-] Usage: make scenario-pull NAME=<power_grid_blackout | hospital_pacs_heist | refinery_disaster_triton>"; \
+		exit 1; \
+	fi
+	@echo "[*] Resolving scenario package: scenario_$(NAME).tar.gz..."
+	@mkdir -p configs/active_scenario
+	@if [ -f "$(HUB_DIST_DIR)/scenarios/scenario_$(NAME).tar.gz" ]; then \
+		tar -xzf "$(HUB_DIST_DIR)/scenarios/scenario_$(NAME).tar.gz" -C configs/active_scenario/; \
+		echo "[SUCCESS] Scenario '$(NAME)' unpacked into configs/active_scenario/"; \
+	else \
+		echo "[-] Error: Scenario archive scenario_$(NAME).tar.gz not found in $(HUB_DIST_DIR)/scenarios/"; \
+	fi
