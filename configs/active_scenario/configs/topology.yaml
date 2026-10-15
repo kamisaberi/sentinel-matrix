@@ -1,0 +1,13 @@
+scenario_name: "power_grid_blackout"
+network_subnet: "10.240.0.0/24"
+nodes:
+  - id: "matrix-nexus"
+    ip: "10.240.0.10"
+    role: "COMMAND_PLANE"
+  - id: "matrix-substation-01"
+    ip: "10.240.0.101"
+    role: "EDGE_SCADA_SUBSTATION"
+    target_protocol: "IEC_60870_5_104"
+  - id: "matrix-adversary"
+    ip: "10.240.0.99"
+    role: "RED_TEAM_ATTACKER"
