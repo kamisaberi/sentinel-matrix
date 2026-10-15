@@ -67,6 +67,15 @@ help:
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "chaos-sever" "Abruptly terminate Edge Node 01 to test 0ms graceful disconnect in Nexus"
 	@echo ""
 
+	@echo -e "${GREEN}${BOLD}7. HUB REGISTRY & CACHED ASSETS (PCAPs, Scenarios)${RESET}"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "sync-hub-pcaps" "Resolve & sync certified malware PCAPs from cache (/var/cache/sentinel)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-pull" "Unpack digital twin scenario bundle (NAME=<power_grid_blackout | ...>)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-run" "Execute attack automation script in the active unpacked scenario"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "attack-hub-industroyer2" "Replay certified Industroyer2 IEC-104 capture from Hub cache"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "attack-hub-triton" "Replay certified TRITON TriStation 1131 capture from Hub cache"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "attack-hub-s7" "Replay certified Siemens S7Comm Stuxnet capture from Hub cache"
+	@echo ""
+
 # ==============================================================================
 # TARGET IMPLEMENTATIONS
 # ==============================================================================
@@ -201,33 +210,79 @@ chaos-sever:
 	docker compose stop sentinel-edge-01
 	@echo -e "${YELLOW}[+] Node 01 severed. Check TUI/Web UI for instant 0ms OFFLINE transition.${RESET}"
 
-
-
-# -------------------------------------------------------------------
-# HUB ASSET INTEGRATION & SCENARIO MANAGEMENT
-# -------------------------------------------------------------------
-HUB_DIST_DIR ?= /home/kami/sentinel-hub/dist
+# ==============================================================================
+# 7. HUB ASSET INTEGRATION & CACHE-FIRST SCENARIO MANAGEMENT
+# ==============================================================================
+SENTINEL_CACHE_DIR ?= /var/cache/sentinel
+FALLBACK_HUB_DIR   ?= /home/kami/sentinel-hub/dist
 
 sync-hub-pcaps:
-	@echo "[+] Syncing certified malware PCAPs from sentinel-hub..."
+	@echo -e "${YELLOW}[*] Resolving certified malware PCAPs (Cache-First)...${RESET}"
 	@mkdir -p shared/datasets
-	@if [ -d "$(HUB_DIST_DIR)/pcaps" ]; then \
-		cp -v $(HUB_DIST_DIR)/pcaps/*.pcap shared/datasets/; \
-		echo "[SUCCESS] PCAPs synced to shared/datasets/"; \
+	@if [ -d "$(SENTINEL_CACHE_DIR)/pcaps" ] && [ "$$(ls -A $(SENTINEL_CACHE_DIR)/pcaps/*.pcap 2>/dev/null)" ]; then \
+		echo -e "    ${GREEN}--> [CACHE HIT] Syncing from $(SENTINEL_CACHE_DIR)/pcaps/...${RESET}"; \
+		cp -v $(SENTINEL_CACHE_DIR)/pcaps/*.pcap shared/datasets/; \
+	elif [ -d "$(FALLBACK_HUB_DIR)/pcaps" ]; then \
+		echo -e "    ${YELLOW}--> [LOCAL FALLBACK] Syncing from $(FALLBACK_HUB_DIR)/pcaps/...${RESET}"; \
+		mkdir -p $(SENTINEL_CACHE_DIR)/pcaps 2>/dev/null || true; \
+		cp $(FALLBACK_HUB_DIR)/pcaps/*.pcap $(SENTINEL_CACHE_DIR)/pcaps/ 2>/dev/null || true; \
+		cp -v $(FALLBACK_HUB_DIR)/pcaps/*.pcap shared/datasets/; \
 	else \
-		echo "[-] Error: sentinel-hub distribution not found at $(HUB_DIST_DIR)/pcaps"; \
+		echo -e "${RED}[-] Error: PCAPs not found in cache. Run 'sentinel-ctl pcap pull <slug>' first.${RESET}"; \
 	fi
+	@echo -e "${GREEN}[SUCCESS] PCAPs ready in shared/datasets/${RESET}"
 
 scenario-pull:
 	@if [ -z "$(NAME)" ]; then \
-		echo "[-] Usage: make scenario-pull NAME=<power_grid_blackout | hospital_pacs_heist | refinery_disaster_triton>"; \
+		echo -e "${RED}[-] Usage: make scenario-pull NAME=<power_grid_blackout | hospital_pacs_heist | refinery_disaster_triton>${RESET}"; \
 		exit 1; \
 	fi
-	@echo "[*] Resolving scenario package: scenario_$(NAME).tar.gz..."
+	@echo -e "${YELLOW}[*] Resolving scenario package: scenario_$(NAME).tar.gz...${RESET}"
 	@mkdir -p configs/active_scenario
-	@if [ -f "$(HUB_DIST_DIR)/scenarios/scenario_$(NAME).tar.gz" ]; then \
-		tar -xzf "$(HUB_DIST_DIR)/scenarios/scenario_$(NAME).tar.gz" -C configs/active_scenario/; \
-		echo "[SUCCESS] Scenario '$(NAME)' unpacked into configs/active_scenario/"; \
+	@SCENARIO_FILE="$(SENTINEL_CACHE_DIR)/scenarios/scenario_$(NAME).tar.gz"; \
+	if [ ! -f "$$SCENARIO_FILE" ] && [ -f "$(FALLBACK_HUB_DIR)/scenarios/scenario_$(NAME).tar.gz" ]; then \
+		mkdir -p $(SENTINEL_CACHE_DIR)/scenarios 2>/dev/null || true; \
+		cp "$(FALLBACK_HUB_DIR)/scenarios/scenario_$(NAME).tar.gz" "$$SCENARIO_FILE" 2>/dev/null || true; \
+	fi; \
+	if [ -f "$$SCENARIO_FILE" ]; then \
+		echo -e "    ${GREEN}--> [CACHE HIT] Unpacking $$SCENARIO_FILE...${RESET}"; \
+		tar -xzf "$$SCENARIO_FILE" -C configs/active_scenario/; \
+		echo -e "${GREEN}[SUCCESS] Scenario '$(NAME)' unpacked into configs/active_scenario/${RESET}"; \
+	elif [ -f "$(FALLBACK_HUB_DIR)/scenarios/scenario_$(NAME).tar.gz" ]; then \
+		echo -e "    ${YELLOW}--> [LOCAL FALLBACK] Unpacking $(FALLBACK_HUB_DIR)/scenarios/scenario_$(NAME).tar.gz...${RESET}"; \
+		tar -xzf "$(FALLBACK_HUB_DIR)/scenarios/scenario_$(NAME).tar.gz" -C configs/active_scenario/; \
+		echo -e "${GREEN}[SUCCESS] Scenario '$(NAME)' unpacked into configs/active_scenario/${RESET}"; \
 	else \
-		echo "[-] Error: Scenario archive scenario_$(NAME).tar.gz not found in $(HUB_DIST_DIR)/scenarios/"; \
+		echo -e "${RED}[-] Error: Scenario archive scenario_$(NAME).tar.gz not found in cache.${RESET}"; \
+		exit 1; \
 	fi
+
+scenario-run:
+	@if [ ! -f "configs/active_scenario/scripts/run_attack.sh" ]; then \
+		echo -e "${RED}[-] Error: No active scenario loaded. Run 'make scenario-pull NAME=...' first.${RESET}"; \
+		exit 1; \
+	fi
+	@echo -e "${YELLOW}[*] Executing active scenario attack script...${RESET}"
+	@bash configs/active_scenario/scripts/run_attack.sh
+
+# Certified Replays from Hub Cache
+attack-hub-industroyer2: sync-hub-pcaps
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /shared/datasets/industroyer2_substation.pcap \
+		--node Edge-Substation-01 \
+		--tactic T0855 \
+		--name "Certified Industroyer2 IEC-104 Substation Breaker Trip"
+
+attack-hub-triton: sync-hub-pcaps
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /shared/datasets/triton_trisis_sis.pcap \
+		--node Edge-Hospital-PACS-02 \
+		--tactic T0843 \
+		--name "Certified TRITON / Trisis TriStation 1131 Safety Override"
+
+attack-hub-s7: sync-hub-pcaps
+	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
+		--pcap /shared/datasets/stuxnet_s7comm_injected.pcap \
+		--node Edge-Refinery-PLC-03 \
+		--tactic T0831 \
+		--name "Certified Siemens S7Comm Stuxnet Ladder Logic Injection"
