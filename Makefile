@@ -135,8 +135,9 @@ live-scada:
 	docker compose exec adversary mbpoll -m tcp -a 1 -r 105 -t 0 10.240.0.101 1
 
 live-api:
-	docker compose exec adversary curl -v -X POST http://10.240.0.101:8443/api/v1/auth/login -d '{"user":"admin","token":"test"}'
+	docker compose exec adversary curl -v -X POST http://10.240.0.10:9443/api/v1/threats/broadcast -H "Content-Type: application/json" -d '{"ip":"198.51.100.99"}'
 
+	
 # PCAP Dataset Tools
 download-pcaps:
 	python3 tools/download_real_pcaps.py
