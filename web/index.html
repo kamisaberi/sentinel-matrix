@@ -1,156 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <title>Sentinel Nexus | Autonomous Fleet Command Plane</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aryorithm Sentinel Nexus | Sovereign Fleet Command Center</title>
+    <!-- 100% Zero-CDN Local Air-Gapped Styling -->
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/topology_map.css">
-
 </head>
+<body class="dark-theme">
 
-<body>
-    <header class="navbar">
-        <div class="brand">
-            <span class="logo-text">SENTINEL<strong>NEXUS</strong></span>
-            <span class="badge tier-badge">TIER 6 FLEET GRID</span>
-        </div>
-        <div class="system-status">
-            <span class="pulse-dot"></span>
-            <span id="fleet-summary-text">Fleet: Synchronizing...</span>
-        </div>
-    </header>
+    <!-- Centered Fixed-Width Boxed Frame -->
+    <div class="boxed-frame">
 
-    <main class="container">
-        <!-- Top Statistics Cards -->
-        <section class="stat-grid">
-            <div class="card stat-card">
-                <span class="label">ACTIVE APPLIANCES</span>
-                <div class="value" id="val-nodes">0</div>
-                <span class="subtext">TPM 2.0 Hardware Attested</span>
+        <!-- Top Navigation Bar -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="brand-logo-hex"></div>
+                <div class="brand-text">
+                    <span class="brand-title">ARYORITHM SENTINEL NEXUS</span>
+                    <span class="brand-subtitle">FLEET COMMAND PLANE &middot; SUB-50MS DEFENSE GRID</span>
+                </div>
             </div>
-            <div class="card stat-card">
-                <span class="label">KERNEL DROPS (eBPF)</span>
-                <div class="value accent" id="val-drops">0</div>
-                <span class="subtext">&lt; 1.0 ms Mitigation SLA</span>
+
+            <!-- Navigation Tabs -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-tab="tab-topology">FLEET TOPOLOGY</button>
+                <button class="nav-tab" data-tab="tab-extensions">EXTENSIONS &amp; .SPKG</button>
+                <button class="nav-tab" data-tab="tab-pipeline">PIPELINE DAG</button>
+                <button class="nav-tab" data-tab="tab-threats">MITRE ATT&amp;CK</button>
+                <button class="nav-tab" data-tab="tab-ota">CANARY OTA</button>
+                <button class="nav-tab" data-tab="tab-compliance">COMPLIANCE</button>
+            </nav>
+
+            <div class="nav-status">
+                <div class="status-pill status-pill-airgap">
+                    <span class="dot pulse-green"></span>
+                    <span class="status-text">AIR-GAPPED SOVEREIGN</span>
+                </div>
+                <div class="status-pill status-pill-nodes">
+                    <span id="active-node-count">3</span> NODES
+                </div>
             </div>
-            <div class="card stat-card">
-                <span class="label">FORGE CANDIDATE SAMPLES</span>
-                <div class="value warning" id="val-samples">0</div>
-                <span class="subtext">Active Continuous Learning</span>
+        </header>
+
+        <!-- Global KPI Ribbon -->
+        <section class="kpi-ribbon">
+            <div class="kpi-card">
+                <span class="kpi-label">GLOBAL FLEET THROUGHPUT</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value" id="kpi-eps">1,250,000</span>
+                    <span class="kpi-unit">EPS</span>
+                </div>
+                <span class="kpi-sub">AF_XDP UMEM Zero-Copy Active</span>
             </div>
-            <div class="card stat-card">
-                <span class="label">ACTIVE ONNX MODEL</span>
-                <div class="value info" id="val-model">Loading...</div>
-                <span class="subtext" id="val-model-stage">Stage: FLEET_WIDE</span>
+            <div class="kpi-card">
+                <span class="kpi-label">DRIVER MITIGATION SLA</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value text-cyan" id="kpi-mitigation-sla">0.84</span>
+                    <span class="kpi-unit">µs</span>
+                </div>
+                <span class="kpi-sub">In-Kernel eBPF CO-RE Drop</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">FAST-PATH REFLEX LATENCY</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value text-green" id="kpi-reflex-latency">88</span>
+                    <span class="kpi-unit">ns</span>
+                </div>
+                <span class="kpi-sub">Tier A Native C++20 Dissector</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">COLLECTIVE DEFENSE FANOUT</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value text-purple" id="kpi-fanout-speed">38.4</span>
+                    <span class="kpi-unit">ms</span>
+                </div>
+                <span class="kpi-sub">Sub-50ms Fleet gRPC SLA</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">FAULT ISOLATION STATUS</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value text-green" id="kpi-quarantine-status">SECURE</span>
+                </div>
+                <span class="kpi-sub" id="kpi-quarantine-sub">0 Plugins Quarantined</span>
             </div>
         </section>
 
-        <!-- Main Workspace -->
-        <div class="main-columns">
-            <!-- Left: Fleet Node Matrix -->
-            <section class="card node-section">
-                <div class="card-header">
-                    <h2>CONNECTED SENTINEL APPLIANCES</h2>
-                    <span class="refresh-note">Auto-refresh: 2s</span>
-                </div>
-                <div class="table-container">
-                    <table class="nexus-table">
-                        <thead>
-                            <tr>
-                                <th>Node ID</th>
-                                <th>Site</th>
-                                <th>Hostname</th>
-                                <th>Status</th>
-                                <th>CPU / Temp</th>
-                                <th>eBPF Drops</th>
-                                <th>Mitigation Latency</th>
-                            </tr>
-                        </thead>
-                        <tbody id="node-table-body">
-                            <tr>
-                                <td colspan="7" class="empty-state">Awaiting appliance heartbeats via gRPC...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+        <!-- Master Viewports -->
+        <main class="dashboard-viewport">
 
-            <!-- Right: Interactive Controls -->
-            <section class="action-column">
-                <!-- Collective Defense Tool -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>COLLECTIVE DEFENSE INJECTOR</h3>
+            <!-- TAB 1: FLEET TOPOLOGY -->
+            <div class="tab-pane active" id="tab-topology">
+                <div class="pane-split">
+                    <div class="canvas-container">
+                        <canvas id="topologyCanvas"></canvas>
+                        <div class="canvas-overlay-controls">
+                            <button class="btn-ctrl" id="btn-zoom-in">+</button>
+                            <button class="btn-ctrl" id="btn-zoom-out">-</button>
+                            <button class="btn-ctrl" id="btn-reset-view">&#8635;</button>
+                        </div>
                     </div>
-                    <p class="card-desc">Injects a zero-day IoC into all edge nodes' eBPF <code>blocked_ip_map</code>
-                        within 50ms.</p>
-                    <div class="input-group">
-                        <input type="text" id="broadcast-ip" placeholder="Attacker IP (e.g. 192.168.1.100)">
-                        <button class="btn btn-danger" onclick="broadcastThreat()">Broadcast Drop</button>
+                    <div class="side-panel">
+                        <div class="panel-header">
+                            <h3>ACTIVE FLEET ENCLAVES</h3>
+                            <span class="badge badge-cyan" id="fleet-enclave-count">3 ENCLAVES</span>
+                        </div>
+                        <div class="enclave-list" id="enclave-list">
+                            <!-- Populated dynamically by fleet_topology.js -->
+                        </div>
+                        <div class="panel-header mt-4">
+                            <h3>REAL-TIME eBPF DROP LOGS</h3>
+                        </div>
+                        <div class="drop-log-feed" id="drop-log-feed">
+                            <!-- Populated by SSE Streamer -->
+                        </div>
                     </div>
-                    <div id="broadcast-result" class="console-feedback"></div>
                 </div>
+            </div>
 
-                <!-- Model OTA Canary Controls -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>MODEL OTA & CANARY STAGING</h3>
-                    </div>
-                    <p class="card-desc">Continuous retraining deployment pipeline from <code>xinfer-forge</code>.</p>
-                    <div class="ota-btn-row">
-                        <button class="btn btn-outline" onclick="stageModel()">1. Stage v2 (Shadow)</button>
-                        <button class="btn btn-warning" onclick="advanceModel()">2. Advance (5% Canary)</button>
-                        <button class="btn btn-danger" onclick="rollbackModel()">Emergency Rollback</button>
-                    </div>
-                    <div id="ota-status-log" class="console-feedback"></div>
-                </div>
-            </section>
-            <!-- MITRE ATT&CK Heatmap Section -->
-            <section class="card" style="margin-top: 1.5rem;">
-                <div class="card-header">
-                    <h2>AGGREGATED MITRE ATT&CK TACTICAL HEATMAP</h2>
-                    <span class="refresh-note">Cross-Fleet Event Correlation</span>
-                </div>
-                <div id="mitre-matrix-container" class="mitre-grid">
-                    <div class="empty-state">Loading MITRE telemetry...</div>
-                </div>
-            </section>
+            <!-- TAB 2: EXTENSIONS & .SPKG -->
+            <div class="tab-pane" id="tab-extensions">
+                <div class="extensions-layout">
+                    
+                    <div class="spkg-upload-col">
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3>FLEET PACKAGE DEPLOYER (.spkg)</h3>
+                                <span class="badge badge-purple">Ed25519 SEALED</span>
+                            </div>
+                            <p class="panel-desc">Drag and drop a unified Sentinel Package (.spkg) to verify Merkle integrity, audit source code, and broadcast fleet-wide via gRPC.</p>
+                            
+                            <div class="dropzone" id="spkg-dropzone">
+                                <input type="file" id="spkg-file-input" accept=".spkg" class="file-input-hidden">
+                                <div class="dropzone-content">
+                                    <div class="dropzone-icon">&#10515;</div>
+                                    <span class="dropzone-title">Drop .spkg package here</span>
+                                    <span class="dropzone-sub">or click to browse local filesystem</span>
+                                </div>
+                            </div>
 
-            <section class="card topology-card">
-                <div class="card-header">
-                    <h2>FLEET TOPOLOGY & HARDWARE ATTESTATION GRAPH</h2>
-                    <span class="refresh-note">Real-Time Radial Link Matrix</span>
-                </div>
-                <div class="topology-canvas-container">
-                    <canvas id="topology-canvas"></canvas>
-                </div>
-            </section>
-            <!-- REAL-TIME XAI FEATURE ATTRIBUTION & AUDIT PROOF SECTION -->
-            <section class="card xai-section" style="margin-top: 1.5rem;">
-                <div class="card-header">
-                    <div>
-                        <h2>REAL-TIME XAI FEATURE ATTRIBUTION & AUDIT PROOF</h2>
-                        <span class="subtext">IEC 62443 Clause 5.4 & CMMC 2.0 Physical Anomaly Justifications (< 80ns
-                                MRD Decomposition)</span>
-                    </div>
-                    <span class="refresh-note">Auto-Sync: Live</span>
-                </div>
+                            <div class="package-preview hidden" id="package-preview">
+                                <div class="preview-header">
+                                    <span class="preview-badge" id="prev-tier-badge">TIER B: RUST WASM</span>
+                                    <span class="preview-filename" id="prev-filename">s7_guard.spkg</span>
+                                </div>
+                                <div class="preview-details">
+                                    <div class="detail-row">
+                                        <span class="lbl">Package ID:</span>
+                                        <span class="val font-mono" id="prev-id">-</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="lbl">Target Protocol:</span>
+                                        <span class="val" id="prev-proto">-</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="lbl">Latency SLA:</span>
+                                        <span class="val text-cyan" id="prev-sla">-</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="lbl">Merkle Signature:</span>
+                                        <span class="val text-green" id="prev-sig">VERIFIED AUTHENTIC</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="lbl">Auditable Source:</span>
+                                        <button class="btn-link" id="btn-view-source">View Embedded Source</button>
+                                    </div>
+                                </div>
 
-                <div id="xai-container" class="xai-grid">
-                    <div class="empty-state">Awaiting cyber-physical anomaly events...</div>
+                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">
+                                    BROADCAST PACKAGE FLEET-WIDE (&lt; 50ms)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="extensions-table-col">
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3>ACTIVE EXTENSIONS RUNNING ACROSS FLEET</h3>
+                                <div class="header-actions">
+                                    <button class="btn-sm" id="btn-refresh-ext">Refresh Status</button>
+                                </div>
+                            </div>
+
+                            <div class="tier-meters-grid">
+                                <div class="tier-meter-card">
+                                    <div class="tier-meter-top">
+                                        <span class="tier-tag tier-tag-native">TIER A: NATIVE C++20</span>
+                                        <span class="tier-speed text-green">88 ns (p50)</span>
+                                    </div>
+                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 15%;"></div></div>
+                                    <span class="tier-desc">Line-rate OT dissectors &bull; POSIX SEGV isolated</span>
+                                </div>
+                                <div class="tier-meter-card">
+                                    <div class="tier-meter-top">
+                                        <span class="tier-tag tier-tag-lua">TIER C: LUAJIT C-FFI</span>
+                                        <span class="tier-speed text-yellow">350 ns (p50)</span>
+                                    </div>
+                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 35%;"></div></div>
+                                    <span class="tier-desc">Dynamic zero-day heuristics &bull; &lt; 2ms hot-swap</span>
+                                </div>
+                                <div class="tier-meter-card">
+                                    <div class="tier-meter-top">
+                                        <span class="tier-tag tier-tag-wasm">TIER B: RUST WASM3</span>
+                                        <span class="tier-speed text-cyan">1,240 ns (p50)</span>
+                                    </div>
+                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 55%;"></div></div>
+                                    <span class="tier-desc">Linear memory sandbox &bull; 50 µs watchdog trap</span>
+                                </div>
+                            </div>
+
+                            <table class="data-table mt-4" id="table-extensions">
+                                <thead>
+                                    <tr>
+                                        <th>PACKAGE IDENTIFIER</th>
+                                        <th>TIER</th>
+                                        <th>PROTOCOL</th>
+                                        <th>LATENCY</th>
+                                        <th>FRAMES PROCESSED</th>
+                                        <th>KERNEL DROPS</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="extensions-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
-            </section>
+            </div>
+
+            <!-- TAB 3: PIPELINE DAG -->
+            <div class="tab-pane" id="tab-pipeline">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>HIERARCHICAL SENSOR-TO-MODEL ROUTING DAG (configs/model_routes.yaml)</h3>
+                        <span class="badge badge-cyan">4-STAGE CASCADE PIPELINE</span>
+                    </div>
+                    <p class="panel-desc">Visual execution flow of incoming wire frames: Line-Rate .spkg Reflex Gate &rarr; Protocol Normalizer &rarr; Subsystem Neural Chain &rarr; Cross-Modal Sensor Fusion.</p>
+                    
+                    <div class="dag-canvas-container">
+                        <canvas id="pipelineDagCanvas"></canvas>
+                    </div>
+
+                    <div class="cross-modal-card mt-4">
+                        <div class="cm-header">
+                            <span class="cm-icon">&#9888;</span>
+                            <span class="cm-title">ACTIVE CROSS-MODAL FUSION INTERLOCK: FUSION-SCADA-THERMAL-DISCREPANCY</span>
+                            <span class="badge badge-green">ARMED &amp; GUARDED</span>
+                        </div>
+                        <p class="cm-desc">Detects Stuxnet-style HMI blinding attacks. If Cyber Modbus packet states report <span class="text-green">NORMAL</span> but Substation Thermal Camera detects temperature <span class="text-red">&gt; 120.0&deg;C</span>, Sentinel automatically cuts physical pump power via GPIO Pin 17 and blocks the attacker IP at driver line rate.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: MITRE ATT&CK -->
+            <div class="tab-pane" id="tab-threats">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>DYNAMIC MITRE ATT&amp;CK FOR ICS TACTICAL HEATMAP</h3>
+                        <span class="badge badge-cyan">REAL-TIME TELEMETRY FEED</span>
+                    </div>
+                    <div id="mitre-grid" class="mitre-grid"></div>
+                </div>
+            </div>
+
+            <!-- TAB 5: CANARY OTA -->
+            <div class="tab-pane" id="tab-ota">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>OVER-THE-AIR (OTA) MODEL ROLLOUT &amp; ROLLBACKGUARD</h3>
+                        <span class="badge badge-purple" id="ota-current-stage">FLEET-WIDE (100%)</span>
+                    </div>
+                    <div id="ota-controls" class="ota-controls"></div>
+                </div>
+            </div>
+
+            <!-- TAB 6: COMPLIANCE -->
+            <div class="tab-pane" id="tab-compliance">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>STATUTORY COMPLIANCE &amp; HARDWARE AUDIT VAULT</h3>
+                    </div>
+                    <div class="compliance-actions">
+                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171 Report</button>
+                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial Report</button>
+                    </div>
+                    <pre class="report-preview-box" id="report-output">Select a compliance standard above to compile a signed audit report...</pre>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer Bar Inside Boxed Layout -->
+        <footer class="boxed-footer">
+            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical Defense</span>
+            <span class="text-muted font-mono">v1.0.0-core-ebpf</span>
+        </footer>
+
+    </div><!-- End .boxed-frame -->
+
+    <!-- Source Code Audit Modal -->
+    <div class="modal-overlay hidden" id="source-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-source-title">AUDITABLE SOURCE CODE PREVIEW</h3>
+                    <span class="text-muted text-xs">Plain-text source code extracted directly from .spkg Merkle container</span>
+                </div>
+                <button class="btn-close" id="btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <pre><code class="code-preview font-mono" id="modal-source-code">// Source code will load here...</code></pre>
+            </div>
+            <div class="modal-footer">
+                <span class="text-xs text-green">&#10004; Verified matching SHA-256 Merkle root in container</span>
+                <button class="btn-sm" id="btn-close-modal-footer">Close Inspector</button>
+            </div>
         </div>
-    </main>
+    </div>
 
-    <script src="js/app.js"></script>
+    <!-- Vanilla ES6 Scripts -->
     <script src="js/ws_client.js"></script>
-
-    <script src="js/threat_matrix.js"></script>
     <script src="js/fleet_topology.js"></script>
-
-
+    <script src="js/threat_matrix.js"></script>
+    <script src="js/ota_manager.js"></script>
+    <script src="js/extensions_manager.js"></script>
+    <script src="js/pipeline_dag.js"></script>
+    <script src="js/app.js"></script>
 </body>
-
 </html>
