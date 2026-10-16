@@ -52,6 +52,8 @@ services:
       - shared-datasets:/var/lib/sentinel-nexus/forge_datasets
       - shared-logs:/var/log/sentinel-nexus
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
     environment:
       - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - VMWARE_ENVIRONMENT=true
@@ -115,10 +117,12 @@ services:
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
 
     environment:
       - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - NODE_IDENTIFIER=Edge-Substation-01
+      - SITE_IDENTIFIER=Edge-Substation-01
       - NODE_SITE=PowerGrid-North-01
       - PRIMARY_BACKEND=INTEL_OPENVINO
       - VMWARE_VIRTUAL_NIC=true
@@ -152,16 +156,17 @@ services:
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
     environment:
       - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - NODE_IDENTIFIER=Edge-Hospital-PACS-02
+      - SITE_IDENTIFIER=Edge-Hospital-PACS-02
       - NODE_SITE=Metro-General-Hospital
       - PRIMARY_BACKEND=NVIDIA_TENSORRT
       - VMWARE_VIRTUAL_NIC=true
       - XDP_MODE=SKB
       - NEXUS_HOST=10.240.0.10
       - NEXUS_PORT=50051
-
 
   # ============================================================================
   # TIER 3: EDGE APPLIANCE 03 (Refinery SCADA - RKNN Emulation)
@@ -189,16 +194,17 @@ services:
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
     environment:
       - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - NODE_IDENTIFIER=Edge-Refinery-PLC-03
+      - SITE_IDENTIFIER=Edge-Refinery-PLC-03
       - NODE_SITE=Coastal-Refinery-ZoneB
       - PRIMARY_BACKEND=ROCKCHIP_RKNN
       - VMWARE_VIRTUAL_NIC=true
       - XDP_MODE=SKB
       - NEXUS_HOST=10.240.0.10
       - NEXUS_PORT=50051
-
 
   # ============================================================================
   # SYNTHETIC WIRE TRAFFIC & ATTACK WAVE GENERATOR
@@ -220,6 +226,7 @@ services:
       - ./configs:/configs:ro
       - ./src:/app/src:ro
       - shared-logs:/var/log/traffic-gen
+      - ./shared/datasets:/shared/datasets:ro
     environment:
       - NEXUS_ENDPOINT=10.240.0.10:50051
       - TARGET_NODES=10.240.0.101,10.240.0.102,10.240.0.103
@@ -240,7 +247,6 @@ services:
     networks:
       sentinel-grid-net:
         ipv4_address: 10.240.0.60
-
     volumes:
       - ./src/monitor:/app/src/monitor:ro
     environment:
@@ -249,7 +255,6 @@ services:
       - TERM=xterm-256color
     stdin_open: true
     tty: true
-
 
   # ============================================================================
   # LIVE ADVERSARY & ACTIVE WIRE THREAT CONTAINER (10.240.0.99)
