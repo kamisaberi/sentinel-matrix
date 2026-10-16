@@ -218,19 +218,21 @@ FALLBACK_HUB_DIR   ?= /home/kami/sentinel-hub/dist
 
 sync-hub-pcaps:
 	@echo -e "${YELLOW}[*] Resolving certified malware PCAPs (Cache-First)...${RESET}"
-	@mkdir -p shared/datasets
+	@mkdir -p shared/datasets configs/pcaps
 	@if [ -d "$(SENTINEL_CACHE_DIR)/pcaps" ] && [ "$$(ls -A $(SENTINEL_CACHE_DIR)/pcaps/*.pcap 2>/dev/null)" ]; then \
 		echo -e "    ${GREEN}--> [CACHE HIT] Syncing from $(SENTINEL_CACHE_DIR)/pcaps/...${RESET}"; \
+		cp -v $(SENTINEL_CACHE_DIR)/pcaps/*.pcap configs/pcaps/; \
 		cp -v $(SENTINEL_CACHE_DIR)/pcaps/*.pcap shared/datasets/; \
 	elif [ -d "$(FALLBACK_HUB_DIR)/pcaps" ]; then \
 		echo -e "    ${YELLOW}--> [LOCAL FALLBACK] Syncing from $(FALLBACK_HUB_DIR)/pcaps/...${RESET}"; \
 		mkdir -p $(SENTINEL_CACHE_DIR)/pcaps 2>/dev/null || true; \
 		cp $(FALLBACK_HUB_DIR)/pcaps/*.pcap $(SENTINEL_CACHE_DIR)/pcaps/ 2>/dev/null || true; \
+		cp -v $(FALLBACK_HUB_DIR)/pcaps/*.pcap configs/pcaps/; \
 		cp -v $(FALLBACK_HUB_DIR)/pcaps/*.pcap shared/datasets/; \
 	else \
 		echo -e "${RED}[-] Error: PCAPs not found in cache. Run 'sentinel-ctl pcap pull <slug>' first.${RESET}"; \
 	fi
-	@echo -e "${GREEN}[SUCCESS] PCAPs ready in shared/datasets/${RESET}"
+	@echo -e "${GREEN}[SUCCESS] PCAPs ready in configs/pcaps/ and shared/datasets/${RESET}"
 
 scenario-pull:
 	@if [ -z "$(NAME)" ]; then \
@@ -265,24 +267,24 @@ scenario-run:
 	@echo -e "${YELLOW}[*] Executing active scenario attack script...${RESET}"
 	@bash configs/active_scenario/scripts/run_attack.sh
 
-# Certified Replays from Hub Cache
+# Certified Replays from Hub Cache (Using /configs/pcaps container mount path)
 attack-hub-industroyer2: sync-hub-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
-		--pcap /shared/datasets/industroyer2_substation.pcap \
+		--pcap /configs/pcaps/industroyer2_substation.pcap \
 		--node Edge-Substation-01 \
 		--tactic T0855 \
 		--name "Certified Industroyer2 IEC-104 Substation Breaker Trip"
 
 attack-hub-triton: sync-hub-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
-		--pcap /shared/datasets/triton_trisis_sis.pcap \
+		--pcap /configs/pcaps/triton_trisis_sis.pcap \
 		--node Edge-Hospital-PACS-02 \
 		--tactic T0843 \
 		--name "Certified TRITON / Trisis TriStation 1131 Safety Override"
 
 attack-hub-s7: sync-hub-pcaps
 	docker compose exec traffic-gen python3 /app/src/traffic/pcap_streamer.py \
-		--pcap /shared/datasets/stuxnet_s7comm_injected.pcap \
+		--pcap /configs/pcaps/stuxnet_s7comm_injected.pcap \
 		--node Edge-Refinery-PLC-03 \
 		--tactic T0831 \
 		--name "Certified Siemens S7Comm Stuxnet Ladder Logic Injection"
