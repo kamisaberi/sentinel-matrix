@@ -10,6 +10,8 @@
 #include <signal.h>
 #include <stdbool.h>
 
+#include "plant_ode.h"
+
 #define DEFAULT_MODBUS_PORT 502
 #define DEFAULT_S7COMM_PORT 102
 #define DEFAULT_IEC104_PORT 2404
@@ -27,36 +29,40 @@ typedef struct
     pthread_mutex_t lock;
     uint16_t holding_registers[100]; // 40001 - 40100
     uint8_t coils[16];
-    float temperature_celsius;
-    float vibration_rpm;
-    float pressure_psi;
+    plant_state_t plant_state;
+    plant_control_t plant_control;
 } plc_state_t;
 
 static plc_state_t g_plc_state;
 static volatile bool g_running = true;
 
 // ----------------------------------------------------------------------------
-// Physics Simulation Loop (Updates registers dynamically in real-time)
+// Physics Simulation Loop (4th-Order Runge-Kutta RK4 ODE Integration)
 // ----------------------------------------------------------------------------
 void *physics_simulation_thread(void *arg)
 {
     (void)arg;
+    double dt = 0.1; // 100ms integration step
+
     while (g_running)
     {
         pthread_mutex_lock(&g_plc_state.lock);
 
-        // Auto-increment thermal sensor state slightly to simulate dynamic physical operation
-        g_plc_state.temperature_celsius += 0.1f;
-        if (g_plc_state.temperature_celsius > 125.0f)
-        {
-            g_plc_state.temperature_celsius = 85.0f; // Reset loop
-        }
+        // Read control inputs u(t) driven by PLC coils/registers
+        g_plc_state.plant_control.heater_power = g_plc_state.coils[0] ? 1.0 : 0.2;
+        g_plc_state.plant_control.pump_speed = (double)g_plc_state.holding_registers[0] / 1000.0;
+        g_plc_state.plant_control.valve_opening = g_plc_state.coils[1] ? 0.8 : 0.1;
 
-        // Map thermal float state directly into Modbus Holding Register 40002
-        g_plc_state.holding_registers[1] = (uint16_t)g_plc_state.temperature_celsius;
+        // Perform RK4 numerical integration step: dx/dt = f(x, u)
+        plant_ode_step_rk4(&g_plc_state.plant_state, &g_plc_state.plant_control, dt);
+
+        // Map physical states directly into Modbus Holding Registers
+        g_plc_state.holding_registers[1] = (uint16_t)g_plc_state.plant_state.temperature;
+        g_plc_state.holding_registers[2] = (uint16_t)g_plc_state.plant_state.vibration;
+        g_plc_state.holding_registers[3] = (uint16_t)g_plc_state.plant_state.pressure;
 
         pthread_mutex_unlock(&g_plc_state.lock);
-        sleep(1);
+        usleep(100000); // 100ms loop
     }
     return NULL;
 }
@@ -104,7 +110,6 @@ void *modbus_server_thread(void *arg)
         ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer), 0);
         if (bytes_read > 7)
         {
-            // Modbus MBAP Header Response Generation
             uint8_t unit_id = buffer[6];
             uint8_t func_code = buffer[7];
 
@@ -112,22 +117,31 @@ void *modbus_server_thread(void *arg)
 
             if (func_code == 0x03)
             { // Read Holding Registers
-                uint8_t response[13] = {
-                    buffer[0], buffer[1], // Transaction ID
-                    0x00, 0x00,           // Protocol ID
-                    0x00, 0x07,           // Length
+                uint8_t response[15] = {
+                    buffer[0], buffer[1],
+                    0x00, 0x00,
+                    0x00, 0x09,
                     unit_id,
-                    0x03, // Function Code
-                    0x04, // Byte count
+                    0x03,
+                    0x06, // 6 bytes
                     (uint8_t)(g_plc_state.holding_registers[0] >> 8),
                     (uint8_t)(g_plc_state.holding_registers[0] & 0xFF),
                     (uint8_t)(g_plc_state.holding_registers[1] >> 8),
-                    (uint8_t)(g_plc_state.holding_registers[1] & 0xFF)};
+                    (uint8_t)(g_plc_state.holding_registers[1] & 0xFF),
+                    (uint8_t)(g_plc_state.holding_registers[2] >> 8),
+                    (uint8_t)(g_plc_state.holding_registers[2] & 0xFF)};
                 send(client_fd, response, sizeof(response), 0);
             }
             else if (func_code == 0x05 || func_code == 0x06)
-            { // Write Single Coil/Register
-                // Echo back query as Modbus ACK
+            {
+                if (func_code == 0x05)
+                {
+                    uint16_t coil_addr = (buffer[8] << 8) | buffer[9];
+                    if (coil_addr < 16)
+                    {
+                        g_plc_state.coils[coil_addr] = (buffer[10] == 0xFF);
+                    }
+                }
                 send(client_fd, buffer, bytes_read, 0);
             }
 
@@ -177,8 +191,7 @@ void *s7comm_server_thread(void *arg)
         uint8_t buffer[256];
         ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer), 0);
         if (bytes_read > 4 && buffer[0] == 0x03)
-        { // COTP CR Connection Request
-            // Standard COTP Connection Confirm (CC) packet response
+        {
             uint8_t cotp_cc[] = {0x03, 0x00, 0x00, 0x0B, 0x06, 0xD0, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00};
             send(client_fd, cotp_cc, sizeof(cotp_cc), 0);
         }
@@ -226,8 +239,7 @@ void *iec104_server_thread(void *arg)
         uint8_t buffer[256];
         ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer), 0);
         if (bytes_read >= 6 && buffer[0] == 0x68)
-        { // APCI Start Byte
-            // Standard IEC-104 STARTDT CON (Start Data Transfer Confirm)
+        {
             uint8_t iec_ack[] = {0x68, 0x04, 0x0B, 0x00, 0x00, 0x00};
             send(client_fd, iec_ack, sizeof(iec_ack), 0);
         }
@@ -238,9 +250,6 @@ void *iec104_server_thread(void *arg)
     return NULL;
 }
 
-// ----------------------------------------------------------------------------
-// Main CLI Parser & Entry Point
-// ----------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
     plc_config_t config;
@@ -249,7 +258,6 @@ int main(int argc, char *argv[])
     config.iec104_port = DEFAULT_IEC104_PORT;
     strncpy(config.config_path, "configs/plc_register_map.json", sizeof(config.config_path));
 
-    // Parse CLI Flags
     int opt;
     while ((opt = getopt(argc, argv, "p:s:i:c:h")) != -1)
     {
@@ -274,14 +282,14 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Initialize state
     pthread_mutex_init(&g_plc_state.lock, NULL);
-    g_plc_state.holding_registers[0] = 500; // Default Setpoint
-    g_plc_state.holding_registers[1] = 85;  // Default Thermal Value (85 deg C)
-    g_plc_state.temperature_celsius = 85.0f;
+    g_plc_state.holding_registers[0] = 500;
+    g_plc_state.plant_state.temperature = 85.0;
+    g_plc_state.plant_state.vibration = 1200.0;
+    g_plc_state.plant_state.pressure = 100.0;
 
     printf("===============================================================\n");
-    printf("        ARYORITHM SENTINEL-MATRIX: DYNAMIC MOCK PLC TWIN\n");
+    printf("  ARYORITHM SENTINEL-MATRIX: RK4 ODE PHYSICAL PLANT PLC TWIN\n");
     printf("===============================================================\n");
     printf("[+] Configuration Path : %s\n", config.config_path);
     printf("[+] Modbus TCP Port    : %d\n", config.modbus_port);
