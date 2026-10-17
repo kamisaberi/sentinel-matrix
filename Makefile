@@ -25,8 +25,9 @@ help:
 	@echo -e "  make ${CYAN}<command>${RESET}  or  sudo make ${CYAN}<command>${RESET}\n"
 	
 	@echo -e "${GREEN}${BOLD}1. GRID LIFECYCLE & CORE OPS${RESET}"
-	@printf "  ${CYAN}%-22s${RESET} %s\n" "init" "Prepare shared directories, certs, and auto-bundle host dynamic libs"
-	@printf "  ${CYAN}%-22s${RESET} %s\n" "build" "Build/rebuild all container images (Nexus, Sentinel, Forge, Adversary)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "init" "Prepare shared directories, certs, build mock_plc, and auto-bundle libs"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "build" "Build/rebuild all container images (Nexus, Sentinel, Forge, Adversary, PLC)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "mock-plc" "Compile dynamic C mock PLC twin binary (mock_plc.c -> shared/bin/mock_plc)"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "up" "Launch entire 8-node simulation mesh in background (10.240.0.0/24)"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "down" "Gracefully stop and dismantle the simulation grid"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "restart" "Perform full teardown and clean launch of the grid"
@@ -80,12 +81,23 @@ help:
 # TARGET IMPLEMENTATIONS
 # ==============================================================================
 
+mock-plc:
+	@if [ -f mock_plc.c ]; then \
+		echo -e "${YELLOW}[*] Compiling dynamic mock PLC twin (mock_plc.c)...${RESET}"; \
+		mkdir -p shared/bin; \
+		gcc -O3 -pthread mock_plc.c -o shared/bin/mock_plc; \
+		echo -e "${GREEN}[+] Successfully compiled shared/bin/mock_plc${RESET}"; \
+	else \
+		echo -e "${RED}[-] Error: mock_plc.c not found.${RESET}"; \
+	fi
+
 init:
-	@mkdir -p shared/certs shared/datasets shared/models shared/logs/nexus shared/logs/nodes shared/logs/forge shared/bin shared/proto shared/lib web
+	@mkdir -p shared/certs shared/datasets shared/models shared/logs/nexus shared/logs/nodes shared/logs/forge shared/bin shared/proto shared/lib web configs
 	@if [ ! -f .env ]; then cp .env.example .env; fi
 	@if [ -f /home/kami/sentinel-nexus/build/sentinel-nexus ]; then cp /home/kami/sentinel-nexus/build/sentinel-nexus shared/bin/; fi
 	@if [ -f /home/kami/sentinel-nexus/build/nexus-ctl ]; then cp /home/kami/sentinel-nexus/build/nexus-ctl shared/bin/; fi
 	@if [ -f /home/kami/blackbox-sentinel/build/sentinel ]; then cp /home/kami/blackbox-sentinel/build/sentinel shared/bin/; fi
+	@if [ -f mock_plc.c ]; then gcc -O3 -pthread mock_plc.c -o shared/bin/mock_plc 2>/dev/null || true; fi
 	@if [ -d /home/kami/sentinel-nexus/web ]; then cp -r /home/kami/sentinel-nexus/web/* web/ 2>/dev/null || true; fi
 	@if [ -d /home/kami/sentinel-nexus/proto ]; then cp /home/kami/sentinel-nexus/proto/*.proto shared/proto/ 2>/dev/null || true; fi
 	@chmod +x shared/certs/gen_matrix_certs.sh 2>/dev/null || true
@@ -93,16 +105,17 @@ init:
 	@ldd shared/bin/sentinel-nexus shared/bin/sentinel 2>/dev/null | grep "=> /" | awk '{print $$3}' | grep -vE "libc\.so|libm\.so|libpthread|ld-linux|libdl" | sort -u | xargs -I {} cp -L -u {} shared/lib/ 2>/dev/null || true
 	@echo -e "${GREEN}[+] Environment initialized and host artifacts synchronized.${RESET}"
 
-build: init
+build: init mock-plc
 	docker compose build
 
-up: init
+up: init mock-plc
 	docker compose up -d --build
 	@echo ""
 	@echo -e "${GREEN}${BOLD}[+] Sentinel-Matrix is actively executing inside VMware!${RESET}"
 	@echo -e "    • Web Command Center  : ${CYAN}http://localhost:9443${RESET}"
 	@echo -e "    • gRPC Nexus Service  : ${CYAN}10.240.0.10:50051${RESET}"
 	@echo -e "    • Live Adversary Node : ${CYAN}10.240.0.99${RESET}"
+	@echo -e "    • Live Mock PLC Twin  : ${CYAN}10.240.0.150 (502, 102, 2404)${RESET}"
 	@echo -e "    • Real-Time TUI       : ${CYAN}make tui${RESET}"
 	@echo ""
 
