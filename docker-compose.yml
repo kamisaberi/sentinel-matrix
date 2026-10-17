@@ -4,8 +4,8 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.240.0.0/24
-          gateway: 10.240.0.1
+        - subnet: ${SUBNET_PREFIX:-10.240.0}.0/24
+          gateway: ${SUBNET_PREFIX:-10.240.0}.1
 
 volumes:
   shared-models:
@@ -41,13 +41,14 @@ services:
     privileged: true
     networks:
       sentinel-grid-net:
-        ipv4_address: 10.240.0.10
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.10
     ports:
       - "${NEXUS_GRPC_PORT:-50051}:50051"
       - "${NEXUS_REST_PORT:-9443}:9443"
       - "${NEXUS_STREAM_PORT:-9444}:9444"
     volumes:
       - ./configs/matrix.yaml:/opt/sentinel-nexus/configs/nexus.yaml:ro
+      - ./configs:/opt/sentinel-nexus/configs:ro
       - shared-models:/opt/sentinel-nexus/models
       - shared-datasets:/var/lib/sentinel-nexus/forge_datasets
       - shared-logs:/var/log/sentinel-nexus
@@ -59,11 +60,32 @@ services:
       - VMWARE_ENVIRONMENT=true
       - NEXUS_ENV=simulation
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9443/api/v1/fleet/nodes"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9443/api/v1/fleet/nodes" ]
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 10s
+
+  # ============================================================================
+  # DIGITAL TWIN HARDWARE: MOCK PLC (SCADA Industrial Protocols Listener)
+  # ============================================================================
+  mock-plc:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.plc
+    container_name: matrix-mock-plc
+    hostname: plc.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.150
+    ports:
+      - "${MODBUS_PORT:-502}:502"
+      - "${S7COMM_PORT:-102}:102"
+      - "${IEC104_PORT:-2404}:2404"
+    volumes:
+      - ./configs:/opt/sentinel-matrix/configs:ro
+    command: [ "/usr/local/bin/mock_plc", "-c", "/opt/sentinel-matrix/configs/plc_register_map.json" ]
 
   # ============================================================================
   # TIER 4: XINFER FORGE (Continuous Learning Daemon)
@@ -80,13 +102,13 @@ services:
         condition: service_healthy
     networks:
       sentinel-grid-net:
-        ipv4_address: 10.240.0.20
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.20
     volumes:
       - shared-datasets:/var/lib/sentinel-nexus/forge_datasets:ro
       - shared-models:/opt/sentinel-nexus/models:rw
       - shared-logs:/var/log/xinfer-forge
     environment:
-      - NEXUS_REST_URL=http://10.240.0.10:9443
+      - NEXUS_REST_URL=http://${SUBNET_PREFIX:-10.240.0}.10:9443
       - NEXUS_DATASET_DIR=/var/lib/sentinel-nexus/forge_datasets
       - NEXUS_MODELS_DIR=/opt/sentinel-nexus/models
       - VMWARE_CONTAINER=true
@@ -111,9 +133,10 @@ services:
         condition: service_healthy
     networks:
       sentinel-grid-net:
-        ipv4_address: 10.240.0.101
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.101
     volumes:
       - ./configs/nodes/node_01_substation_alpha.yaml:/etc/sentinel/sentinel.yaml:ro
+      - ./configs:/etc/sentinel/configs:ro
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
@@ -127,7 +150,7 @@ services:
       - PRIMARY_BACKEND=INTEL_OPENVINO
       - VMWARE_VIRTUAL_NIC=true
       - XDP_MODE=SKB
-      - NEXUS_HOST=10.240.0.10
+      - NEXUS_HOST=${SUBNET_PREFIX:-10.240.0}.10
       - NEXUS_PORT=50051
 
   # ============================================================================
@@ -150,9 +173,10 @@ services:
         condition: service_healthy
     networks:
       sentinel-grid-net:
-        ipv4_address: 10.240.0.102
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.102
     volumes:
       - ./configs/nodes/node_02_hospital_pacs.yaml:/etc/sentinel/sentinel.yaml:ro
+      - ./configs:/etc/sentinel/configs:ro
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
@@ -165,7 +189,7 @@ services:
       - PRIMARY_BACKEND=NVIDIA_TENSORRT
       - VMWARE_VIRTUAL_NIC=true
       - XDP_MODE=SKB
-      - NEXUS_HOST=10.240.0.10
+      - NEXUS_HOST=${SUBNET_PREFIX:-10.240.0}.10
       - NEXUS_PORT=50051
 
   # ============================================================================
@@ -188,9 +212,10 @@ services:
         condition: service_healthy
     networks:
       sentinel-grid-net:
-        ipv4_address: 10.240.0.103
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.103
     volumes:
       - ./configs/nodes/node_03_refinery_plc.yaml:/etc/sentinel/sentinel.yaml:ro
+      - ./configs:/etc/sentinel/configs:ro
       - shared-models:/etc/sentinel/models:rw
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
@@ -203,7 +228,7 @@ services:
       - PRIMARY_BACKEND=ROCKCHIP_RKNN
       - VMWARE_VIRTUAL_NIC=true
       - XDP_MODE=SKB
-      - NEXUS_HOST=10.240.0.10
+      - NEXUS_HOST=${SUBNET_PREFIX:-10.240.0}.10
       - NEXUS_PORT=50051
 
   # ============================================================================
@@ -221,15 +246,15 @@ services:
         condition: service_healthy
     networks:
       sentinel-grid-net:
-        ipv4_address: 10.240.0.50
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.50
     volumes:
       - ./configs:/configs:ro
       - ./src:/app/src:ro
       - shared-logs:/var/log/traffic-gen
       - ./shared/datasets:/shared/datasets:ro
     environment:
-      - NEXUS_ENDPOINT=10.240.0.10:50051
-      - TARGET_NODES=10.240.0.101,10.240.0.102,10.240.0.103
+      - NEXUS_ENDPOINT=${SUBNET_PREFIX:-10.240.0}.10:50051
+      - TARGET_NODES=${SUBNET_PREFIX:-10.240.0}.101,${SUBNET_PREFIX:-10.240.0}.102,${SUBNET_PREFIX:-10.240.0}.103
       - VMWARE_SIMULATION_MODE=true
 
   # ============================================================================
@@ -246,12 +271,12 @@ services:
         condition: service_healthy
     networks:
       sentinel-grid-net:
-        ipv4_address: 10.240.0.60
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.60
     volumes:
       - ./src/monitor:/app/src/monitor:ro
     environment:
-      - NEXUS_REST_URL=http://10.240.0.10:9443
-      - NEXUS_STREAM_URL=http://10.240.0.10:9444
+      - NEXUS_REST_URL=http://${SUBNET_PREFIX:-10.240.0}.10:9443
+      - NEXUS_STREAM_URL=http://${SUBNET_PREFIX:-10.240.0}.10:9444
       - TERM=xterm-256color
     stdin_open: true
     tty: true
@@ -271,11 +296,11 @@ services:
         condition: service_healthy
     networks:
       sentinel-grid-net:
-        ipv4_address: 10.240.0.99
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.99
     volumes:
       - ./configs:/configs:ro
       - ./src:/app/src:ro
       - shared-logs:/var/log/adversary
     environment:
-      - NEXUS_REST_URL=http://10.240.0.10:9443
-      - TARGET_NODES=10.240.0.101,10.240.0.102,10.240.0.103
+      - NEXUS_REST_URL=http://${SUBNET_PREFIX:-10.240.0}.10:9443
+      - TARGET_NODES=${SUBNET_PREFIX:-10.240.0}.101,${SUBNET_PREFIX:-10.240.0}.102,${SUBNET_PREFIX:-10.240.0}.103
