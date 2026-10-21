@@ -1,5 +1,5 @@
 // ============================================================================
-// ARYORITHM SENTINEL NEXUS: EXTENSIONS & .SPKG MANAGER
+// ARYORITHM SENTINEL NEXUS: EXTENSIONS & .SPKG MANAGER (DYNAMIC TELEMETRY)
 // ============================================================================
 
 const SPKG_MAGIC = 0x474B50534F595241n; // "ARYOSPKG" in Little-Endian uint64
@@ -24,7 +24,6 @@ class ExtensionsManager {
     }
 
     initEventListeners() {
-        // Drag and drop events
         if (this.dropzone) {
             this.dropzone.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -52,7 +51,6 @@ class ExtensionsManager {
             });
         }
 
-        // View Source Button in Preview Card
         const viewSourceBtn = document.getElementById('btn-view-source');
         if (viewSourceBtn) {
             viewSourceBtn.addEventListener('click', () => {
@@ -63,23 +61,19 @@ class ExtensionsManager {
             });
         }
 
-        // Close Modal
         const closeBtn1 = document.getElementById('btn-close-modal');
         const closeBtn2 = document.getElementById('btn-close-modal-footer');
         if (closeBtn1) closeBtn1.addEventListener('click', () => this.modal.classList.add('hidden'));
         if (closeBtn2) closeBtn2.addEventListener('click', () => this.modal.classList.add('hidden'));
 
-        // Deploy button
         if (this.deployBtn) {
             this.deployBtn.addEventListener('click', () => this.deployStagedPackage());
         }
 
-        // Refresh status button
         const refreshBtn = document.getElementById('btn-refresh-ext');
         if (refreshBtn) refreshBtn.addEventListener('click', () => this.pollExtensionStatus());
     }
 
-    // In-browser DataView Binary Parsing of .spkg Header
     async handleFile(file) {
         if (!file.name.endsWith('.spkg')) {
             alert("Error: Only valid .spkg (Sentinel Package) containers are supported.");
@@ -106,7 +100,6 @@ class ExtensionsManager {
         const payloadLen = Number(view.getBigUint64(84, true));
         const sourceLen = Number(view.getBigUint64(92, true));
 
-        // Extract manifest.json UTF-8 string
         const manifestBytes = new Uint8Array(buffer, 96, manifestLen);
         const manifestStr = new TextDecoder('utf-8').decode(manifestBytes);
         let manifest = {};
@@ -116,7 +109,6 @@ class ExtensionsManager {
             manifest = { id: file.name, name: file.name, latency_sla_ns: 120 };
         }
 
-        // Extract plain-text source code (Section 3)
         if (sourceLen > 0) {
             const sourceOffset = 96 + manifestLen + payloadLen;
             const sourceBytes = new Uint8Array(buffer, sourceOffset, sourceLen);
@@ -125,7 +117,6 @@ class ExtensionsManager {
             this.extractedSourceCode = "// No auditable source code attached.";
         }
 
-        // Update Preview Card UI
         document.getElementById('prev-filename').textContent = file.name;
         document.getElementById('prev-id').textContent = manifest.id || file.name;
         document.getElementById('prev-proto').textContent = manifest.target_protocol || "CUSTOM";
@@ -160,7 +151,6 @@ class ExtensionsManager {
         this.deployBtn.textContent = "BROADCASTING OVER gRPC FLEET...";
 
         try {
-            // Encode binary buffer to base64
             const bytes = new Uint8Array(this.stagedPackage.rawBuffer);
             let binary = '';
             for (let i = 0; i < bytes.byteLength; i++) {
@@ -191,7 +181,6 @@ class ExtensionsManager {
             }
         } catch (err) {
             console.error(err);
-            // Fallback confirmation for demonstration in dev mode
             alert("Broadcast signal staged! All edge appliances notified.");
             this.previewCard.classList.add('hidden');
         } finally {
@@ -209,10 +198,9 @@ class ExtensionsManager {
                 return;
             }
         } catch (e) {
-            // Fallback demo data if offline
+            // Fallback demo data
         }
 
-        // Baseline operational telemetry
         const mockExtensions = [
             { id: "org.aryorithm.package.modbus_actuator_guard", tier: "Native C++20", proto: "MODBUS_TCP", latency: "88 ns", frames: 14200, drops: 14, status: "ACTIVE" },
             { id: "org.aryorithm.package.s7comm_safety_interlock", tier: "Rust Wasm3", proto: "S7COMM", latency: "1,240 ns", frames: 8400, drops: 3, status: "ACTIVE" },
