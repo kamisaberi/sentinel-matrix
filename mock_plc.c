@@ -10,8 +10,11 @@
 #include <signal.h>
 #include <stdbool.h>
 
+#if __has_include("plant_ode.h")
 #include "plant_ode.h"
-
+#elif __has_include("include/plant_ode.h")
+#include "include/plant_ode.h"
+#endif
 #define DEFAULT_MODBUS_PORT 502
 #define DEFAULT_S7COMM_PORT 102
 #define DEFAULT_IEC104_PORT 2404
