@@ -3,13 +3,15 @@
 Sentinel-Matrix: Visual Threat Blueprint Compiler
 Compiles visual node-and-edge JSON graphs from app.aryorithm.com into canonical model_routes.yaml.
 Supports offline files or live fetch from backend.aryorithm.com using ~/.sentinel/credentials.json.
+Uses standard library urllib (zero external pip dependencies required).
 """
 
 import os
 import sys
 import json
 import argparse
-import requests
+import urllib.request
+import urllib.error
 
 
 def load_credentials() -> dict:
@@ -32,16 +34,22 @@ def fetch_remote_blueprint(blueprint_id: str, hub_url: str = None) -> dict:
     creds = load_credentials()
     api_key = creds.get("api_key", "")
     base_url = hub_url or creds.get("hub_url", "https://backend.aryorithm.com/api/v1")
-    
+
     endpoint = f"{base_url.rstrip('/')}/blueprints/{blueprint_id}"
     print(f"[*] Fetching remote visual blueprint from: {endpoint}")
-    
-    headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
-    r = requests.get(endpoint, headers=headers, timeout=5)
-    if r.status_code == 200:
-        return r.json()
-    else:
-        raise RuntimeError(f"HTTP {r.status_code} fetching remote blueprint: {r.text}")
+
+    req = urllib.request.Request(endpoint)
+    if api_key:
+        req.add_header("Authorization", f"Bearer {api_key}")
+
+    try:
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = response.read().decode('utf-8')
+            return json.loads(data)
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"HTTP {e.code} fetching remote blueprint: {e.reason}")
+    except Exception as e:
+        raise RuntimeError(f"Failed fetching remote blueprint: {e}")
 
 
 def compile_blueprint_to_yaml(blueprint_json: dict) -> str:
@@ -148,7 +156,6 @@ def main():
         with open(args.input, "r") as f:
             blueprint_data = json.load(f)
     else:
-        # Default fallback to sample substation blueprint
         default_sample = "configs/sample_substation_blueprint.json"
         if not os.path.exists(default_sample):
             default_sample = "../configs/sample_substation_blueprint.json"
