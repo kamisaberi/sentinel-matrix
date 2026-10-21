@@ -28,7 +28,7 @@ volumes:
       device: ${PWD}/shared/logs
 
 services:
-  # ============================================================================
+# ============================================================================
   # TIER 6: SENTINEL NEXUS (Master Command Plane)
   # ============================================================================
   nexus:
@@ -47,7 +47,6 @@ services:
       - "${NEXUS_REST_PORT:-9443}:9443"
       - "${NEXUS_STREAM_PORT:-9444}:9444"
     volumes:
-      - ./configs/matrix.yaml:/opt/sentinel-nexus/configs/nexus.yaml:ro
       - ./configs:/opt/sentinel-nexus/configs:ro
       - shared-models:/opt/sentinel-nexus/models
       - shared-datasets:/var/lib/sentinel-nexus/forge_datasets
@@ -60,12 +59,11 @@ services:
       - VMWARE_ENVIRONMENT=true
       - NEXUS_ENV=simulation
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9443/api/v1/fleet/nodes" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9443/api/v1/fleet/nodes"]
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 10s
-
   # ============================================================================
   # DIGITAL TWIN HARDWARE: MOCK PLC (SCADA Industrial Protocols Listener)
   # ============================================================================
