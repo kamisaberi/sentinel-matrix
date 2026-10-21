@@ -85,10 +85,8 @@ mock-plc:
 	@if [ -f mock_plc.c ]; then \
 		echo -e "${YELLOW}[*] Compiling dynamic mock PLC twin (mock_plc.c)...${RESET}"; \
 		mkdir -p shared/bin; \
-		gcc -O3 -pthread mock_plc.c -o shared/bin/mock_plc; \
+		gcc -O3 -pthread -Iinclude -I. mock_plc.c src/plant_ode.c -o shared/bin/mock_plc; \
 		echo -e "${GREEN}[+] Successfully compiled shared/bin/mock_plc${RESET}"; \
-	else \
-		echo -e "${RED}[-] Error: mock_plc.c not found.${RESET}"; \
 	fi
 
 init:
@@ -97,7 +95,7 @@ init:
 	@if [ -f /home/kami/sentinel-nexus/build/sentinel-nexus ]; then cp /home/kami/sentinel-nexus/build/sentinel-nexus shared/bin/; fi
 	@if [ -f /home/kami/sentinel-nexus/build/nexus-ctl ]; then cp /home/kami/sentinel-nexus/build/nexus-ctl shared/bin/; fi
 	@if [ -f /home/kami/blackbox-sentinel/build/sentinel ]; then cp /home/kami/blackbox-sentinel/build/sentinel shared/bin/; fi
-	@if [ -f mock_plc.c ]; then gcc -O3 -pthread mock_plc.c -o shared/bin/mock_plc 2>/dev/null || true; fi
+	@if [ -f mock_plc.c ]; then gcc -O3 -pthread -Iinclude -I. mock_plc.c src/plant_ode.c -o shared/bin/mock_plc 2>/dev/null || true; fi
 	@if [ -d /home/kami/sentinel-nexus/web ]; then cp -r /home/kami/sentinel-nexus/web/* web/ 2>/dev/null || true; fi
 	@if [ -d /home/kami/sentinel-nexus/proto ]; then cp /home/kami/sentinel-nexus/proto/*.proto shared/proto/ 2>/dev/null || true; fi
 	@chmod +x shared/certs/gen_matrix_certs.sh 2>/dev/null || true
@@ -105,6 +103,8 @@ init:
 	@ldd shared/bin/sentinel-nexus shared/bin/sentinel 2>/dev/null | grep "=> /" | awk '{print $$3}' | grep -vE "libc\.so|libm\.so|libpthread|ld-linux|libdl" | sort -u | xargs -I {} cp -L -u {} shared/lib/ 2>/dev/null || true
 	@echo -e "${GREEN}[+] Environment initialized and host artifacts synchronized.${RESET}"
 
+
+	
 build: init mock-plc
 	docker compose build
 
