@@ -1,0 +1,15 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    net-tools \
+    iproute2 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY shared/bin/mock_plc /usr/local/bin/mock_plc
+RUN chmod +x /usr/local/bin/mock_plc
+
+EXPOSE 502 102 2404
+
+CMD ["/usr/local/bin/mock_plc", "-c", "/opt/sentinel-matrix/configs/plc_register_map.json"]
