@@ -1,0 +1,135 @@
+{
+    "blueprint_id": "bp_substation_alpha_v2",
+    "name": "Substation Alpha SCADA & Thermal Protection Blueprint",
+    "description": "Visual pipeline connecting Modbus TCP ingress to native C++ guard, OpenVINO INT8 model, and Stuxnet HMI blinding interlock",
+    "version": "1.0.0",
+    "target_sites": [
+        "PowerGrid-North-01",
+        "Substation-Alpha"
+    ],
+    "nodes": [
+        {
+            "id": "node_sensor_1",
+            "type": "SENSOR_INGRESS",
+            "label": "Modbus TCP Ingress (Port 502)",
+            "position": {
+                "x": 100,
+                "y": 200
+            },
+            "config": {
+                "sensor_id": "Substation-Modbus-01",
+                "sensor_type": "SCADA_MODBUS_TCP",
+                "driver_mode": "AF_XDP_UMEM",
+                "port": 502,
+                "transport": "tcp"
+            }
+        },
+        {
+            "id": "node_reflex_1",
+            "type": "SPKG_REFLEX_GATE",
+            "label": "Modbus Actuator Guard (Tier A: Native C++)",
+            "position": {
+                "x": 400,
+                "y": 200
+            },
+            "config": {
+                "package_id": "org.aryorithm.package.modbus_actuator_guard",
+                "plugin_id": "modbus_actuator_guard.so",
+                "owner_subsystem": "18_cps_sec",
+                "execution_mode": "CASCADE_SHORT_CIRCUIT",
+                "latency_sla_ns": 120
+            }
+        },
+        {
+            "id": "node_ai_1",
+            "type": "SILICON_MODEL",
+            "label": "OpenVINO Tabular MAE (INT8 QDQ)",
+            "position": {
+                "x": 750,
+                "y": 200
+            },
+            "config": {
+                "model_id": "network_threat_int8.onnx",
+                "silicon_target": "INTEL_OPENVINO",
+                "format": "ONNX",
+                "precision": "INT8",
+                "latency_budget_ns": 20000,
+                "threshold_drop": 0.85,
+                "xai_explainer": "MRD_XAI"
+            }
+        },
+        {
+            "id": "node_fusion_1",
+            "type": "CROSS_MODAL_FUSION",
+            "label": "Stuxnet Anti-Blinding Interlock",
+            "position": {
+                "x": 1100,
+                "y": 200
+            },
+            "config": {
+                "correlation_id": "STUXNET_THERMAL_BLINDING",
+                "cyber_sensor_id": "Substation-Modbus-01",
+                "cyber_max_score": 0.20,
+                "physical_sensor_id": "101",
+                "physical_min_temp": 120.0,
+                "action": "KERNEL_DROP_AND_ISOLATE"
+            }
+        },
+        {
+            "id": "node_action_drop",
+            "type": "ACTION_KERNEL_DROP",
+            "label": "In-Kernel eBPF Drop (< 0.84 µs SLA)",
+            "position": {
+                "x": 1400,
+                "y": 320
+            },
+            "config": {
+                "action": "KERNEL_DROP_AND_ISOLATE"
+            }
+        }
+    ],
+    "edges": [
+        {
+            "id": "e1",
+            "source_node": "node_sensor_1",
+            "source_port": "out",
+            "target_node": "node_reflex_1",
+            "target_port": "in"
+        },
+        {
+            "id": "e2",
+            "source_node": "node_reflex_1",
+            "source_port": "pass",
+            "target_node": "node_ai_1",
+            "target_port": "in"
+        },
+        {
+            "id": "e3",
+            "source_node": "node_reflex_1",
+            "source_port": "drop",
+            "target_node": "node_action_drop",
+            "target_port": "in"
+        },
+        {
+            "id": "e4",
+            "source_node": "node_ai_1",
+            "source_port": "pass",
+            "target_node": "node_fusion_1",
+            "target_port": "cyber_in"
+        },
+        {
+            "id": "e5",
+            "source_node": "node_ai_1",
+            "source_port": "anomaly",
+            "target_node": "node_action_drop",
+            "target_port": "in"
+        },
+        {
+            "id": "e6",
+            "source_node": "node_fusion_1",
+            "source_port": "breach",
+            "target_node": "node_action_drop",
+            "target_port": "in"
+        }
+    ]
+}
