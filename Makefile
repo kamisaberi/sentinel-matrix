@@ -323,3 +323,9 @@ sim-finetune:
 	@MODE_VAL=$${MODE:-air-gapped}; \
 	echo -e "${CYAN}[*] Launching Extensible Fine-Tuning Simulation ($$MODE_VAL mode)...${RESET}"; \
 	python3 tools/scenario_engine.py load scenarios/finetune_simulation.yaml --mode $$MODE_VAL
+
+
+build-device-runtime:
+	@echo -e "${CYAN}[*] Building Universal Parameterized Device Container (8 Archetypes)...${RESET}"
+	docker build -t sentinel-matrix/device-runtime:latest -f docker/Dockerfile.device_runtime .
+	@echo -e "${GREEN}[+] Successfully built sentinel-matrix/device-runtime:latest${RESET}"
