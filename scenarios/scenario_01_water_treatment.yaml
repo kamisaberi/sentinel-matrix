@@ -1,0 +1,48 @@
+# ==============================================================================
+# ARYORITHM SCENARIO 01: MUNICIPAL WATER TREATMENT & PUMPING GRID
+# ==============================================================================
+scenario:
+  name: "water_treatment_plant"
+  description: "3-Stage Water Treatment Facility: Raw Water Intake, Filtration & Chlorine Dosing"
+  base_subnet: "10.240.0"
+
+nodes:
+  # 1. Raw Water Intake Pump PLC (Modbus TCP)
+  - name: "matrix-plc-water-intake"
+    hostname: "intake-plc.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.151"
+    ports: ["15501:502"]
+    environment:
+      PLC_ROLE: "RAW_WATER_PUMP"
+      TARGET_PORT: "502"
+    command: ["python3", "-c", "import socket; s=socket.socket(); s.bind(('0.0.0.0', 502)); s.listen(5); print('[+] Raw Water Intake PLC listening on 502'); [s.accept() for _ in iter(int, 1)]"]
+
+  # 2. Rapid Gravity Sand Filtration PLC (Modbus TCP)
+  - name: "matrix-plc-water-filter"
+    hostname: "filter-plc.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.152"
+    ports: ["15502:502"]
+    environment:
+      PLC_ROLE: "SAND_GRAVITY_FILTER"
+      TARGET_PORT: "502"
+    command: ["python3", "-c", "import socket; s=socket.socket(); s.bind(('0.0.0.0', 502)); s.listen(5); print('[+] Filtration PLC listening on 502'); [s.accept() for _ in iter(int, 1)]"]
+
+  # 3. Chemical Dosing & Disinfection PLC (Modbus TCP)
+  - name: "matrix-plc-water-chlorine"
+    hostname: "chlorine-plc.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.153"
+    ports: ["15503:502"]
+    environment:
+      PLC_ROLE: "CHLORINE_DOSING_PUMP"
+      TARGET_PORT: "502"
+    command: ["python3", "-c", "import socket; s=socket.socket(); s.bind(('0.0.0.0', 502)); s.listen(5); print('[+] Chlorine Dosing PLC listening on 502'); [s.accept() for _ in iter(int, 1)]"]
+
+  # 4. Central Operator SCADA HMI Poller
+  - name: "matrix-water-hmi"
+    hostname: "hmi.water.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.154"
+    command: ["python3", "-c", "import time; print('[+] Water SCADA HMI Poller running'); [time.sleep(60) for _ in iter(int, 1)]"]
