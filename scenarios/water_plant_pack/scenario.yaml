@@ -1,0 +1,30 @@
+version: "1.0"
+scenario:
+  name: "water_plant_pack"
+  description: "3-Stage Water Treatment Facility"
+
+networks:
+  water_scada_net:
+    driver: bridge
+    subnet: "10.210.0.0/24"
+    gateway: "10.210.0.1"
+    internal: true   # Strict Air-Gap
+
+nodes:
+  - name: "water-intake-plc"
+    hostname: "intake.water.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      water_scada_net:
+        ip: "10.210.0.10"
+    ports: ["15501:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Water-Intake-PLC"]
+
+  - name: "water-chlorine-plc"
+    hostname: "chlorine.water.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      water_scada_net:
+        ip: "10.210.0.20"
+    ports: ["15502:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Chlorine-Dosing-PLC"]
