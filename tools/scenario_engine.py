@@ -29,7 +29,7 @@ def compile_scenario_to_compose(scenario_path: Path) -> tuple[str, Path]:
     scenario_name = scenario_meta.get("name", scenario_path.stem)
     out_compose_file = CACHE_DIR / f"docker-compose.{scenario_name}.yml"
 
-    # 1. Compile Networks (Custom subnets, gateways, air-gaps)
+    # 1. Compile Networks
     networks_def = {}
     raw_networks = data.get("networks", {})
     for net_name, net_conf in raw_networks.items():
@@ -49,20 +49,24 @@ def compile_scenario_to_compose(scenario_path: Path) -> tuple[str, Path]:
             }
         networks_def[net_name] = net_entry
 
-    # 2. Compile Named Volumes (shared-models, shared-datasets, shared-logs, etc.)
+    # 2. Compile Named Volumes
     volumes_def = {}
     raw_volumes = data.get("volumes", {})
     for vol_name, vol_conf in raw_volumes.items():
         if isinstance(vol_conf, dict):
+            # Evaluate ${PWD} if present in volume bind opts
+            if "driver_opts" in vol_conf and "device" in vol_conf["driver_opts"]:
+                dev_path = vol_conf["driver_opts"]["device"]
+                dev_path = dev_path.replace("${PWD}", str(MATRIX_ROOT))
+                vol_conf["driver_opts"]["device"] = dev_path
             volumes_def[vol_name] = vol_conf
         else:
             volumes_def[vol_name] = {"driver": "local"}
 
-    # 3. Compile Production Services with Full Passthrough
+    # 3. Compile Production Services with Full Passthrough & Path Anchoring
     services_def = {}
     nodes = data.get("nodes", data.get("services", []))
 
-    # Support either a list of nodes or dictionary of services
     if isinstance(nodes, list):
         node_iterator = [(n["name"], n) for n in nodes]
     elif isinstance(nodes, dict):
@@ -73,9 +77,13 @@ def compile_scenario_to_compose(scenario_path: Path) -> tuple[str, Path]:
     for svc_key, svc_conf in node_iterator:
         service = {}
 
-        # Preserve Build Context & Dockerfile
+        # Preserve & Anchor Build Context & Dockerfile
         if "build" in svc_conf:
-            service["build"] = svc_conf["build"]
+            build_spec = svc_conf["build"].copy() if isinstance(svc_conf["build"], dict) else {"context": svc_conf["build"]}
+            ctx = build_spec.get("context", ".")
+            if not os.path.isabs(ctx):
+                build_spec["context"] = str((MATRIX_ROOT / ctx).resolve())
+            service["build"] = build_spec
         elif "image" in svc_conf:
             service["image"] = svc_conf["image"]
 
@@ -95,33 +103,41 @@ def compile_scenario_to_compose(scenario_path: Path) -> tuple[str, Path]:
         if "cap_add" in svc_conf:
             service["cap_add"] = svc_conf["cap_add"]
 
-        # Preserve Depends On & Healthchecks
+        # Preserve Dependencies & Healthchecks
         if "depends_on" in svc_conf:
             service["depends_on"] = svc_conf["depends_on"]
         if "healthcheck" in svc_conf:
             service["healthcheck"] = svc_conf["healthcheck"]
 
-        # Preserve Environment & Variables
+        # Preserve Environment
         if "environment" in svc_conf:
             service["environment"] = svc_conf["environment"]
 
-        # Preserve Volumes & Host Mounts
+        # Preserve & Anchor Volume Mounts
         if "volumes" in svc_conf:
-            service["volumes"] = svc_conf["volumes"]
+            anchored_volumes = []
+            for v in svc_conf["volumes"]:
+                if isinstance(v, str) and (v.startswith("./") or v.startswith("../")):
+                    # Anchor host bind mounts to MATRIX_ROOT
+                    parts = v.split(":")
+                    host_part = str((MATRIX_ROOT / parts[0]).resolve())
+                    parts[0] = host_part
+                    anchored_volumes.append(":".join(parts))
+                else:
+                    anchored_volumes.append(v)
+            service["volumes"] = anchored_volumes
 
-        # Preserve Ports & Commands
+        # Preserve Ports, Commands, TTY
         if "ports" in svc_conf:
             service["ports"] = svc_conf["ports"]
         if "command" in svc_conf:
             service["command"] = svc_conf["command"]
-
-        # Preserve TTY / Stdin
         if svc_conf.get("stdin_open", False):
             service["stdin_open"] = True
         if svc_conf.get("tty", False):
             service["tty"] = True
 
-        # Handle Network Bindings
+        # Network Bindings
         if "networks" in svc_conf:
             service["networks"] = svc_conf["networks"]
 
@@ -156,8 +172,10 @@ def load_scenario(scenario_file: str):
     print("\033[1;36m================================================================================\033[0m")
     print(f"[*] Compiled standalone manifest: {compose_file}")
 
+    # Explicitly anchor the project directory to MATRIX_ROOT
     cmd = [
         "docker", "compose",
+        "--project-directory", str(MATRIX_ROOT),
         "-p", f"matrix_{scenario_name}",
         "-f", str(compose_file),
         "up", "-d"
@@ -178,13 +196,25 @@ def teardown_scenario(scenario_name: str = None):
         for f in CACHE_DIR.glob("docker-compose.*.yml"):
             s_name = f.stem.replace("docker-compose.", "")
             print(f"[*] Dismantling scenario project: matrix_{s_name}...")
-            subprocess.run(["docker", "compose", "-p", f"matrix_{s_name}", "-f", str(f), "down", "--remove-orphans"], cwd=str(MATRIX_ROOT))
+            subprocess.run([
+                "docker", "compose",
+                "--project-directory", str(MATRIX_ROOT),
+                "-p", f"matrix_{s_name}",
+                "-f", str(f),
+                "down", "--remove-orphans"
+            ], cwd=str(MATRIX_ROOT))
             f.unlink(missing_ok=True)
         return
 
     compose_file = CACHE_DIR / f"docker-compose.{scenario_name}.yml"
     if compose_file.exists():
-        subprocess.run(["docker", "compose", "-p", f"matrix_{scenario_name}", "-f", str(compose_file), "down", "--remove-orphans"], cwd=str(MATRIX_ROOT))
+        subprocess.run([
+            "docker", "compose",
+            "--project-directory", str(MATRIX_ROOT),
+            "-p", f"matrix_{scenario_name}",
+            "-f", str(compose_file),
+            "down", "--remove-orphans"
+        ], cwd=str(MATRIX_ROOT))
         compose_file.unlink(missing_ok=True)
 
 
