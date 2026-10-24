@@ -1,0 +1,41 @@
+{
+    "profiles": {
+        "endress_hauser_promag": {
+            "archetype": "sensor",
+            "protocol": "modbus",
+            "default_port": 502,
+            "registers": {
+                "flow_rate": 40001,
+                "totalizer": 40003,
+                "fluid_temp": 40005
+            }
+        },
+        "siemens_s7_1500": {
+            "archetype": "plc",
+            "protocol": "s7comm",
+            "default_port": 102,
+            "db_blocks": {
+                "DB1_Setpoint": 1,
+                "DB2_Telemetry": 2
+            }
+        },
+        "abb_relion_670": {
+            "archetype": "ied",
+            "protocol": "iec104",
+            "default_port": 2404,
+            "asdu_address": 1
+        },
+        "quectel_5g_upf": {
+            "archetype": "5g_gateway",
+            "protocol": "gtpu",
+            "default_port": 2152,
+            "teid_default": "0x00000100"
+        },
+        "cubesat_transceiver": {
+            "archetype": "space_telemetry",
+            "protocol": "ccsds",
+            "default_port": 50100,
+            "apid": "0x050"
+        }
+    }
+}
