@@ -1,0 +1,65 @@
+# ==============================================================================
+# SOVEREIGN SCENARIO: 5 UNIVERSAL DEVICE ARCHETYPES IN A SINGLE GRID
+# ==============================================================================
+version: "1.0"
+scenario:
+  name: "universal_archetypes_grid"
+  description: "Runs Endress+Hauser Sensor, Siemens S7 PLC, ABB Grid Relay, 5G Gateway, and Satellite Link on 1 Base Image"
+
+networks:
+  industrial_plant_net:
+    driver: bridge
+    subnet: "10.220.0.0/24"
+    gateway: "10.220.0.1"
+    internal: false
+
+nodes:
+  # 1. Device 1: Endress+Hauser Water Flow Sensor (Archetype 1)
+  - name: "eh-promag-sensor"
+    hostname: "flowmeter.plant.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      industrial_plant_net:
+        ip: "10.220.0.11"
+    ports: ["15511:502"]
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "EndressHauser-Promag-500"]
+
+  # 2. Device 2: Siemens S7-1500 Assembly PLC (Archetype 2)
+  - name: "siemens-s7-1500-plc"
+    hostname: "s7plc.plant.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      industrial_plant_net:
+        ip: "10.220.0.12"
+    ports: ["15102:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Siemens-S7-1500-PAC"]
+
+  # 3. Device 3: ABB Relion 670 Electrical Substation IED (Archetype 3)
+  - name: "abb-relion-grid-relay"
+    hostname: "relay.substation.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      industrial_plant_net:
+        ip: "10.220.0.13"
+    ports: ["17404:2404"]
+    command: ["--archetype", "ied", "--protocol", "iec104", "--port", "2404", "--name", "ABB-Relion-Protection-Relay"]
+
+  # 4. Device 4: Quectel 3GPP 5G UPF Gateway (Archetype 7)
+  - name: "quectel-5g-gateway"
+    hostname: "upf.5g.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      industrial_plant_net:
+        ip: "10.220.0.14"
+    ports: ["2152:2152/udp"]
+    command: ["--archetype", "5g_gateway", "--protocol", "gtpu", "--port", "2152", "--name", "Quectel-5G-SA-Gateway"]
+
+  # 5. Device 5: CubeSat Ground Telemetry Transceiver (Archetype 8)
+  - name: "cubesat-ground-link"
+    hostname: "satellite.ground.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      industrial_plant_net:
+        ip: "10.220.0.15"
+    ports: ["50100:50100/udp"]
+    command: ["--archetype", "space_telemetry", "--protocol", "ccsds", "--port", "50100", "--name", "LEO-CubeSat-Transceiver"]
