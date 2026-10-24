@@ -302,3 +302,24 @@ attack-hub-s7: sync-hub-pcaps
 		--node Edge-Refinery-PLC-03 \
 		--tactic T0831 \
 		--name "Certified Siemens S7Comm Stuxnet Ladder Logic Injection"
+
+# ==============================================================================
+# 8. DYNAMIC EXTENSIBLE SCENARIO ENGINE
+# ==============================================================================
+scenario-load:
+	@if [ -z "$(SCENARIO)" ]; then \
+		echo -e "${RED}[-] Usage: make scenario-load SCENARIO=<path/to/scenario.yaml> [MODE=local|air-gapped|cloud]${RESET}"; \
+		exit 1; \
+	fi
+	python3 tools/scenario_engine.py load $(SCENARIO) $(if $(MODE),--mode $(MODE),)
+
+scenario-down:
+	python3 tools/scenario_engine.py down
+
+scenario-status:
+	python3 tools/scenario_engine.py status
+
+sim-finetune:
+	@MODE_VAL=$${MODE:-air-gapped}; \
+	echo -e "${CYAN}[*] Launching Extensible Fine-Tuning Simulation ($$MODE_VAL mode)...${RESET}"; \
+	python3 tools/scenario_engine.py load scenarios/finetune_simulation.yaml --mode $$MODE_VAL
