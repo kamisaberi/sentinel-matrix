@@ -1,0 +1,38 @@
+# ==============================================================================
+# ARYORITHM SCENARIO 02: ELECTRICAL SUBSTATION VIA PRIVATE 5G SLICING
+# ==============================================================================
+scenario:
+  name: "substation_5g_grid"
+  description: "High-Voltage Substation Protection IEDs tunneled over 3GPP 5G GTP-U"
+  base_subnet: "10.240.0"
+
+nodes:
+  # 1. Bay 01 Feeder Protection IED (IEC 60870-5-104)
+  - name: "matrix-ied-bay01"
+    hostname: "ied-bay01.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.161"
+    ports: ["17401:2404"]
+    environment:
+      IED_ROLE: "FEEDER_PROTECTION_BAY1"
+    command: ["python3", "-c", "import socket; s=socket.socket(); s.bind(('0.0.0.0', 2404)); s.listen(5); print('[+] Feeder IED 01 listening on 2404'); [s.accept() for _ in iter(int, 1)]"]
+
+  # 2. Bay 02 Busbar Protection IED (IEC 60870-5-104)
+  - name: "matrix-ied-bay02"
+    hostname: "ied-bay02.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.162"
+    ports: ["17402:2404"]
+    environment:
+      IED_ROLE: "BUSBAR_PROTECTION_BAY2"
+    command: ["python3", "-c", "import socket; s=socket.socket(); s.bind(('0.0.0.0', 2404)); s.listen(5); print('[+] Busbar IED 02 listening on 2404'); [s.accept() for _ in iter(int, 1)]"]
+
+  # 3. 5G Standalone UPF Tunnel Gateway (N3 GTP-U Port 2152)
+  - name: "matrix-5g-upf-gateway"
+    hostname: "upf-gtp.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.165"
+    ports: ["2152:2152/udp"]
+    environment:
+      UPF_ROLE: "3GPP_UPF_N3_TERMINATION"
+    command: ["python3", "-c", "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.bind(('0.0.0.0', 2152)); print('[+] 5G UPF GTP-U tunnel gateway listening on UDP 2152'); [s.recvfrom(2048) for _ in iter(int, 1)]"]
