@@ -1,0 +1,26 @@
+FROM python:3.11-slim
+
+LABEL maintainer="Aryorithm Technologies B.V. <kamran@aryorithm.com>"
+LABEL description="Universal Parameterized Industrial Device & Sensor Emulator (8 Archetypes)"
+
+# Install core network diagnostic and traffic shaping utilities
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    iproute2 \
+    procps \
+    net-tools \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy the universal multi-protocol runtime engine
+COPY src/device_runtime/universal_device.py /app/universal_device.py
+COPY configs/archetypes/device_archetypes.json /app/device_archetypes.json
+
+RUN chmod +x /app/universal_device.py
+
+# Expose all universal industrial protocol ports
+# Modbus (502), S7Comm (102), IEC-104 (2404), GTP-U (2152), CCSDS (50100), OPC UA (4840), RTSP (8554)
+EXPOSE 502 102 2404 2152/udp 50100/udp 4840 8554
+
+ENTRYPOINT ["python3", "/app/universal_device.py"]
