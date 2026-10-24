@@ -1,0 +1,13 @@
+{
+    "name": "water_plant_pack",
+    "slug": "water_plant_pack",
+    "version": "1.0.0",
+    "asset_type": "scenario",
+    "author": "Aryorithm Certified Engineer",
+    "description": "Municipal drinking water treatment grid with 3 Modbus PLCs and HMI",
+    "target_industry": "Water & Wastewater",
+    "compliance": [
+        "IEC-62443-4-2",
+        "NIS2"
+    ]
+}
