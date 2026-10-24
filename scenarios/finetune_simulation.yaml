@@ -1,0 +1,61 @@
+# ==============================================================================
+# ARYORITHM SENTINEL-MATRIX: DYNAMIC FINE-TUNING SIMULATION SCENARIO
+# ==============================================================================
+scenario:
+  name: "finetune_multi_mode"
+  description: "Dynamic simulation comparing local edge, air-gapped GPU, and cloud fine-tuning"
+  base_subnet: "10.240.0"
+
+modes:
+  # ----------------------------------------------------------------------------
+  # MODE 1: LOCAL EDGE RETRAINING (Resource-Constrained Fanless IPC)
+  # ----------------------------------------------------------------------------
+  local:
+    description: "Simulates local PyTorch fine-tuning on constrained fanless edge hardware"
+    target_node: "sentinel-edge-01"
+    target_ip: "10.240.0.101"
+    emulation:
+      cpus: 1.0
+      memory: "1024m"
+      expected_sla: "10s - 45s (CPU Throttling Warning)"
+
+  # ----------------------------------------------------------------------------
+  # MODE 2: AIR-GAPPED PRIVATE GPU CLUSTER (Zero Egress / High-Speed On-Prem)
+  # ----------------------------------------------------------------------------
+  air-gapped:
+    description: "Private on-premises high-power GPU node inside air-gapped OT subnet"
+    dynamic_nodes:
+      - name: "matrix-private-gpu-worker"
+        hostname: "gpu-worker.matrix.internal"
+        ip: "10.240.0.55"
+        ports:
+          - "50055:50055"
+        network: "sentinel-grid-net"
+        environment:
+          FORGE_WORKER_PORT: "50055"
+          CUDA_SIMULATION: "true"
+          AIR_GAP_MODE: "true"
+          EGRESS_COST: "0.00"
+        command: ["python3", "-m", "http.server", "50055"]
+    expected_sla: "< 2.5s (High-Throughput CUDA Cluster)"
+
+  # ----------------------------------------------------------------------------
+  # MODE 3: CLOUD / MANAGED WAN RETRAINING (Remote Sovereign Cloud Endpoint)
+  # ----------------------------------------------------------------------------
+  cloud:
+    description: "Remote cloud training gateway with simulated WAN latency and jitter"
+    dynamic_nodes:
+      - name: "matrix-cloud-gateway"
+        hostname: "cloud-forge.aryorithm.internal"
+        ip: "10.240.0.80"
+        ports:
+          - "8000:8000"
+        network: "sentinel-grid-net"
+        network_impairment:
+          latency_ms: 35
+          jitter_ms: 5
+        environment:
+          CLOUD_GATEWAY_PORT: "8000"
+          API_AUTH_REQUIRED: "true"
+        command: ["python3", "-m", "http.server", "8000"]
+    expected_sla: "3.5s - 5.0s (WAN RTT + Transfer Overhead)"
