@@ -1,0 +1,29 @@
+# ==============================================================================
+# ARYORITHM SCENARIO 03: CHEMICAL REACTOR WITH GENAI OT COPILOT
+# ==============================================================================
+scenario:
+  name: "copilot_trism_reactor"
+  description: "Exothermic Chemical Reactor with Tool-Calling GenAI SCADA Assistant"
+  base_subnet: "10.240.0"
+
+nodes:
+  # 1. Physics Continuous Reactor PLC (RK4 ODE thermal simulation)
+  - name: "matrix-chemical-reactor-plc"
+    hostname: "reactor-plc.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.170"
+    ports: ["15510:502"]
+    environment:
+      PROCESS_TYPE: "EXOTHERMIC_CONTINUOUS_REACTOR"
+    command: ["python3", "-c", "import socket; s=socket.socket(); s.bind(('0.0.0.0', 502)); s.listen(5); print('[+] Chemical Reactor PLC online on 502'); [s.accept() for _ in iter(int, 1)]"]
+
+  # 2. GenAI Industrial Copilot Agent (HTTP REST Interface for Operator Queries)
+  - name: "matrix-scada-copilot"
+    hostname: "copilot.matrix.internal"
+    image: "python:3.11-slim"
+    ip: "10.240.0.175"
+    ports: ["18080:8080"]
+    environment:
+      MODEL_TYPE: "INDUSTRIAL_COPILOT_LLM"
+      PROTECTED_BY: "ARYORITHM_AI_TRISM"
+    command: ["python3", "-c", "import http.server; server = http.server.HTTPServer(('0.0.0.0', 8080), http.server.SimpleHTTPRequestHandler); print('[+] Industrial Copilot Agent online on 8080'); server.serve_forever()"]
