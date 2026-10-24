@@ -1,0 +1,21 @@
+services:
+  matrix-private-gpu-worker:
+    command:
+    - python3
+    - -m
+    - http.server
+    - '50055'
+    container_name: matrix-private-gpu-worker
+    environment:
+      AIR_GAP_MODE: 'true'
+      CUDA_SIMULATION: 'true'
+      EGRESS_COST: '0.00'
+      FORGE_WORKER_PORT: '50055'
+    hostname: gpu-worker.matrix.internal
+    image: python:3.11-slim
+    networks:
+      sentinel-grid-net:
+        ipv4_address: 10.240.0.55
+    ports:
+    - 50055:50055
+    restart: unless-stopped
