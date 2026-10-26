@@ -1,0 +1,21 @@
+version: "1.0"
+scenario:
+  name: "water_grid_v2"
+  description: "Digital Twin Scenario for water_grid_v2"
+
+networks:
+  ot_scada_net:
+    driver: bridge
+    subnet: "10.220.0.0/24"
+    gateway: "10.220.0.1"
+    internal: true
+
+nodes:
+  - name: "primary-scada-plc"
+    hostname: "plc01.scada.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      ot_scada_net:
+        ip: "10.220.0.10"
+    ports: ["15501:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Primary-PLC"]

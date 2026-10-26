@@ -1,0 +1,3 @@
+{
+  "holding_registers": {"flow": 40001, "pressure": 40002, "temp": 40003}
+}

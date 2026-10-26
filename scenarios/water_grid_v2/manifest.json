@@ -1,0 +1,20 @@
+{
+  "name": "water_grid_v2",
+  "slug": "water_grid_v2",
+  "title": "water_grid_v2",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "WATER_TREATMENT",
+  "sector": "WATER_TREATMENT",
+  "complexity": "INTERMEDIATE",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "Turnkey Digital Twin Scenario for water_grid_v2",
+  "author_public_key": "d9af7532a37ea3c9c6726adc47720910c44c5f827b408127ec3206c8fc99506c",
+  "dependencies": {
+    "packages": ["modbus_unauthorized_write", "industrial_anomaly_detector", "modbus_rate_limiter"],
+    "models": [],
+    "pcaps": []
+  },
+  "compliance": ["IEC-62443-4-2", "NIS2"]
+}
