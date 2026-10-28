@@ -12,10 +12,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # 1. Install general packages from standard PyPI
-RUN pip install --no-cache-dir numpy pyyaml onnx requests
+RUN pip install numpy pyyaml onnx requests
 
 # 2. Install lightweight CPU-only PyTorch from PyTorch index
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 COPY docker/entrypoints/forge_entrypoint.sh /entrypoint.sh
 COPY src/loop/forge_watcher.py /app/forge_watcher.py
