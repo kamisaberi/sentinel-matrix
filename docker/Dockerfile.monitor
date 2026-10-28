@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y curl procps && rm -rf /var/lib/apt/list
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir \
+RUN pip install \
     rich \
     requests \
     sseclient-py
