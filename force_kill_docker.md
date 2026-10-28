@@ -7,3 +7,19 @@ sudo systemctl restart docker
 
 # 3. Force-remove any leftover stuck matrix containers
 sudo docker rm -f $(docker ps -aq --filter "name=matrix-") 2>/dev/null || true
+
+
+
+# 1. Stop and disable the host systemd service so it stops respawning
+sudo systemctl stop sentinel-nexus.service
+sudo systemctl disable sentinel-nexus.service
+
+# 2. Force-kill anything still clinging to port 9443
+sudo fuser -k 9443/tcp 2>/dev/null || true
+
+# 3. Confirm port 9443 is completely free (this should return nothing)
+sudo ss -tulpn | grep 9443 || echo "[+] Port 9443 is 100% FREE!"
+
+# 4. Now start the nexus container in Docker
+# cd /home/kami/sentinel-matrix
+# docker compose up -d nexus
