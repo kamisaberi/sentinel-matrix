@@ -26,9 +26,10 @@ help:
 	
 	@echo -e "${GREEN}${BOLD}1. GRID LIFECYCLE & CORE OPS${RESET}"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "init" "Prepare shared directories, certs, build mock_plc, and auto-bundle libs"
-	@printf "  ${CYAN}%-22s${RESET} %s\n" "build" "Build/rebuild all container images (Nexus, Sentinel, Forge, Adversary, PLC)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "build" "Build/rebuild all container images (Nexus, Sentinel, Forge, Adversary, PLC, Device-Runtime)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "build-device-runtime" "Build universal multi-archetype container image (Dockerfile.device_runtime)"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "mock-plc" "Compile dynamic C mock PLC twin binary (mock_plc.c -> shared/bin/mock_plc)"
-	@printf "  ${CYAN}%-22s${RESET} %s\n" "up" "Launch entire 8-node simulation mesh in background (10.240.0.0/24)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "up" "Launch entire simulation mesh in background (10.240.0.0/24)"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "down" "Gracefully stop and dismantle the simulation grid"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "restart" "Perform full teardown and clean launch of the grid"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "status" "Display container health, runtime status, and port bindings"
@@ -68,13 +69,20 @@ help:
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "chaos-sever" "Abruptly terminate Edge Node 01 to test 0ms graceful disconnect in Nexus"
 	@echo ""
 
-	@echo -e "${GREEN}${BOLD}7. HUB REGISTRY & CACHED ASSETS (PCAPs, Scenarios)${RESET}"
+	@echo -e "${GREEN}${BOLD}7. HUB ASSET INTEGRATION & CACHE-FIRST SCENARIO MANAGEMENT${RESET}"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "sync-hub-pcaps" "Resolve & sync certified malware PCAPs from cache (/var/cache/sentinel)"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-pull" "Unpack digital twin scenario bundle (NAME=<power_grid_blackout | ...>)"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-run" "Execute attack automation script in the active unpacked scenario"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "attack-hub-industroyer2" "Replay certified Industroyer2 IEC-104 capture from Hub cache"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "attack-hub-triton" "Replay certified TRITON TriStation 1131 capture from Hub cache"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "attack-hub-s7" "Replay certified Siemens S7Comm Stuxnet capture from Hub cache"
+	@echo ""
+
+	@echo -e "${GREEN}${BOLD}8. DYNAMIC EXTENSIBLE SCENARIO ENGINE${RESET}"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-load" "Compile and launch a dynamic scenario (SCENARIO=<path.yaml>)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-down" "Dismantle active scenario overlays and custom networks"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-status" "Display live containers across dynamic scenario subnets"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "sim-finetune" "Simulate fine-tuning mesh (MODE=local|air-gapped|cloud)"
 	@echo ""
 
 # ==============================================================================
@@ -85,7 +93,7 @@ mock-plc:
 	@if [ -f mock_plc.c ]; then \
 		echo -e "${YELLOW}[*] Compiling dynamic mock PLC twin (mock_plc.c)...${RESET}"; \
 		mkdir -p shared/bin; \
-		gcc -O3 -pthread -Iinclude -I. mock_plc.c src/plant_ode.c -o shared/bin/mock_plc; \
+		gcc -O3 -pthread -Iinclude -I. mock_plc.c src/plant_ode.c -o shared/bin/mock_plc -lm; \
 		echo -e "${GREEN}[+] Successfully compiled shared/bin/mock_plc${RESET}"; \
 	fi
 
@@ -95,7 +103,7 @@ init:
 	@if [ -f /home/kami/sentinel-nexus/build/sentinel-nexus ]; then cp /home/kami/sentinel-nexus/build/sentinel-nexus shared/bin/; fi
 	@if [ -f /home/kami/sentinel-nexus/build/nexus-ctl ]; then cp /home/kami/sentinel-nexus/build/nexus-ctl shared/bin/; fi
 	@if [ -f /home/kami/blackbox-sentinel/build/sentinel ]; then cp /home/kami/blackbox-sentinel/build/sentinel shared/bin/; fi
-	@if [ -f mock_plc.c ]; then gcc -O3 -pthread -Iinclude -I. mock_plc.c src/plant_ode.c -o shared/bin/mock_plc 2>/dev/null || true; fi
+	@if [ -f mock_plc.c ]; then gcc -O3 -pthread -Iinclude -I. mock_plc.c src/plant_ode.c -o shared/bin/mock_plc -lm 2>/dev/null || true; fi
 	@if [ -d /home/kami/sentinel-nexus/web ]; then cp -r /home/kami/sentinel-nexus/web/* web/ 2>/dev/null || true; fi
 	@if [ -d /home/kami/sentinel-nexus/proto ]; then cp /home/kami/sentinel-nexus/proto/*.proto shared/proto/ 2>/dev/null || true; fi
 	@chmod +x shared/certs/gen_matrix_certs.sh 2>/dev/null || true
@@ -103,12 +111,15 @@ init:
 	@ldd shared/bin/sentinel-nexus shared/bin/sentinel 2>/dev/null | grep "=> /" | awk '{print $$3}' | grep -vE "libc\.so|libm\.so|libpthread|ld-linux|libdl" | sort -u | xargs -I {} cp -L -u {} shared/lib/ 2>/dev/null || true
 	@echo -e "${GREEN}[+] Environment initialized and host artifacts synchronized.${RESET}"
 
+build-device-runtime:
+	@echo -e "${CYAN}[*] Building Universal Parameterized Device Container (8 Archetypes)...${RESET}"
+	docker build -t sentinel-matrix/device-runtime:latest -f docker/Dockerfile.device_runtime .
+	@echo -e "${GREEN}[+] Successfully built sentinel-matrix/device-runtime:latest${RESET}"
 
-	
-build: init mock-plc
+build: init mock-plc build-device-runtime
 	docker compose build
 
-up: init mock-plc
+up: init mock-plc build-device-runtime
 	docker compose up -d --build
 	@echo ""
 	@echo -e "${GREEN}${BOLD}[+] Sentinel-Matrix is actively executing inside VMware!${RESET}"
@@ -150,7 +161,6 @@ live-scada:
 live-api:
 	docker compose exec adversary curl -v -X POST http://10.240.0.10:9443/api/v1/threats/broadcast -H "Content-Type: application/json" -d '{"ip":"198.51.100.99"}'
 
-	
 # PCAP Dataset Tools
 download-pcaps:
 	python3 tools/download_real_pcaps.py
@@ -323,9 +333,3 @@ sim-finetune:
 	@MODE_VAL=$${MODE:-air-gapped}; \
 	echo -e "${CYAN}[*] Launching Extensible Fine-Tuning Simulation ($$MODE_VAL mode)...${RESET}"; \
 	python3 tools/scenario_engine.py load scenarios/finetune_simulation.yaml --mode $$MODE_VAL
-
-
-build-device-runtime:
-	@echo -e "${CYAN}[*] Building Universal Parameterized Device Container (8 Archetypes)...${RESET}"
-	docker build -t sentinel-matrix/device-runtime:latest -f docker/Dockerfile.device_runtime .
-	@echo -e "${GREEN}[+] Successfully built sentinel-matrix/device-runtime:latest${RESET}"
