@@ -135,7 +135,17 @@ build: init mock-plc build-device-runtime
 	@echo -e "${CYAN}[*] Building all Docker containers with BuildKit cache enabled (IMAGE_TAG=$(IMAGE_TAG))...${RESET}"
 	docker compose build
 
-up: init mock-plc build-device-runtime
+# ==============================================================================
+# AUTOMATED PORT & PROCESS CLEANUP
+# ==============================================================================
+port-clean:
+	@echo -e "${YELLOW}[*] Ensuring simulation ports are free (9443, 9444, 50051)...${RESET}"
+	@sudo systemctl stop sentinel-nexus.service 2>/dev/null || true
+	@sudo systemctl disable sentinel-nexus.service 2>/dev/null || true
+	@sudo pkill -9 -f sentinel-nexus 2>/dev/null || true
+	@sudo fuser -k 9443/tcp 9444/tcp 50051/tcp 15501/tcp 15502/tcp 8554/tcp 8889/tcp 2>/dev/null || true
+
+up: port-clean init mock-plc build-device-runtime
 	docker compose up -d --build
 	@echo ""
 	@echo -e "${GREEN}${BOLD}[+] Sentinel-Matrix is actively executing inside VMware!${RESET}"
@@ -147,9 +157,19 @@ up: init mock-plc build-device-runtime
 	@echo ""
 
 down:
-	docker compose down --remove-orphans
+	@echo -e "${YELLOW}[*] Stopping and dismantling Sentinel-Matrix simulation grid...${RESET}"
+	@sudo systemctl stop sentinel-nexus.service 2>/dev/null || true
+	@docker compose down --remove-orphans 2>/dev/null || true
+	@echo -e "${YELLOW}[*] Force-clearing any frozen matrix containers (AppArmor bypass)...${RESET}"
+	@sudo docker rm -f $$(docker ps -aq --filter "name=matrix-") 2>/dev/null || true
+	@echo -e "${YELLOW}[*] Terminating lingering background processes and releasing ports...${RESET}"
+	@sudo pkill -9 -f sentinel-nexus 2>/dev/null || true
+	@sudo pkill -9 -f mock_plc 2>/dev/null || true
+	@sudo fuser -k 9443/tcp 9444/tcp 50051/tcp 15501/tcp 15502/tcp 8554/tcp 8889/tcp 2368/udp 2>/dev/null || true
+	@echo -e "${GREEN}[+] Grid dismantled and all ports released successfully.${RESET}"
 
 restart: down up
+
 
 status:
 	docker compose ps
