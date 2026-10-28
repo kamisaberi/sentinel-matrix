@@ -28,7 +28,7 @@ volumes:
       device: ${PWD}/shared/logs
 
 services:
-# ============================================================================
+  # ============================================================================
   # TIER 6: SENTINEL NEXUS (Master Command Plane)
   # ============================================================================
   nexus:
@@ -64,6 +64,69 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+
+  # ============================================================================
+  # SENSOR 1: FLIR INDUSTRIAL THERMAL CAMERA (RTSP :8554 & WebRTC :8889)
+  # ============================================================================
+  sensor-camera:
+    image: bluenviron/mediamtx:latest-ffmpeg
+    container_name: matrix-sensor-camera
+    hostname: camera.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.75
+    ports:
+      - "8554:8554"   # RTSP for Sentinel Edge Plugins
+      - "8889:8889"   # WebRTC (WHEP) for Browser HTML5 Video Player
+    environment:
+      - MTX_RUNONREADY=ffmpeg -re -f lavfi -i testsrc=size=640x360:rate=15 -pix_fmt yuv420p -c:v libx264 -preset ultrafast -f rtsp rtsp://localhost:8554/thermal_feed
+
+  # ============================================================================
+  # SENSOR 2: MULTI-AXIS VIBRATION & TEMPERATURE SENSOR (Modbus TCP :15502)
+  # ============================================================================
+  sensor-vibration:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-sensor-vibration
+    hostname: vibration.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.76
+    ports:
+      - "15502:502"
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "IFM-Vibration-Temp-Probe"]
+
+  # ============================================================================
+  # SENSOR 3: SICK / VELODYNE INDUSTRIAL LIDAR SPATIAL SCANNER (UDP :2368)
+  # ============================================================================
+  sensor-lidar:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-sensor-lidar
+    hostname: lidar.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.77
+    ports:
+      - "2368:2368/udp"
+    command: ["--archetype", "vision", "--protocol", "stream_telemetry", "--port", "2368", "--name", "SICK-LiDAR-Scanner"]
+
+  # ============================================================================
+  # SENSOR 4: SUBSTATION POWER QUALITY SMART METER (Modbus TCP :15501)
+  # ============================================================================
+  sensor-power:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-sensor-power
+    hostname: power-meter.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: ${SUBNET_PREFIX:-10.240.0}.78
+    ports:
+      - "15501:502"
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Siemens-PAC3200-Power-Meter"]
+
   # ============================================================================
   # DIGITAL TWIN HARDWARE: MOCK PLC (SCADA Industrial Protocols Listener)
   # ============================================================================
@@ -140,7 +203,6 @@ services:
       - shared-logs:/var/log/sentinel
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
       - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
-
     environment:
       - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - NODE_IDENTIFIER=Edge-Substation-01
@@ -303,4 +365,3 @@ services:
     environment:
       - NEXUS_REST_URL=http://${SUBNET_PREFIX:-10.240.0}.10:9443
       - TARGET_NODES=${SUBNET_PREFIX:-10.240.0}.101,${SUBNET_PREFIX:-10.240.0}.102,${SUBNET_PREFIX:-10.240.0}.103
-
