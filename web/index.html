@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/topology_map.css">
 </head>
+
 <body class="dark-theme">
 
     <div class="boxed-frame">
@@ -93,7 +95,7 @@
             <!-- TAB 0: INTERACTIVE MULTI-FRAME MISSION CONTROL (NEW) -->
             <div class="tab-pane active" id="tab-mission-control">
                 <div class="mission-control-grid">
-                    
+
                     <!-- FRAME 1: FLEET SELECTOR & MULTI-CAMERA VISION WALL -->
                     <div class="mc-frame">
                         <div class="panel-header">
@@ -133,11 +135,24 @@
                             <h3>INTERACTIVE RED-TEAM ATTACK GENERATOR</h3>
                             <span class="badge badge-purple">SCENARIO TRIGGER</span>
                         </div>
-                        <div class="attack-button-grid">
-                            <button class="btn-attack" data-attack="MODBUS_FC05_OVERRIDE">Inject Modbus Coil Override (FC05)</button>
-                            <button class="btn-attack" data-attack="S7COMM_CPU_STOP">Inject S7Comm CPU STOP (0x29)</button>
+                        <div class="attack-button-grid" style="margin-top: 10px;">
+                            <button class="btn-attack" data-attack="MODBUS_FC05_OVERRIDE">Inject Modbus Coil Override
+                                (FC05)</button>
+                            <button class="btn-attack" data-attack="S7COMM_CPU_STOP">Inject S7Comm CPU STOP
+                                (0x29)</button>
                             <button class="btn-attack" data-attack="5G_GTPU_SLICE_HOP">Inject 5G TEID Slice-Hop</button>
-                            <button class="btn-attack" data-attack="AI_PROMPT_INJECTION">Inject AI TRiSM Prompt Jailbreak</button>
+                            <button class="btn-attack" data-attack="AI_PROMPT_INJECTION">Inject AI TRiSM Prompt
+                                Jailbreak</button>
+                            <div class="attack-button-grid" style="margin-top: 10px;">
+                                <button class="btn-attack" id="btn-trigger-anomaly"
+                                    style="border: 1px solid rgba(235, 60, 60, 0.8);">
+                                    [!] INJECT SENSOR ANOMALY (Overheat &amp; Vibration Surge)
+                                </button>
+                                <button class="btn-attack" id="btn-reset-anomaly"
+                                    style="border: 1px solid rgba(0, 220, 140, 0.8);">
+                                    [+] RESET ALL SENSORS TO NORMAL BASELINE
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -178,7 +193,8 @@
                                 <h3>FLEET PACKAGE DEPLOYER (.spkg)</h3>
                                 <span class="badge badge-purple">Ed25519 SEALED</span>
                             </div>
-                            <p class="panel-desc">Drag and drop a unified Sentinel Package (.spkg) to verify Merkle integrity, audit source code, and broadcast fleet-wide via gRPC.</p>
+                            <p class="panel-desc">Drag and drop a unified Sentinel Package (.spkg) to verify Merkle
+                                integrity, audit source code, and broadcast fleet-wide via gRPC.</p>
                             <div class="dropzone" id="spkg-dropzone">
                                 <input type="file" id="spkg-file-input" accept=".spkg" class="file-input-hidden">
                                 <div class="dropzone-content">
@@ -193,13 +209,19 @@
                                     <span class="preview-filename" id="prev-filename">s7_guard.spkg</span>
                                 </div>
                                 <div class="preview-details">
-                                    <div class="detail-row"><span class="lbl">Package ID:</span><span class="val font-mono" id="prev-id">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Target Protocol:</span><span class="val" id="prev-proto">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Latency SLA:</span><span class="val text-cyan" id="prev-sla">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Merkle Signature:</span><span class="val text-green" id="prev-sig">VERIFIED AUTHENTIC</span></div>
-                                    <div class="detail-row"><span class="lbl">Auditable Source:</span><button class="btn-link" id="btn-view-source">View Embedded Source</button></div>
+                                    <div class="detail-row"><span class="lbl">Package ID:</span><span
+                                            class="val font-mono" id="prev-id">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Target Protocol:</span><span class="val"
+                                            id="prev-proto">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Latency SLA:</span><span
+                                            class="val text-cyan" id="prev-sla">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Merkle Signature:</span><span
+                                            class="val text-green" id="prev-sig">VERIFIED AUTHENTIC</span></div>
+                                    <div class="detail-row"><span class="lbl">Auditable Source:</span><button
+                                            class="btn-link" id="btn-view-source">View Embedded Source</button></div>
                                 </div>
-                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">BROADCAST PACKAGE FLEET-WIDE (&lt; 50ms)</button>
+                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">BROADCAST PACKAGE
+                                    FLEET-WIDE (&lt; 50ms)</button>
                             </div>
                         </div>
                     </div>
@@ -207,29 +229,45 @@
                         <div class="panel-card">
                             <div class="panel-header">
                                 <h3>ACTIVE EXTENSIONS RUNNING ACROSS FLEET</h3>
-                                <div class="header-actions"><button class="btn-sm" id="btn-refresh-ext">Refresh Status</button></div>
+                                <div class="header-actions"><button class="btn-sm" id="btn-refresh-ext">Refresh
+                                        Status</button></div>
                             </div>
                             <div class="tier-meters-grid">
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-native">TIER A: NATIVE C++20</span><span class="tier-speed text-green">88 ns (p50)</span></div>
-                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 15%;"></div></div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-native">TIER A: NATIVE
+                                            C++20</span><span class="tier-speed text-green">88 ns (p50)</span></div>
+                                    <div class="tier-bar-bg">
+                                        <div class="tier-bar-fill" style="width: 15%;"></div>
+                                    </div>
                                     <span class="tier-desc">Line-rate OT dissectors &bull; POSIX SEGV isolated</span>
                                 </div>
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-lua">TIER C: LUAJIT C-FFI</span><span class="tier-speed text-yellow">350 ns (p50)</span></div>
-                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 35%;"></div></div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-lua">TIER C: LUAJIT
+                                            C-FFI</span><span class="tier-speed text-yellow">350 ns (p50)</span></div>
+                                    <div class="tier-bar-bg">
+                                        <div class="tier-bar-fill" style="width: 35%;"></div>
+                                    </div>
                                     <span class="tier-desc">Dynamic zero-day heuristics &bull; &lt; 2ms hot-swap</span>
                                 </div>
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-wasm">TIER B: RUST WASM3</span><span class="tier-speed text-cyan">1,240 ns (p50)</span></div>
-                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 55%;"></div></div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-wasm">TIER B: RUST
+                                            WASM3</span><span class="tier-speed text-cyan">1,240 ns (p50)</span></div>
+                                    <div class="tier-bar-bg">
+                                        <div class="tier-bar-fill" style="width: 55%;"></div>
+                                    </div>
                                     <span class="tier-desc">Linear memory sandbox &bull; 50 µs watchdog trap</span>
                                 </div>
                             </div>
                             <table class="data-table mt-4" id="table-extensions">
                                 <thead>
                                     <tr>
-                                        <th>PACKAGE IDENTIFIER</th><th>TIER</th><th>PROTOCOL</th><th>LATENCY</th><th>FRAMES PROCESSED</th><th>KERNEL DROPS</th><th>STATUS</th>
+                                        <th>PACKAGE IDENTIFIER</th>
+                                        <th>TIER</th>
+                                        <th>PROTOCOL</th>
+                                        <th>LATENCY</th>
+                                        <th>FRAMES PROCESSED</th>
+                                        <th>KERNEL DROPS</th>
+                                        <th>STATUS</th>
                                     </tr>
                                 </thead>
                                 <tbody id="extensions-tbody"></tbody>
@@ -253,7 +291,9 @@
             <!-- TAB 4: MITRE ATT&CK -->
             <div class="tab-pane" id="tab-threats">
                 <div class="panel-card">
-                    <div class="panel-header"><h3>DYNAMIC MITRE ATT&amp;CK FOR ICS TACTICAL HEATMAP</h3></div>
+                    <div class="panel-header">
+                        <h3>DYNAMIC MITRE ATT&amp;CK FOR ICS TACTICAL HEATMAP</h3>
+                    </div>
                     <div id="mitre-grid" class="mitre-grid"></div>
                 </div>
             </div>
@@ -261,7 +301,9 @@
             <!-- TAB 5: CANARY OTA -->
             <div class="tab-pane" id="tab-ota">
                 <div class="panel-card">
-                    <div class="panel-header"><h3>OVER-THE-AIR (OTA) MODEL ROLLOUT &amp; ROLLBACKGUARD</h3></div>
+                    <div class="panel-header">
+                        <h3>OVER-THE-AIR (OTA) MODEL ROLLOUT &amp; ROLLBACKGUARD</h3>
+                    </div>
                     <div id="ota-controls" class="ota-controls"></div>
                 </div>
             </div>
@@ -269,19 +311,25 @@
             <!-- TAB 6: COMPLIANCE -->
             <div class="tab-pane" id="tab-compliance">
                 <div class="panel-card">
-                    <div class="panel-header"><h3>STATUTORY COMPLIANCE &amp; HARDWARE AUDIT VAULT</h3></div>
-                    <div class="compliance-actions">
-                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171 Report</button>
-                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial Report</button>
+                    <div class="panel-header">
+                        <h3>STATUTORY COMPLIANCE &amp; HARDWARE AUDIT VAULT</h3>
                     </div>
-                    <pre class="report-preview-box" id="report-output">Select standard above to compile audit report...</pre>
+                    <div class="compliance-actions">
+                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171
+                            Report</button>
+                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial
+                            Report</button>
+                    </div>
+                    <pre class="report-preview-box"
+                        id="report-output">Select standard above to compile audit report...</pre>
                 </div>
             </div>
 
         </main>
 
         <footer class="boxed-footer">
-            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical Defense</span>
+            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical
+                Defense</span>
             <span class="text-muted font-mono">v1.0.0-core-ebpf</span>
         </footer>
 
@@ -301,4 +349,5 @@
     <script src="js/mission_control.js"></script>
     <script src="js/app.js"></script>
 </body>
+
 </html>
