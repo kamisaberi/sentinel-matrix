@@ -80,8 +80,9 @@ services:
       - "8554:8554"   # RTSP for Sentinel Edge Plugins
       - "8889:8889"   # WebRTC (WHEP) for Browser HTML5 Video Player
     environment:
-      - MTX_RUNONREADY=ffmpeg -re -f lavfi -i testsrc=size=640x360:rate=15 -pix_fmt yuv420p -c:v libx264 -preset ultrafast -f rtsp rtsp://localhost:8554/thermal_feed
+      - MTX_RUNONINIT=ffmpeg -re -f lavfi -i testsrc=size=640x360:rate=15 -pix_fmt yuv420p -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp rtsp://localhost:8554/thermal_feed
 
+      
   # ============================================================================
   # SENSOR 2: MULTI-AXIS VIBRATION & TEMPERATURE SENSOR (Modbus TCP :15502)
   # ============================================================================
