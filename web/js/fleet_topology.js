@@ -21,8 +21,13 @@ class FleetTopologyMap {
 
     resize() {
         if (!this.canvas || !this.canvas.parentElement) return;
-        this.width = this.canvas.parentElement.clientWidth;
-        this.height = this.canvas.parentElement.clientHeight || 560;
+        const parentW = this.canvas.parentElement.clientWidth || this.canvas.parentElement.offsetWidth;
+        const parentH = this.canvas.parentElement.clientHeight || this.canvas.parentElement.offsetHeight;
+
+        // Fallback guarantees positive dimensions even if initialized inside a hidden tab or unmounted container
+        this.width = parentW > 0 ? parentW : (window.innerWidth ? Math.max(window.innerWidth - 64, 400) : 800);
+        this.height = parentH > 0 ? parentH : 560;
+
         this.canvas.width = this.width;
         this.canvas.height = this.height;
     }
@@ -113,19 +118,30 @@ class FleetTopologyMap {
         const w = this.width;
         const h = this.height;
 
+        // Hard invariant: Abort frame immediately if layout dimensions are zero or invalid
+        if (!w || !h || w <= 10 || h <= 10) {
+            this.resize();
+            return;
+        }
+
         ctx.clearRect(0, 0, w, h);
 
         const cx = w / 2;
         const cy = h / 2;
         const maxRadius = Math.min(w, h) * 0.42;
 
-        // 1. Draw Concentric Radar Rings
+        if (maxRadius <= 10) return;
+
+        // 1. Draw Concentric Radar Rings (guaranteed strictly positive step)
         ctx.strokeStyle = "rgba(0, 240, 255, 0.12)";
         ctx.lineWidth = 1;
-        for (let r = maxRadius * 0.33; r <= maxRadius; r += maxRadius * 0.33) {
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.stroke();
+        const ringStep = maxRadius * 0.33;
+        if (ringStep > 0) {
+            for (let r = ringStep; r <= maxRadius + 0.001; r += ringStep) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.stroke();
+            }
         }
 
         // Radar Crosshairs
