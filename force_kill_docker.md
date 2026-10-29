@@ -23,3 +23,15 @@ sudo ss -tulpn | grep 9443 || echo "[+] Port 9443 is 100% FREE!"
 # 4. Now start the nexus container in Docker
 # cd /home/kami/sentinel-matrix
 # docker compose up -d nexus
+
+
+
+# 1. Unload stale/unknown AppArmor profiles locking the containers
+sudo aa-remove-unknown
+
+# 2. Restart containerd and docker to flush all locked container shims
+sudo systemctl restart containerd
+sudo systemctl restart docker
+
+# 3. Force-remove any remaining matrix containers
+docker rm -f $(docker ps -aq --filter "name=matrix-") 2>/dev/null || true
