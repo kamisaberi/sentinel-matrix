@@ -163,8 +163,8 @@ down:
 	@echo -e "${YELLOW}[*] Force-clearing any frozen matrix containers (AppArmor bypass)...${RESET}"
 	@sudo docker rm -f $$(docker ps -aq --filter "name=matrix-") 2>/dev/null || true
 	@echo -e "${YELLOW}[*] Terminating lingering background processes and releasing ports...${RESET}"
-	@sudo pkill -9 -f sentinel-nexus 2>/dev/null || true
-	@sudo pkill -9 -f mock_plc 2>/dev/null || true
+	@sudo pkill -9 -x sentinel-nexus 2>/dev/null || true
+	@sudo pkill -9 -x mock_plc 2>/dev/null || true
 	@sudo fuser -k 9443/tcp 9444/tcp 50051/tcp 15501/tcp 15502/tcp 8554/tcp 8889/tcp 2368/udp 2>/dev/null || true
 	@echo -e "${GREEN}[+] Grid dismantled and all ports released successfully.${RESET}"
 
