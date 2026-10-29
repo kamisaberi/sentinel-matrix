@@ -142,7 +142,7 @@ port-clean:
 	@echo -e "${YELLOW}[*] Ensuring simulation ports are free (9443, 9444, 50051)...${RESET}"
 	@sudo systemctl stop sentinel-nexus.service 2>/dev/null || true
 	@sudo systemctl disable sentinel-nexus.service 2>/dev/null || true
-	@sudo pkill -9 -f sentinel-nexus 2>/dev/null || true
+	@sudo pkill -9 -x sentinel-nexus 2>/dev/null || true
 	@sudo fuser -k 9443/tcp 9444/tcp 50051/tcp 15501/tcp 15502/tcp 8554/tcp 8889/tcp 2>/dev/null || true
 
 up: port-clean init mock-plc build-device-runtime
