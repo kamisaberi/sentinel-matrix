@@ -8,6 +8,100 @@
     <!-- 100% Zero-CDN Local Air-Gapped Styling -->
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/topology_map.css">
+    <style>
+        /* 2x2 SCHEMATIC GRID ENFORCEMENT */
+        .mission-control-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            grid-template-rows: minmax(320px, auto) minmax(280px, auto) !important;
+            gap: 16px !important;
+            padding: 16px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .mc-frame {
+            background: rgba(14, 19, 27, 0.85) !important;
+            border: 1px solid #243144 !important;
+            border-radius: 8px !important;
+            padding: 14px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        .mc-frame .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .mc-frame .panel-header h3 {
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            color: #F8FAFC;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .video-wall-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            min-height: 240px;
+        }
+
+        .dynamic-sensor-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .drop-log-feed {
+            flex: 1;
+            background: #0A0E14;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #94A3B8;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .attack-button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn-attack {
+            background: #161F2C;
+            border: 1px solid #243144;
+            color: #F8FAFC;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-attack:hover {
+            border-color: #00F0FF;
+            color: #00F0FF;
+        }
+    </style>
 </head>
 
 <body class="dark-theme">

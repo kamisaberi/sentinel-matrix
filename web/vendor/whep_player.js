@@ -1,7 +1,6 @@
 /**
  * Aryorithm Air-Gapped WebRTC (WHEP) Player
- * Connects directly to local MediaMTX (port 8889) via native browser RTCPeerConnection.
- * Zero external CDN dependencies.
+ * Video-only transceiver to eliminate audio negotiation lockups.
  */
 class WhepVideoPlayer {
     constructor(videoElement, streamUrl) {
@@ -12,11 +11,11 @@ class WhepVideoPlayer {
 
     async start() {
         this.pc = new RTCPeerConnection({
-            iceServers: [] // 100% Air-Gapped Local Network: No external STUN/TURN
+            iceServers: [] // 100% Air-Gapped Local Network: Direct P2P to container
         });
 
+        // Request VIDEO ONLY (Industrial thermal sensor carries zero audio)
         this.pc.addTransceiver("video", { direction: "recvonly" });
-        this.pc.addTransceiver("audio", { direction: "recvonly" });
 
         this.pc.ontrack = (event) => {
             if (event.streams && event.streams[0]) {
@@ -44,10 +43,12 @@ class WhepVideoPlayer {
                     sdp: answerSdp
                 });
             } else {
-                console.warn("[WHEP] Stream endpoint returned status:", response.status);
+                console.warn("[WHEP] Endpoint returned HTTP", response.status);
+                throw new Error("HTTP " + response.status);
             }
         } catch (err) {
-            console.warn("[WHEP] Local video stream offline or unreachable:", err);
+            console.warn("[WHEP] WebRTC connection failed, activating fallback:", err);
+            throw err;
         }
     }
 
