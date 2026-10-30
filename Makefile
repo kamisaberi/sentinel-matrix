@@ -105,7 +105,7 @@ mock-plc:
 		echo -e "${GREEN}[+] Successfully compiled shared/bin/mock_plc${RESET}"; \
 	fi
 
-init:
+init: sync-models
 	@mkdir -p shared/certs shared/datasets shared/models shared/logs/nexus shared/logs/nodes shared/logs/forge shared/bin shared/proto shared/lib web configs
 	@if [ ! -f .env ]; then cp .env.example .env; fi
 	@echo -e "${YELLOW}[*] Auto-synchronizing assets from central cache ($(SENTINEL_CACHE_DIR))...${RESET}"
