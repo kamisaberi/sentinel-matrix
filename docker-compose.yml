@@ -77,12 +77,14 @@ services:
       sentinel-grid-net:
         ipv4_address: ${SUBNET_PREFIX:-10.240.0}.75
     ports:
-      - "8554:8554"   # RTSP for Sentinel Edge Plugins
-      - "8889:8889"   # WebRTC (WHEP) for Browser HTML5 Video Player
+      - "8554:8554"         # RTSP for Sentinel Edge Plugins
+      - "8889:8889"         # WebRTC (WHEP) HTTP Signaling
+      - "8189:8189/udp"     # WebRTC ICE Data Transport (Required for browser playback)
     environment:
-      - MTX_RUNONINIT=ffmpeg -re -f lavfi -i testsrc=size=640x360:rate=15 -pix_fmt yuv420p -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp rtsp://localhost:8554/thermal_feed
+      - MTX_WEBRTCADDITIONALHOSTS=127.0.0.1
+      - MTX_PATHS_THERMAL_FEED_RUNONINIT=ffmpeg -re -f lavfi -i testsrc=size=640x360:rate=15 -pix_fmt yuv420p -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp rtsp://127.0.0.1:8554/thermal_feed
+      - MTX_PATHS_THERMAL_FEED_RUNONINITRESTART=yes
 
-      
   # ============================================================================
   # SENSOR 2: MULTI-AXIS VIBRATION & TEMPERATURE SENSOR (Modbus TCP :15502)
   # ============================================================================
