@@ -8,100 +8,6 @@
     <!-- 100% Zero-CDN Local Air-Gapped Styling -->
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/topology_map.css">
-    <style>
-        /* 2x2 SCHEMATIC GRID ENFORCEMENT */
-        .mission-control-grid {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            grid-template-rows: minmax(320px, auto) minmax(280px, auto) !important;
-            gap: 16px !important;
-            padding: 16px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
-
-        .mc-frame {
-            background: rgba(14, 19, 27, 0.85) !important;
-            border: 1px solid #243144 !important;
-            border-radius: 8px !important;
-            padding: 14px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            overflow: hidden !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
-        }
-
-        .mc-frame .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .mc-frame .panel-header h3 {
-            font-size: 12px;
-            letter-spacing: 0.5px;
-            color: #F8FAFC;
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .video-wall-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-            border-radius: 6px;
-            overflow: hidden;
-            position: relative;
-            min-height: 240px;
-        }
-
-        .dynamic-sensor-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .drop-log-feed {
-            flex: 1;
-            background: #0A0E14;
-            border-radius: 6px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 11px;
-            color: #94A3B8;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .attack-button-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .btn-attack {
-            background: #161F2C;
-            border: 1px solid #243144;
-            color: #F8FAFC;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-attack:hover {
-            border-color: #00F0FF;
-            color: #00F0FF;
-        }
-    </style>
 </head>
 
 <body class="dark-theme">
@@ -186,67 +92,71 @@
         <!-- Master Viewports -->
         <main class="dashboard-viewport">
 
-            <!-- TAB 0: INTERACTIVE MULTI-FRAME MISSION CONTROL (NEW) -->
+            <!-- TAB 0: INTERACTIVE MULTI-FRAME MISSION CONTROL (2x2 Balanced Grid) -->
             <div class="tab-pane active" id="tab-mission-control">
                 <div class="mission-control-grid">
 
                     <!-- FRAME 1: FLEET SELECTOR & MULTI-CAMERA VISION WALL -->
                     <div class="mc-frame">
                         <div class="panel-header">
-                            <h3>FLEET NODE &amp; SENSOR VISION WALL</h3>
-                            <select id="mc-node-select" class="form-select-sm"></select>
+                            <div class="frame-title-group">
+                                <span class="frame-index">FRAME 01</span>
+                                <h3>VISION WALL &amp; CAMERA FEED</h3>
+                            </div>
+                            <div class="node-selector-wrapper">
+                                <label for="mc-node-select" class="selector-label">TARGET NODE:</label>
+                                <select id="mc-node-select" class="form-select-sm"></select>
+                            </div>
                         </div>
-                        <div class="video-wall-container" id="mc-video-wall">
-                            <!-- Dynamically populated with WHEP video players by mission_control.js -->
-                        </div>
+                        <div class="video-wall-container" id="mc-video-wall"></div>
                     </div>
 
-                    <!-- FRAME 2: DYNAMIC N-SENSOR GRID (Auto-Scales without Hardcoding) -->
+                    <!-- FRAME 2: DYNAMIC N-SENSOR GRID -->
                     <div class="mc-frame">
                         <div class="panel-header">
-                            <h3>DYNAMIC PHYSICAL SENSORS &amp; CBF BARRIER</h3>
-                            <span class="badge badge-cyan">AUTONOMOUS DISCOVERY</span>
+                            <div class="frame-title-group">
+                                <span class="frame-index">FRAME 02</span>
+                                <h3>DYNAMIC PHYSICAL SENSORS &amp; CBF BARRIER</h3>
+                            </div>
+                            <span class="badge badge-cyan" id="mc-node-backend-badge">INTEL OPENVINO</span>
                         </div>
-                        <div class="dynamic-sensor-grid" id="mc-sensor-grid">
-                            <!-- Dynamically generated gauge & sparkline cards -->
-                        </div>
+                        <div class="dynamic-sensor-grid" id="mc-sensor-grid"></div>
                     </div>
 
                     <!-- FRAME 3: LIVE IN-KERNEL eBPF MITIGATION FEED -->
                     <div class="mc-frame">
                         <div class="panel-header">
-                            <h3>IN-KERNEL eBPF DROPS (&lt; 0.84 µs SLA)</h3>
-                            <span class="badge badge-green">LINE-RATE ACTIVE</span>
+                            <div class="frame-title-group">
+                                <span class="frame-index">FRAME 03</span>
+                                <h3>IN-KERNEL eBPF DROPS (&lt; 0.84 µs SLA)</h3>
+                            </div>
+                            <span class="badge badge-green" id="mc-filter-status">AF_XDP LINE-RATE</span>
                         </div>
-                        <div class="drop-log-feed" id="mc-drop-feed" style="max-height: 240px; overflow-y: auto;">
-                            <div class="drop-entry">[READY] eBPF driver rings listening on physical interfaces...</div>
+                        <div class="drop-log-feed" id="mc-drop-feed">
+                            <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical interfaces...</div>
                         </div>
                     </div>
 
                     <!-- FRAME 4: SCENARIO-AWARE INTERACTIVE ATTACK INJECTOR -->
                     <div class="mc-frame">
                         <div class="panel-header">
-                            <h3>INTERACTIVE RED-TEAM ATTACK GENERATOR</h3>
-                            <span class="badge badge-purple">SCENARIO TRIGGER</span>
-                        </div>
-                        <div class="attack-button-grid" style="margin-top: 10px;">
-                            <button class="btn-attack" data-attack="MODBUS_FC05_OVERRIDE">Inject Modbus Coil Override
-                                (FC05)</button>
-                            <button class="btn-attack" data-attack="S7COMM_CPU_STOP">Inject S7Comm CPU STOP
-                                (0x29)</button>
-                            <button class="btn-attack" data-attack="5G_GTPU_SLICE_HOP">Inject 5G TEID Slice-Hop</button>
-                            <button class="btn-attack" data-attack="AI_PROMPT_INJECTION">Inject AI TRiSM Prompt
-                                Jailbreak</button>
-                            <div class="attack-button-grid" style="margin-top: 10px;">
-                                <button class="btn-attack" id="btn-trigger-anomaly"
-                                    style="border: 1px solid rgba(235, 60, 60, 0.8);">
-                                    [!] INJECT SENSOR ANOMALY (Overheat &amp; Vibration Surge)
-                                </button>
-                                <button class="btn-attack" id="btn-reset-anomaly"
-                                    style="border: 1px solid rgba(0, 220, 140, 0.8);">
-                                    [+] RESET ALL SENSORS TO NORMAL BASELINE
-                                </button>
+                            <div class="frame-title-group">
+                                <span class="frame-index">FRAME 04</span>
+                                <h3>RED-TEAM ATTACK INJECTION &amp; ANOMALY</h3>
                             </div>
+                            <span class="badge badge-purple" id="mc-target-ip-badge">TARGET: 10.240.0.101</span>
+                        </div>
+                        <div class="attack-button-grid">
+                            <button class="btn-attack" data-attack="MODBUS_FC05_OVERRIDE">Inject Modbus Coil Override (FC05)</button>
+                            <button class="btn-attack" data-attack="S7COMM_CPU_STOP">Inject S7Comm CPU STOP (0x29)</button>
+                            <button class="btn-attack" data-attack="5G_GTPU_SLICE_HOP">Inject 5G TEID Slice-Hop</button>
+                            <button class="btn-attack" data-attack="AI_PROMPT_INJECTION">Inject AI TRiSM Prompt Jailbreak</button>
+                            <button class="btn-attack btn-attack-danger" id="btn-trigger-anomaly">
+                                [!] INJECT PHYSICAL ANOMALY (Thermal &amp; Vibration Surge)
+                            </button>
+                            <button class="btn-attack btn-attack-success" id="btn-reset-anomaly">
+                                [+] RESTORE NORMAL BASELINE OPERATING BOUNDS
+                            </button>
                         </div>
                     </div>
 
@@ -303,19 +213,13 @@
                                     <span class="preview-filename" id="prev-filename">s7_guard.spkg</span>
                                 </div>
                                 <div class="preview-details">
-                                    <div class="detail-row"><span class="lbl">Package ID:</span><span
-                                            class="val font-mono" id="prev-id">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Target Protocol:</span><span class="val"
-                                            id="prev-proto">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Latency SLA:</span><span
-                                            class="val text-cyan" id="prev-sla">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Merkle Signature:</span><span
-                                            class="val text-green" id="prev-sig">VERIFIED AUTHENTIC</span></div>
-                                    <div class="detail-row"><span class="lbl">Auditable Source:</span><button
-                                            class="btn-link" id="btn-view-source">View Embedded Source</button></div>
+                                    <div class="detail-row"><span class="lbl">Package ID:</span><span class="val font-mono" id="prev-id">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Target Protocol:</span><span class="val" id="prev-proto">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Latency SLA:</span><span class="val text-cyan" id="prev-sla">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Merkle Signature:</span><span class="val text-green" id="prev-sig">VERIFIED AUTHENTIC</span></div>
+                                    <div class="detail-row"><span class="lbl">Auditable Source:</span><button class="btn-link" id="btn-view-source">View Embedded Source</button></div>
                                 </div>
-                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">BROADCAST PACKAGE
-                                    FLEET-WIDE (&lt; 50ms)</button>
+                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">BROADCAST PACKAGE FLEET-WIDE (&lt; 50ms)</button>
                             </div>
                         </div>
                     </div>
@@ -323,32 +227,22 @@
                         <div class="panel-card">
                             <div class="panel-header">
                                 <h3>ACTIVE EXTENSIONS RUNNING ACROSS FLEET</h3>
-                                <div class="header-actions"><button class="btn-sm" id="btn-refresh-ext">Refresh
-                                        Status</button></div>
+                                <div class="header-actions"><button class="btn-sm" id="btn-refresh-ext">Refresh Status</button></div>
                             </div>
                             <div class="tier-meters-grid">
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-native">TIER A: NATIVE
-                                            C++20</span><span class="tier-speed text-green">88 ns (p50)</span></div>
-                                    <div class="tier-bar-bg">
-                                        <div class="tier-bar-fill" style="width: 15%;"></div>
-                                    </div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-native">TIER A: NATIVE C++20</span><span class="tier-speed text-green">88 ns (p50)</span></div>
+                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 15%;"></div></div>
                                     <span class="tier-desc">Line-rate OT dissectors &bull; POSIX SEGV isolated</span>
                                 </div>
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-lua">TIER C: LUAJIT
-                                            C-FFI</span><span class="tier-speed text-yellow">350 ns (p50)</span></div>
-                                    <div class="tier-bar-bg">
-                                        <div class="tier-bar-fill" style="width: 35%;"></div>
-                                    </div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-lua">TIER C: LUAJIT C-FFI</span><span class="tier-speed text-yellow">350 ns (p50)</span></div>
+                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 35%;"></div></div>
                                     <span class="tier-desc">Dynamic zero-day heuristics &bull; &lt; 2ms hot-swap</span>
                                 </div>
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-wasm">TIER B: RUST
-                                            WASM3</span><span class="tier-speed text-cyan">1,240 ns (p50)</span></div>
-                                    <div class="tier-bar-bg">
-                                        <div class="tier-bar-fill" style="width: 55%;"></div>
-                                    </div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-wasm">TIER B: RUST WASM3</span><span class="tier-speed text-cyan">1,240 ns (p50)</span></div>
+                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 55%;"></div></div>
                                     <span class="tier-desc">Linear memory sandbox &bull; 50 µs watchdog trap</span>
                                 </div>
                             </div>
@@ -409,21 +303,17 @@
                         <h3>STATUTORY COMPLIANCE &amp; HARDWARE AUDIT VAULT</h3>
                     </div>
                     <div class="compliance-actions">
-                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171
-                            Report</button>
-                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial
-                            Report</button>
+                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171 Report</button>
+                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial Report</button>
                     </div>
-                    <pre class="report-preview-box"
-                        id="report-output">Select standard above to compile audit report...</pre>
+                    <pre class="report-preview-box" id="report-output">Select standard above to compile audit report...</pre>
                 </div>
             </div>
 
         </main>
 
         <footer class="boxed-footer">
-            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical
-                Defense</span>
+            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical Defense</span>
             <span class="text-muted font-mono">v1.0.0-core-ebpf</span>
         </footer>
 

@@ -654,3 +654,211 @@ body.dark-theme {
     overflow-y: auto;
     margin-top: 12px;
 }
+
+
+/* ==========================================================================
+   MISSION CONTROL: BALANCED 2x2 QUADRANT GRID
+   ========================================================================== */
+.mission-control-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(320px, 1fr));
+    gap: 16px;
+    height: calc(100vh - 210px);
+    min-height: 680px;
+    box-sizing: border-box;
+}
+
+.mc-frame {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.mc-frame .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.frame-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.frame-index {
+    background: rgba(0, 240, 255, 0.12);
+    color: var(--accent-cyan);
+    font-size: 9px;
+    font-weight: 700;
+    font-family: monospace;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 240, 255, 0.25);
+}
+
+.node-selector-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selector-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.form-select-sm {
+    background: var(--bg-obsidian);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: monospace;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-select-sm:hover,
+.form-select-sm:focus {
+    border-color: var(--accent-cyan);
+}
+
+/* Frame 1: Video Wall */
+.video-wall-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+}
+
+/* Frame 2: Dynamic Sensory Grid */
+.dynamic-sensor-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.sensor-card {
+    background: var(--bg-obsidian);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sensor-sparkline {
+    width: 100%;
+    height: 38px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    margin: 4px 0;
+}
+
+/* Frame 3: Live eBPF Feed */
+.drop-log-feed {
+    flex: 1;
+    background: #06090E;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.drop-entry {
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    word-break: break-all;
+}
+
+/* Frame 4: Red-Team Attack Buttons */
+.attack-button-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 8px;
+    min-height: 0;
+}
+
+.btn-attack {
+    background: var(--bg-obsidian);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.btn-attack:hover {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+    background: rgba(0, 240, 255, 0.05);
+}
+
+.btn-attack-danger {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #FCA5A5;
+}
+
+.btn-attack-danger:hover {
+    border-color: var(--status-red);
+    color: #FFF;
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-attack-success {
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #6EE7B7;
+}
+
+.btn-attack-success:hover {
+    border-color: var(--status-green);
+    color: #FFF;
+    background: rgba(16, 185, 129, 0.2);
+}
+
+@media (max-width: 1024px) {
+    .mission-control-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        height: auto;
+    }
+}
