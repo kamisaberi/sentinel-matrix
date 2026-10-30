@@ -92,77 +92,128 @@
         <!-- Master Viewports -->
         <main class="dashboard-viewport">
 
-            <!-- TAB 0: INTERACTIVE MULTI-FRAME MISSION CONTROL (2x2 Balanced Grid) -->
+            <!-- TAB 0: INTERACTIVE MULTI-FRAME MISSION CONTROL (Prominent Bar + 2x2 Grid) -->
             <div class="tab-pane active" id="tab-mission-control">
+
+                <!-- GLOBAL MISSION CONTROL MASTER BAR (Relocated out of Frame 1) -->
+                <div class="mc-master-bar"
+                    style="background: rgba(14, 19, 27, 0.9); border: 1px solid #243144; border-radius: 6px; padding: 12px 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span
+                            style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00F0FF; box-shadow: 0 0 10px #00F0FF;"></span>
+                        <label for="mc-node-select"
+                            style="font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: #F8FAFC; text-transform: uppercase;">
+                            TARGET ENCLAVE / ACTIVE EDGE SENTRY:
+                        </label>
+                        <select id="mc-node-select" class="form-select-sm"
+                            style="background: #0A0E14; color: #00F0FF; border: 1px solid #00F0FF; font-family: monospace; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="badge badge-cyan" id="mc-node-backend-badge">INTEL OPENVINO</span>
+                        <span class="badge badge-purple" id="mc-target-ip-badge">TARGET: 10.240.0.101</span>
+                        <span class="badge badge-green">IN-KERNEL ACTIVE DEFENSE</span>
+                    </div>
+                </div>
+
                 <div class="mission-control-grid">
 
-                    <!-- FRAME 1: FLEET SELECTOR & MULTI-CAMERA VISION WALL -->
+                    <!-- FRAME 1: MULTI-CAMERA VISION WALL (Camera Controls Inside) -->
                     <div class="mc-frame">
                         <div class="panel-header">
                             <div class="frame-title-group">
                                 <span class="frame-index">FRAME 01</span>
                                 <h3>VISION WALL &amp; CAMERA FEED</h3>
                             </div>
-                            <div class="node-selector-wrapper">
-                                <label for="mc-node-select" class="selector-label">TARGET NODE:</label>
-                                <select id="mc-node-select" class="form-select-sm"></select>
-                            </div>
+                            <span class="badge badge-green" id="cam-protocol-tag">RTSP :8554 / WHEP</span>
                         </div>
                         <div class="video-wall-container" id="mc-video-wall"></div>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="btn-attack btn-attack-danger" id="btn-cam-anomaly"
+                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
+                                [!] TRIGGER THERMAL RUNAWAY
+                            </button>
+                            <button class="btn-attack btn-attack-success" id="btn-cam-normalize"
+                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
+                                [+] NORMALIZE CAMERA FEED
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- FRAME 2: DYNAMIC N-SENSOR GRID -->
+                    <!-- FRAME 2: DYNAMIC N-SENSOR GRID & PLOTS (Physical Surge Controls Inside) -->
                     <div class="mc-frame">
                         <div class="panel-header">
                             <div class="frame-title-group">
                                 <span class="frame-index">FRAME 02</span>
-                                <h3>DYNAMIC PHYSICAL SENSORS &amp; CBF BARRIER</h3>
+                                <h3>DYNAMIC SENSORS &amp; CBF BARRIER</h3>
                             </div>
-                            <span class="badge badge-cyan" id="mc-node-backend-badge">INTEL OPENVINO</span>
+                            <span class="badge badge-cyan" id="mc-sensor-count-badge">4 CHANNELS ACTIVE</span>
                         </div>
                         <div class="dynamic-sensor-grid" id="mc-sensor-grid"></div>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="btn-attack btn-attack-danger" id="btn-sensor-surge"
+                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
+                                [!] SURGE SENSORS (Violate h(x) &lt; 0)
+                            </button>
+                            <button class="btn-attack btn-attack-success" id="btn-sensor-stabilize"
+                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
+                                [+] STABILIZE SENSORS (Lyapunov Safe)
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- FRAME 3: LIVE IN-KERNEL eBPF MITIGATION FEED -->
+                    <!-- FRAME 3: LIVE IN-KERNEL eBPF MITIGATION FEED (Filter Controls Inside) -->
                     <div class="mc-frame">
                         <div class="panel-header">
                             <div class="frame-title-group">
                                 <span class="frame-index">FRAME 03</span>
                                 <h3>IN-KERNEL eBPF DROPS (&lt; 0.84 µs SLA)</h3>
                             </div>
-                            <span class="badge badge-green" id="mc-filter-status">AF_XDP LINE-RATE</span>
+                            <div style="display: flex; gap: 6px;">
+                                <button id="btn-clear-drops" class="btn-ctrl"
+                                    style="font-size: 10px; padding: 2px 8px; background: #1E293B; border: 1px solid #334155; color: #94A3B8; border-radius: 4px; cursor: pointer;">CLEAR</button>
+                                <span class="badge badge-green" id="mc-filter-status">AF_XDP LINE-RATE</span>
+                            </div>
                         </div>
-                        <div class="drop-log-feed" id="mc-drop-feed">
-                            <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical interfaces...</div>
+                        <div class="drop-log-feed" id="mc-drop-feed" style="height: 240px; overflow-y: auto;">
+                            <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical
+                                interfaces...</div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button class="btn-attack" id="btn-test-ebpf-drop"
+                                style="width: 100%; padding: 6px 10px; font-size: 10px; border-color: #00F0FF; color: #00F0FF;">
+                                [>] TEST DRIVER-RING PACKET DROP (&lt; 0.84 µs)
+                            </button>
                         </div>
                     </div>
 
-                    <!-- FRAME 4: SCENARIO-AWARE INTERACTIVE ATTACK INJECTOR -->
+                    <!-- FRAME 4: RED-TEAM ATTACK INJECTION (Exclusively Protocol Exploits) -->
                     <div class="mc-frame">
                         <div class="panel-header">
                             <div class="frame-title-group">
                                 <span class="frame-index">FRAME 04</span>
-                                <h3>RED-TEAM ATTACK INJECTION &amp; ANOMALY</h3>
+                                <h3>RED-TEAM INDUSTRIAL PROTOCOL EXPLOITS</h3>
                             </div>
-                            <span class="badge badge-purple" id="mc-target-ip-badge">TARGET: 10.240.0.101</span>
+                            <span class="badge badge-purple">LIVE INJECTION</span>
                         </div>
-                        <div class="attack-button-grid">
-                            <button class="btn-attack" data-attack="MODBUS_FC05_OVERRIDE">Inject Modbus Coil Override (FC05)</button>
-                            <button class="btn-attack" data-attack="S7COMM_CPU_STOP">Inject S7Comm CPU STOP (0x29)</button>
-                            <button class="btn-attack" data-attack="5G_GTPU_SLICE_HOP">Inject 5G TEID Slice-Hop</button>
-                            <button class="btn-attack" data-attack="AI_PROMPT_INJECTION">Inject AI TRiSM Prompt Jailbreak</button>
-                            <button class="btn-attack btn-attack-danger" id="btn-trigger-anomaly">
-                                [!] INJECT PHYSICAL ANOMALY (Thermal &amp; Vibration Surge)
-                            </button>
-                            <button class="btn-attack btn-attack-success" id="btn-reset-anomaly">
-                                [+] RESTORE NORMAL BASELINE OPERATING BOUNDS
-                            </button>
+                        <p style="font-size: 10px; color: #94A3B8; margin-bottom: 10px;">Replay industrial zero-day
+                            exploits targeting the selected active sentry:</p>
+                        <div class="attack-button-grid"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <button class="btn-attack" data-attack="MODBUS_FC05_OVERRIDE">Modbus Coil Override
+                                (FC05)</button>
+                            <button class="btn-attack" data-attack="S7COMM_CPU_STOP">S7Comm CPU STOP (0x29)</button>
+                            <button class="btn-attack" data-attack="5G_GTPU_SLICE_HOP">5G TEID Slice-Hopping</button>
+                            <button class="btn-attack" data-attack="AI_PROMPT_INJECTION">AI TRiSM Prompt
+                                Jailbreak</button>
                         </div>
                     </div>
 
                 </div>
-            </div>
-
+            </div> 
+            
+            
+            
             <!-- TAB 1: FLEET TOPOLOGY -->
             <div class="tab-pane" id="tab-topology">
                 <div class="pane-split">
@@ -213,13 +264,19 @@
                                     <span class="preview-filename" id="prev-filename">s7_guard.spkg</span>
                                 </div>
                                 <div class="preview-details">
-                                    <div class="detail-row"><span class="lbl">Package ID:</span><span class="val font-mono" id="prev-id">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Target Protocol:</span><span class="val" id="prev-proto">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Latency SLA:</span><span class="val text-cyan" id="prev-sla">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Merkle Signature:</span><span class="val text-green" id="prev-sig">VERIFIED AUTHENTIC</span></div>
-                                    <div class="detail-row"><span class="lbl">Auditable Source:</span><button class="btn-link" id="btn-view-source">View Embedded Source</button></div>
+                                    <div class="detail-row"><span class="lbl">Package ID:</span><span
+                                            class="val font-mono" id="prev-id">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Target Protocol:</span><span class="val"
+                                            id="prev-proto">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Latency SLA:</span><span
+                                            class="val text-cyan" id="prev-sla">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Merkle Signature:</span><span
+                                            class="val text-green" id="prev-sig">VERIFIED AUTHENTIC</span></div>
+                                    <div class="detail-row"><span class="lbl">Auditable Source:</span><button
+                                            class="btn-link" id="btn-view-source">View Embedded Source</button></div>
                                 </div>
-                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">BROADCAST PACKAGE FLEET-WIDE (&lt; 50ms)</button>
+                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">BROADCAST PACKAGE
+                                    FLEET-WIDE (&lt; 50ms)</button>
                             </div>
                         </div>
                     </div>
@@ -227,22 +284,32 @@
                         <div class="panel-card">
                             <div class="panel-header">
                                 <h3>ACTIVE EXTENSIONS RUNNING ACROSS FLEET</h3>
-                                <div class="header-actions"><button class="btn-sm" id="btn-refresh-ext">Refresh Status</button></div>
+                                <div class="header-actions"><button class="btn-sm" id="btn-refresh-ext">Refresh
+                                        Status</button></div>
                             </div>
                             <div class="tier-meters-grid">
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-native">TIER A: NATIVE C++20</span><span class="tier-speed text-green">88 ns (p50)</span></div>
-                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 15%;"></div></div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-native">TIER A: NATIVE
+                                            C++20</span><span class="tier-speed text-green">88 ns (p50)</span></div>
+                                    <div class="tier-bar-bg">
+                                        <div class="tier-bar-fill" style="width: 15%;"></div>
+                                    </div>
                                     <span class="tier-desc">Line-rate OT dissectors &bull; POSIX SEGV isolated</span>
                                 </div>
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-lua">TIER C: LUAJIT C-FFI</span><span class="tier-speed text-yellow">350 ns (p50)</span></div>
-                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 35%;"></div></div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-lua">TIER C: LUAJIT
+                                            C-FFI</span><span class="tier-speed text-yellow">350 ns (p50)</span></div>
+                                    <div class="tier-bar-bg">
+                                        <div class="tier-bar-fill" style="width: 35%;"></div>
+                                    </div>
                                     <span class="tier-desc">Dynamic zero-day heuristics &bull; &lt; 2ms hot-swap</span>
                                 </div>
                                 <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-wasm">TIER B: RUST WASM3</span><span class="tier-speed text-cyan">1,240 ns (p50)</span></div>
-                                    <div class="tier-bar-bg"><div class="tier-bar-fill" style="width: 55%;"></div></div>
+                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-wasm">TIER B: RUST
+                                            WASM3</span><span class="tier-speed text-cyan">1,240 ns (p50)</span></div>
+                                    <div class="tier-bar-bg">
+                                        <div class="tier-bar-fill" style="width: 55%;"></div>
+                                    </div>
                                     <span class="tier-desc">Linear memory sandbox &bull; 50 µs watchdog trap</span>
                                 </div>
                             </div>
@@ -303,17 +370,21 @@
                         <h3>STATUTORY COMPLIANCE &amp; HARDWARE AUDIT VAULT</h3>
                     </div>
                     <div class="compliance-actions">
-                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171 Report</button>
-                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial Report</button>
+                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171
+                            Report</button>
+                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial
+                            Report</button>
                     </div>
-                    <pre class="report-preview-box" id="report-output">Select standard above to compile audit report...</pre>
+                    <pre class="report-preview-box"
+                        id="report-output">Select standard above to compile audit report...</pre>
                 </div>
             </div>
 
         </main>
 
         <footer class="boxed-footer">
-            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical Defense</span>
+            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical
+                Defense</span>
             <span class="text-muted font-mono">v1.0.0-core-ebpf</span>
         </footer>
 
