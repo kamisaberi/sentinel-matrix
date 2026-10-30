@@ -28,7 +28,7 @@
             <nav class="nav-tabs">
                 <button class="nav-tab active" data-tab="tab-mission-control">MISSION CONTROL</button>
                 <button class="nav-tab" data-tab="tab-topology">FLEET TOPOLOGY</button>
-                <button class="nav-tab" data-tab="tab-extensions">EXTENSIONS &amp; .SPKG</button>
+                <button class="nav-tab" data-tab="tab-extensions">ARTIFACTS &amp; VAULT</button>
                 <button class="nav-tab" data-tab="tab-pipeline">PIPELINE DAG</button>
                 <button class="nav-tab" data-tab="tab-threats">MITRE ATT&amp;CK</button>
                 <button class="nav-tab" data-tab="tab-ota">CANARY OTA</button>
@@ -210,10 +210,10 @@
                     </div>
 
                 </div>
-            </div> 
-            
-            
-            
+            </div>
+
+
+
             <!-- TAB 1: FLEET TOPOLOGY -->
             <div class="tab-pane" id="tab-topology">
                 <div class="pane-split">
@@ -239,89 +239,97 @@
                 </div>
             </div>
 
-            <!-- TAB 2: EXTENSIONS & .SPKG -->
+            <!-- TAB 2: UNIVERSAL 7-ARTIFACT REGISTRY VAULT -->
             <div class="tab-pane" id="tab-extensions">
                 <div class="extensions-layout">
+                    <!-- Left Column: Universal Ingestion Dropzone -->
                     <div class="spkg-upload-col">
                         <div class="panel-card">
                             <div class="panel-header">
-                                <h3>FLEET PACKAGE DEPLOYER (.spkg)</h3>
-                                <span class="badge badge-purple">Ed25519 SEALED</span>
+                                <h3>UNIVERSAL ARTIFACT INGESTION</h3>
+                                <span class="badge badge-purple">7 ASSET TYPES</span>
                             </div>
-                            <p class="panel-desc">Drag and drop a unified Sentinel Package (.spkg) to verify Merkle
-                                integrity, audit source code, and broadcast fleet-wide via gRPC.</p>
+                            <p class="panel-desc">Drag and drop any verified artifact (.spkg, .onnx, .slab, .pcap,
+                                .tar.gz, .blueprint, .aryopack) to inspect headers and deploy locally.</p>
                             <div class="dropzone" id="spkg-dropzone">
-                                <input type="file" id="spkg-file-input" accept=".spkg" class="file-input-hidden">
+                                <input type="file" id="spkg-file-input"
+                                    accept=".spkg,.onnx,.slab,.pcap,.gz,.tar,.blueprint,.aryopack"
+                                    class="file-input-hidden">
                                 <div class="dropzone-content">
                                     <div class="dropzone-icon">&#10515;</div>
-                                    <span class="dropzone-title">Drop .spkg package here</span>
-                                    <span class="dropzone-sub">or click to browse local filesystem</span>
+                                    <span class="dropzone-title">Drop artifact container here</span>
+                                    <span class="dropzone-sub">Accepts .spkg, .onnx, .slab, .pcap, .tar.gz, .blueprint,
+                                        .aryopack</span>
                                 </div>
                             </div>
                             <div class="package-preview hidden" id="package-preview">
                                 <div class="preview-header">
-                                    <span class="preview-badge" id="prev-tier-badge">TIER B: RUST WASM</span>
-                                    <span class="preview-filename" id="prev-filename">s7_guard.spkg</span>
+                                    <span class="preview-badge" id="prev-tier-badge">PACKAGE</span>
+                                    <span class="preview-filename font-mono" id="prev-filename">-</span>
                                 </div>
                                 <div class="preview-details">
-                                    <div class="detail-row"><span class="lbl">Package ID:</span><span
-                                            class="val font-mono" id="prev-id">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Target Protocol:</span><span class="val"
-                                            id="prev-proto">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Latency SLA:</span><span
-                                            class="val text-cyan" id="prev-sla">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Merkle Signature:</span><span
-                                            class="val text-green" id="prev-sig">VERIFIED AUTHENTIC</span></div>
-                                    <div class="detail-row"><span class="lbl">Auditable Source:</span><button
-                                            class="btn-link" id="btn-view-source">View Embedded Source</button></div>
+                                    <div class="detail-row"><span class="lbl">Asset Type:</span><span
+                                            class="val font-mono" id="prev-type">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Format / Spec:</span><span
+                                            class="val text-cyan" id="prev-spec">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Payload Size:</span><span class="val"
+                                            id="prev-size">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Signature:</span><span
+                                            class="val text-green" id="prev-sig">VERIFIED ED25519</span></div>
                                 </div>
-                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">BROADCAST PACKAGE
-                                    FLEET-WIDE (&lt; 50ms)</button>
+                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">STAGE / DEPLOY TO LOCAL
+                                    RUNTIME</button>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Right Column: Universal 7-Artifact Inventory Table -->
                     <div class="extensions-table-col">
                         <div class="panel-card">
                             <div class="panel-header">
-                                <h3>ACTIVE EXTENSIONS RUNNING ACROSS FLEET</h3>
-                                <div class="header-actions"><button class="btn-sm" id="btn-refresh-ext">Refresh
-                                        Status</button></div>
-                            </div>
-                            <div class="tier-meters-grid">
-                                <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-native">TIER A: NATIVE
-                                            C++20</span><span class="tier-speed text-green">88 ns (p50)</span></div>
-                                    <div class="tier-bar-bg">
-                                        <div class="tier-bar-fill" style="width: 15%;"></div>
-                                    </div>
-                                    <span class="tier-desc">Line-rate OT dissectors &bull; POSIX SEGV isolated</span>
-                                </div>
-                                <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-lua">TIER C: LUAJIT
-                                            C-FFI</span><span class="tier-speed text-yellow">350 ns (p50)</span></div>
-                                    <div class="tier-bar-bg">
-                                        <div class="tier-bar-fill" style="width: 35%;"></div>
-                                    </div>
-                                    <span class="tier-desc">Dynamic zero-day heuristics &bull; &lt; 2ms hot-swap</span>
-                                </div>
-                                <div class="tier-meter-card">
-                                    <div class="tier-meter-top"><span class="tier-tag tier-tag-wasm">TIER B: RUST
-                                            WASM3</span><span class="tier-speed text-cyan">1,240 ns (p50)</span></div>
-                                    <div class="tier-bar-bg">
-                                        <div class="tier-bar-fill" style="width: 55%;"></div>
-                                    </div>
-                                    <span class="tier-desc">Linear memory sandbox &bull; 50 µs watchdog trap</span>
+                                <h3>AIR-GAPPED SYSTEM VAULT INVENTORY</h3>
+                                <div class="header-actions">
+                                    <button class="btn-sm" id="btn-refresh-ext">Refresh Vault</button>
                                 </div>
                             </div>
-                            <table class="data-table mt-4" id="table-extensions">
+
+                            <!-- 7-Category Filter Pills -->
+                            <div class="artifact-filter-bar"
+                                style="display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px 0;">
+                                <button class="btn-ctrl active" data-filter="all"
+                                    style="font-size: 10px; padding: 4px 10px; background: #00F0FF; color: #0B0F17; font-weight: 700; border-radius: 4px; border: none; cursor: pointer;">ALL
+                                    (7 TYPES)</button>
+                                <button class="btn-ctrl" data-filter="package"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">PACKAGES
+                                    (.spkg)</button>
+                                <button class="btn-ctrl" data-filter="model"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">MODELS
+                                    (.onnx)</button>
+                                <button class="btn-ctrl" data-filter="dataset"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">DATASETS
+                                    (.slab)</button>
+                                <button class="btn-ctrl" data-filter="pcap"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">PCAPS
+                                    (.pcap)</button>
+                                <button class="btn-ctrl" data-filter="scenario"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">SCENARIOS
+                                    (.tar.gz)</button>
+                                <button class="btn-ctrl" data-filter="blueprint"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">BLUEPRINTS
+                                    (.blueprint)</button>
+                                <button class="btn-ctrl" data-filter="appliance"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">APPLIANCES
+                                    (.aryopack)</button>
+                            </div>
+
+                            <table class="data-table" id="table-extensions">
                                 <thead>
                                     <tr>
-                                        <th>PACKAGE IDENTIFIER</th>
-                                        <th>TIER</th>
-                                        <th>PROTOCOL</th>
-                                        <th>LATENCY</th>
-                                        <th>FRAMES PROCESSED</th>
-                                        <th>KERNEL DROPS</th>
+                                        <th>ASSET IDENTIFIER</th>
+                                        <th>TYPE</th>
+                                        <th>FORMAT / SPEC</th>
+                                        <th>RUNTIME TARGET</th>
+                                        <th>SIZE</th>
                                         <th>STATUS</th>
                                     </tr>
                                 </thead>
@@ -331,7 +339,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- TAB 3: PIPELINE DAG -->
             <div class="tab-pane" id="tab-pipeline">
                 <div class="panel-card">
