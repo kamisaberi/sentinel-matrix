@@ -1,11 +1,13 @@
+# ============================================================================
+# ARYORITHM MODEL ROUTING DAG: NODE 02 (METRO HOSPITAL PACS & VISION)
+# ============================================================================
+
 node:
   identifier: "Edge-Hospital-PACS-02"
   site_identifier: "Metro-General-Hospital"
   hardware:
     type: "DEVICE_VIRTUAL_TPM"
-    hypervisor: "VMware Workstation Pro"
     primary_backend: "NVIDIA_TENSORRT"
-    kernel_version: "6.8.0-45-generic"
     xdp_driver_mode: "SKB"
 
 nexus:
@@ -13,12 +15,55 @@ nexus:
   host: "10.240.0.10"
   port: 50051
   nexus_http_port: 9443
-  sentinel_local_api_port: 8443
-  heartbeat_interval_sec: 5
-  active_model_name: "network_threat_v1.onnx"
+  active_model_name: "thermal_anomaly_vision.onnx"
   local_models_dir: "/etc/sentinel/models"
 
 subsystems:
   medical_iot_validator: true
-  monitored_protocols: ["DICOM_PACS", "HL7_V2"]
+  vision_perimeter_guard: true
+  monitored_protocols: ["RTSP", "DICOM_PACS", "UDP_LIDAR"]
   ebpf_line_rate_drop: true
+
+# --- STAGE 2 & STAGE 3 SENSOR-TO-MODEL ROUTING DAG ---
+routes:
+  - sensor_id: Hospital-Thermal-Camera-01
+    sensor_type: FLIR_RTSP_STREAM
+    driver_mode: AF_XDP_UMEM
+    match:
+      port: 8554
+      transport: tcp
+      package_id: org.aryorithm.package.rtsp_vision_guard
+      plugin_id: rtsp_vision_correlator_plugin.so
+      owner_subsystem: 03_ndr
+      execution_mode: CASCADE_SHORT_CIRCUIT
+      model_id: thermal_anomaly_vision.onnx
+      silicon_target: NVIDIA_TENSORRT
+      format: ONNX
+      precision: INT8
+      latency_budget_ns: 18000
+      threshold_drop: 0.80
+
+  - sensor_id: Hospital-SICK-LiDAR-02
+    sensor_type: SPATIAL_LIDAR_SCANNER
+    driver_mode: AF_XDP_UMEM
+    match:
+      port: 2368
+      transport: udp
+      package_id: org.aryorithm.package.dicom_phi_guard
+      plugin_id: dicom_medical_plugin.so
+      owner_subsystem: 17_iot_sec
+      execution_mode: CASCADE_SHORT_CIRCUIT
+      model_id: lidar_spatial_detector.onnx
+      silicon_target: NVIDIA_TENSORRT
+      format: ONNX
+      precision: INT8
+      latency_budget_ns: 15000
+      threshold_drop: 0.85
+
+# --- STAGE 4 CROSS-MODAL FUSION INVARIANT ---
+fusion_rules:
+  - correlation_id: HOSPITAL_PERIMETER_SURGE
+    cyber_sensor_id: Hospital-Thermal-Camera-01
+    cyber_max_score: 0.3
+    physical_sensor_id: Hospital-SICK-LiDAR-02
+    action: KERNEL_DROP_AND_ISOLATE
