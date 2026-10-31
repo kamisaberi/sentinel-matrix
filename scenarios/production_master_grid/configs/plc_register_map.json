@@ -1,0 +1,30 @@
+{
+    "device_info": {
+        "vendor": "Siemens S7 / Modbus TCP Digital Twin",
+        "station_name": "Substation_Alpha_PLC",
+        "firmware_version": "v2.1.0"
+    },
+    "default_ports": {
+        "modbus_tcp": 502,
+        "s7comm": 102,
+        "iec104": 2404
+    },
+    "modbus_registers": {
+        "coils": {
+            "0": true,
+            "1": false,
+            "2": true
+        },
+        "holding_registers": {
+            "40001": 500,
+            "40002": 85,
+            "40003": 1450
+        }
+    },
+    "physical_telemetry_simulation": {
+        "initial_temperature_celsius": 85.0,
+        "vibration_rpm": 1450.0,
+        "pressure_psi": 120.0,
+        "auto_heat_increment_per_sec": 0.5
+    }
+}
