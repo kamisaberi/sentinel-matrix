@@ -403,3 +403,26 @@ aryo matrix scenario down --name production_master_grid
 ```
 
 Follow Steps 1 through 6 in your terminal, and confirm that all 9 production containers boot and report healthy.
+
+
+---
+---
+---
+
+cd /home/kami/sentinel-matrix
+
+# 1. Launch default tested production grid (.tar.gz) in 1 command
+make scenario-up
+
+# 2. Check running status
+make scenario-status
+
+# 3. Restart the scenario cleanly
+make scenario-restart
+
+# 4. Tear down the scenario
+make scenario-down
+
+# 5. Launch a specific scenario archive
+make scenario-up SCENARIO=~/.cache/sentinel/scenarios/scenario_water_treatment_facility.tar.gz
+make scenario-down
