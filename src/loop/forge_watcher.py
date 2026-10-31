@@ -10,6 +10,7 @@ import urllib.error
 NEXUS_REST_URL = os.environ.get("NEXUS_REST_URL", "http://10.240.0.10:9443")
 DATASET_DIR = os.environ.get("NEXUS_DATASET_DIR", "/var/lib/sentinel-nexus/forge_datasets")
 MODELS_DIR = os.environ.get("NEXUS_MODELS_DIR", "/opt/sentinel-nexus/models")
+FORGE_AUTO_RETRAIN = os.environ.get("FORGE_AUTO_RETRAIN", "false").lower() in ("true", "1", "yes")
 
 def calculate_sha256(filepath):
     h = hashlib.sha256()
@@ -36,40 +37,36 @@ def stage_model(model_name, model_path):
         print(f"[-] Error staging model to Nexus: {e}")
 
 def main():
-    print("[*] xInfer-Forge Watcher initialized. Polling for curated datasets...")
+    print("==========================================================================")
+    print("        XINFER-FORGE WATCHER: CONTINUAL LEARNING CONTROLLER               ")
+    print("==========================================================================")
+
+    # HARD INVARIANT: Standby mode when auto-retrain is disabled
+    if not FORGE_AUTO_RETRAIN:
+        print("[*] FORGE_AUTO_RETRAIN is DISABLED (manual mode active).")
+        print("[+] Automatic ONNX generation is paused. Standing by for manual 'aryo forge run' commands...")
+        while True:
+            time.sleep(60)
+
+    print("[*] xInfer-Forge Watcher initialized with AUTO-RETRAIN enabled.")
     processed_datasets = set()
     model_version = 2
 
     while True:
-        time.sleep(5)
+        time.sleep(10)
         datasets = glob.glob(os.path.join(DATASET_DIR, "forge_dataset_*.csv"))
         for d in datasets:
             if d not in processed_datasets:
-                print(f"\n[+] Detected new curated dataset from Nexus: {d}")
+                print(f"\n[+] Processing curated dataset from Nexus: {d}")
                 processed_datasets.add(d)
 
-                # Simulate Self-Supervised Masked Autoencoding (MAE) training
-                print("[*] Training Masked Autoencoder (MAE) on edge NetFlow representations...")
-                time.sleep(6)
-                print("[+] Evaluating against configs/safety/golden_attacks.yaml... 100% Retained!")
-
-                # Generate updated ONNX model artifact
-                model_name = f"network_threat_v{model_version}.onnx"
+                model_name = "network_threat_v2_adapted.onnx"
                 model_path = os.path.join(MODELS_DIR, model_name)
                 with open(model_path, "wb") as f:
                     f.write(f"ONNX_SENTINEL_WEIGHTS_V{model_version}_ADAPTED".encode('utf-8'))
 
-                print(f"[+] Compiled to ONNX Opset 17: {model_path}")
+                print(f"[+] Output static candidate model: {model_path}")
                 stage_model(model_name, model_path)
-
-                # Automatically advance model canary stages via Nexus REST API
-                time.sleep(4)
-                urllib.request.urlopen(urllib.request.Request(f"{NEXUS_REST_URL}/api/v1/ota/advance", data=b"{}"))
-                print("[+] Advanced to 5% Canary Cohort.")
-                time.sleep(6)
-                urllib.request.urlopen(urllib.request.Request(f"{NEXUS_REST_URL}/api/v1/ota/advance", data=b"{}"))
-                print(f"\033[32m[+] Fully promoted {model_name} FLEET-WIDE! Edge appliances will auto-pull.\033[0m")
-
                 model_version += 1
 
 if __name__ == "__main__":
