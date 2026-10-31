@@ -23,6 +23,16 @@ def ensure_cache_dir():
     STAGED_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def safe_clean_dir(target_path: Path):
+    """Safely removes a directory even if prior runs left root-owned files."""
+    if not target_path.exists():
+        return
+    try:
+        shutil.rmtree(target_path)
+    except PermissionError:
+        # Fallback to sudo rm if previous Docker commands left root artifacts
+        subprocess.run(["sudo", "rm", "-rf", str(target_path)], check=False)
+
 def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
     """
     Resolves input (tar.gz, directory, yaml file, or slug name) into a valid scenario.yaml.
