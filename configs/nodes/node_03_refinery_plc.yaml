@@ -1,11 +1,13 @@
+# ============================================================================
+# ARYORITHM MODEL ROUTING DAG: NODE 03 (COASTAL REFINERY ZONE B)
+# ============================================================================
+
 node:
   identifier: "Edge-Refinery-PLC-03"
   site_identifier: "Coastal-Refinery-ZoneB"
   hardware:
     type: "DEVICE_DMI_FALLBACK"
-    hypervisor: "VMware Virtual Platform"
     primary_backend: "ROCKCHIP_RKNN"
-    kernel_version: "6.8.0-45-generic"
     xdp_driver_mode: "SKB"
 
 nexus:
@@ -13,12 +15,57 @@ nexus:
   host: "10.240.0.10"
   port: 50051
   nexus_http_port: 9443
-  sentinel_local_api_port: 8443
-  heartbeat_interval_sec: 5
-  active_model_name: "network_threat_v1.onnx"
+  active_model_name: "network_threat_int8.onnx"
   local_models_dir: "/etc/sentinel/models"
 
 subsystems:
   industrial_boundary_guard: true
-  monitored_protocols: ["PROFINET", "S7COMM"]
+  continuous_ode_stability: true
+  monitored_protocols: ["MODBUS", "S7COMM"]
   ebpf_line_rate_drop: true
+
+# --- STAGE 2 & STAGE 3 SENSOR-TO-MODEL ROUTING DAG ---
+routes:
+  - sensor_id: Refinery-Reactor-PLC-01
+    sensor_type: SCADA_S7COMM_MODBUS
+    driver_mode: AF_XDP_UMEM
+    match:
+      port: 502
+      transport: tcp
+      package_id: org.aryorithm.package.s7comm_guard
+      plugin_id: s7comm_opcua_plugin.so
+      owner_subsystem: 18_cps_sec
+      execution_mode: CASCADE_SHORT_CIRCUIT
+      model_id: network_threat_int8.onnx
+      silicon_target: ROCKCHIP_RKNN
+      format: ONNX
+      precision: INT8
+      latency_budget_ns: 20000
+      threshold_drop: 0.85
+      xai_explainer: MRD_XAI
+
+  - sensor_id: Refinery-IFM-Vibration-02
+    sensor_type: VIBRATION_BEARING_PROBE
+    driver_mode: AF_XDP_UMEM
+    match:
+      port: 15502
+      transport: tcp
+      package_id: org.aryorithm.package.modbus_actuator_guard
+      plugin_id: scada_modbus_plugin.so
+      owner_subsystem: 18_cps_sec
+      execution_mode: CASCADE_SHORT_CIRCUIT
+      model_id: vibration_spectral_ae.onnx
+      silicon_target: ROCKCHIP_RKNN
+      format: ONNX
+      precision: INT8
+      latency_budget_ns: 12000
+      threshold_drop: 0.80
+
+# --- STAGE 4 CROSS-MODAL FUSION INVARIANT ---
+fusion_rules:
+  - correlation_id: STUXNET_CENTRIFUGE_OVERSPIN
+    cyber_sensor_id: Refinery-Reactor-PLC-01
+    cyber_max_score: 0.2
+    physical_sensor_id: Refinery-IFM-Vibration-02
+    physical_min_temp: 120.0
+    action: KERNEL_DROP_AND_ISOLATE
