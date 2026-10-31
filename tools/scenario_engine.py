@@ -74,7 +74,7 @@ def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
 
         extract_target = STAGED_DIR / slug
         if extract_target.exists():
-            shutil.rmtree(extract_target)
+            safe_clean_dir(extract_target)
         extract_target.mkdir(parents=True, exist_ok=True)
 
         print(f"[*] Extracting scenario archive: {p.name} -> {extract_target}...")
