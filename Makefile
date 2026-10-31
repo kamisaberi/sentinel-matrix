@@ -86,7 +86,7 @@ help:
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-run" "Execute attack automation script in the active unpacked scenario"
 	@echo ""
 
-@echo -e "${GREEN}${BOLD}8. DYNAMIC EXTENSIBLE SCENARIO ENGINE${RESET}"
+	@echo -e "${GREEN}${BOLD}8. DYNAMIC EXTENSIBLE SCENARIO ENGINE${RESET}"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-up" "Build & launch scenario (default: production_master_grid or SCENARIO=...)"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-down" "Dismantle active scenario containers and custom networks (NAME=...)"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-restart" "Full teardown and clean re-launch of the active scenario"
