@@ -1,0 +1,49 @@
+name: matrix-water_treatment_facility
+networks:
+  water_scada_net:
+    driver: bridge
+    internal: true
+    ipam:
+      driver: default
+      config:
+      - subnet: 10.210.0.0/24
+        gateway: 10.210.0.1
+services:
+  water-intake-plc:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-intake-plc
+    hostname: intake.water.internal
+    restart: unless-stopped
+    ports:
+    - 15501:502
+    command:
+    - --archetype
+    - plc
+    - --protocol
+    - modbus
+    - --port
+    - '502'
+    - --name
+    - Water-Intake-PLC
+    networks:
+      water_scada_net:
+        ip: 10.210.0.10
+  water-chlorine-plc:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-chlorine-plc
+    hostname: chlorine.water.internal
+    restart: unless-stopped
+    ports:
+    - 15502:502
+    command:
+    - --archetype
+    - plc
+    - --protocol
+    - modbus
+    - --port
+    - '502'
+    - --name
+    - Chlorine-Dosing-PLC
+    networks:
+      water_scada_net:
+        ip: 10.210.0.20
