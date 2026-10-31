@@ -417,4 +417,4 @@ If you utilize Sentinel-Matrix in your research, academic publications, or cyber
 **Developed & Maintained by:**  
 **Aryorithm Technologies B.V.**  
 *Autonomous Sub-Microsecond Edge Defense for Critical Cyber-Physical Infrastructure*  
-Amsterdam, The Netherlands \quad\textbar\quad Website: [https://aryorithm.com](https://aryorithm.com) \quad\textbar\quad Direct Inquiries: `kamran@aryorithm.com`
+Amsterdam, The Netherlands \quad\textbar\quad Website: [https://aryorithm.com](https://aryorithm.com) \quad\textbar\quad Direct Inquiries: `kamran.saberifard@aryorithm.com`
