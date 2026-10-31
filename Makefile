@@ -382,21 +382,49 @@ scenario-run:
 	@echo -e "${YELLOW}[*] Executing active scenario attack script...${RESET}"
 	@bash configs/active_scenario/scripts/run_attack.sh
 
+
+
 # ==============================================================================
 # 8. DYNAMIC EXTENSIBLE SCENARIO ENGINE
 # ==============================================================================
-scenario-load:
-	@if [ -z "$(SCENARIO)" ]; then \
-		echo -e "${RED}[-] Usage: make scenario-load SCENARIO=<path/to/scenario.yaml> [MODE=local|air-gapped|cloud]${RESET}"; \
-		exit 1; \
-	fi
-	python3 tools/scenario_engine.py load $(SCENARIO) $(if $(MODE),--mode $(MODE),)
+# Default scenario to launch if SCENARIO= is not specified
+DEFAULT_DYNAMIC_SCENARIO := scenarios/master_grid_scenario.yaml
+
+scenario-up:
+	@TARGET_SCENARIO="$(SCENARIO)"; \
+	if [ -z "$$TARGET_SCENARIO" ]; then \
+		if [ -f "$$HOME/.cache/sentinel/scenarios/scenario_production_master_grid.tar.gz" ]; then \
+			TARGET_SCENARIO="$$HOME/.cache/sentinel/scenarios/scenario_production_master_grid.tar.gz"; \
+		elif [ -f "$(SENTINEL_CACHE_DIR)/scenarios/scenario_production_master_grid.tar.gz" ]; then \
+			TARGET_SCENARIO="$(SENTINEL_CACHE_DIR)/scenarios/scenario_production_master_grid.tar.gz"; \
+		else \
+			TARGET_SCENARIO="$(DEFAULT_DYNAMIC_SCENARIO)"; \
+		fi; \
+	fi; \
+	echo -e "${CYAN}[*] Launching dynamic scenario: $${TARGET_SCENARIO}...${RESET}"; \
+	python3 tools/scenario_engine.py load "$$TARGET_SCENARIO" $(if $(MODE),--mode $(MODE),)
+
+scenario-load: scenario-up
 
 scenario-down:
-	python3 tools/scenario_engine.py down
+	@echo -e "${YELLOW}[*] Dismantling dynamic scenario mesh...${RESET}"
+	@python3 tools/scenario_engine.py down $(if $(NAME),--name $(NAME),)
+	@echo -e "${GREEN}[+] Dynamic scenario dismantled successfully.${RESET}"
+
+scenario-restart: scenario-down scenario-up
 
 scenario-status:
-	python3 tools/scenario_engine.py status
+	@python3 tools/scenario_engine.py status $(if $(NAME),--name $(NAME),)
+
+scenario-pack:
+	@if [ -z "$(NAME)" ]; then \
+		echo -e "${RED}[-] Usage: make scenario-pack NAME=<scenario_folder> [EMBED=1]${RESET}"; \
+		exit 1; \
+	fi
+	@EMBED_FLAG=""; \
+	if [ "$(EMBED)" = "1" ] || [ "$(EMBED)" = "true" ]; then EMBED_FLAG="--embed"; fi; \
+	echo -e "${CYAN}[*] Packaging scenario: $(NAME) (Embed: $${EMBED_FLAG:-false})...${RESET}"; \
+	aryo scenario pack scenarios/$(NAME) $${EMBED_FLAG}
 
 sim-finetune:
 	@MODE_VAL=$${MODE:-air-gapped}; \
