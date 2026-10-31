@@ -1,381 +1,420 @@
-# Sentinel Matrix: Autonomous Cyber-Range & Simulation Mesh
+# Sentinel-Matrix: Autonomous Cyber-Physical Cyber-Range & Digital Twin Mesh
+### Tier 7 of the Aryorithm Technologies Active Defense Ecosystem
+
+[![Ecosystem Health](https://img.shields.io/badge/System%20Health-21%2F21%20PASSED-10B981?style=for-the-badge)](https://aryorithm.com)
+[![eBPF Kernel Drop](https://img.shields.io/badge/eBPF%20Drop-0.84%20%C2%B5s-00F0FF?style=for-the-badge)](https://aryorithm.com)
+[![Line Rate](https://img.shields.io/badge/AF__XDP%20Throughput-40M%2B%20EPS-00B4D8?style=for-the-badge)](https://aryorithm.com)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
+[![DOI](https://img.shields.io/badge/CERN%2FZenodo%20DOI-10.5281%2Fzenodo.23598779-A855F7?style=for-the-badge)](https://doi.org/10.5281/zenodo.23598779)
+
+---
+
+## 1. Executive Overview
+
+**Sentinel-Matrix** is an autonomous, self-sovereign Cyber-Physical Systems (CPS) and Industrial Control Systems (ICS) digital twin range. It provides a multi-container network simulation environment designed to evaluate in-kernel eBPF active defenses, hardware-accelerated neural inference, and continuous physical plant dynamics under live, wire-speed cyber-attacks.
+
+### Core Architectural Differentiators:
+* **Continuous Numerical ODE Physics Coupling:** Embeds a native C 4th-Order Runge-Kutta (RK4) numerical ODE solver (`plant_ode.c`) directly into mock PLCs, asserting formal Control Barrier Functions ($h(x) \ge 0$) and Lyapunov stability ($\lambda \le 0$).
+* **8 Universal Device Archetypes:** Replaces hundreds of static vendor Dockerfiles with a single parameterized runtime container (`Dockerfile.device_runtime` + `universal_device.py`), emulating any sensor, PLC, or IED via runtime configuration.
+* **Self-Sovereign Multi-Network Scenarios:** Completely decoupled from static Compose files. The dynamic scenario compiler (`tools/scenario_engine.py`) compiles standalone, multi-subnet topologies with configurable air-gaps (`internal: true`) and network impairments.
+* **Heterogeneous Multi-Silicon Fleet:** Concurrently runs three isolated Edge XDR Sentries emulating **Intel OpenVINO**, **NVIDIA TensorRT**, and **Rockchip RKNN** hardware backends.
+* **Multi-Modal Industrial Sensor Array:** Emulates real-time thermal vision (MediaMTX WebRTC/RTSP), multi-axis bearing vibration, SICK LiDAR spatial range scanning, and Siemens power quality metering.
+* **Deterministic Malware Replay:** Replays genuine, full-fidelity industrial attack PCAPs (Industroyer2, TRITON/Trisis, Stuxnet) directly onto virtual wire interfaces.
+
+---
+
+## 2. Complete Mesh Topology & Network Map
+
+By default, the master range operates across the `sentinel-grid-net` bridge network (`10.240.0.0/24`), interconnecting 13 distinct containers:
 
 ```text
-====================================================================================================
-                        SENTINEL-MATRIX: THE INFINITE DEFENSE FLYWHEEL
-====================================================================================================
-                                              │
-         ┌────────────────────────────────────┴────────────────────────────────────┐
-         ▼                                                                         ▼
-  [ PHASE 1: AMBIENT TELEMETRY ]                                         [ PHASE 2: ADVERSARIAL ATTACK ]
-  • Continuous 5,000 EPS baseline NetFlow                                • Exploit wave hits Node #01
-  • Sub-microsecond local scoring                                        • In-kernel XDP drop (< 1µs)
-  • High-uncertainty vectors [0.40 - 0.60]                               • ThreatIndicator emitted to Nexus
-         │                                                                         │
-         ▼                                                                         ▼
-  [ PHASE 3: COLLECTIVE DEFENSE ]                                        [ PHASE 4: DATASET CURATION ]
-  • Nexus fans out FleetDefenseRule                                      • Nexus batches candidate vectors
-  • Nodes #02-#05 inject IP into eBPF                                    • Generates forge_dataset_*.csv
-  • Attacker blocked grid-wide in < 50ms                                 • ForgeTrigger quota tripped
-         │                                                                         │
-         └────────────────────────────────────┬────────────────────────────────────┘
-                                              │
-                                              ▼
-                               [ PHASE 5: CONTINUOUS ADAPTATION ]
-                               • Forge trains MAE/InfoNCE on edge vectors
-                               • Evaluates against golden_attacks.yaml
-                               • Exports network_threat_v2.onnx to Nexus
-                               • Nexus executes Canary Staged Rollout
-                               • Edge appliances auto-pull & hot-reload
-                                              │
-                                              ▼
-                               (Cycle repeats indefinitely with v3, v4...)
+                               ┌─────────────────────────────────────────────────────────────┐
+                               │                    HOST BROWSER / OPERATOR                  │
+                               │  • Web C2: http://localhost:9443                            │
+                               │  • Live WebRTC Video: http://localhost:8889/thermal_feed    │
+                               │  • Real-Time SSE Event Stream: http://localhost:9444        │
+                               └──────────────┬───────────────────────────────▲──────────────┘
+                                              │                               │
+                                              ▼                               │
+═══════════════════════════════════════════ WIRE BOUNDARY (sentinel-grid-net: 10.240.0.0/24) ═════════════════════════════════════════════
+                                              │                               │
+         ┌────────────────────────────────────┼───────────────────────────────┴────────────────────────────────────┐
+         │                                    │                                                                    │
+         ▼                                    ▼                                                                    ▼
+ ┌──────────────────────┐             ┌──────────────────────┐                                             ┌──────────────────────┐
+ │ matrix-nexus         │◄──(Models)──┤ matrix-forge         │                                             │ matrix-monitor       │
+ │ 10.240.0.10          │             │ 10.240.0.20          │                                             │ 10.240.0.60          │
+ │ [C2 Fleet Commander] │──(Dataset)─►│ [Continual AI Forge] │                                             │ [Terminal UI - TUI]  │
+ └──────────▲───────────┘             └──────────────────────┘                                             └──────────▲───────────┘
+            │                                                                                                         │
+            │ gRPC 50051 Telemetry & Rules                                                                            │
+            ├─────────────────────────────────────────┬────────────────────────────────────────┐                      │
+            │                                         │                                        │                      │
+            ▼                                         ▼                                        ▼                      │
+ ┌──────────────────────┐             ┌──────────────────────┐             ┌──────────────────────┐                   │
+ │ matrix-edge-         │             │ matrix-edge-         │             │ matrix-edge-         │                   │
+ │ substation-01        │             │ hospital-02          │             │ refinery-03          │                   │
+ │ 10.240.0.101         │             │ 10.240.0.102         │             │ 10.240.0.103         │                   │
+ │ Backend: OpenVINO    │             │ Backend: TensorRT    │             │ Backend: RKNN        │                   │
+ │ Cap: eBPF/NET_ADMIN  │             │ Cap: eBPF/NET_ADMIN  │             │ Cap: eBPF/NET_ADMIN  │                   │
+ └──────────▲───────────┘             └──────────▲───────────┘             └──────────▲───────────┘                   │
+            │                                    │                                    │                               │
+            └────────────────────────────────────┼────────────────────────────────────┴───────────────────────────────┘
+                                                 │
+                                                 │ Protected Industrial Network & Direct Sensor Interfaces
+            ┌────────────────────────────────────┴────────────────────────────────────┐
+            ▼                                                                         ▼
+ ┌────────────────────────────────────────────────────────┐         ┌─────────────────────────────────────────────────┐
+ │ SENSOR & I/O ARRAY (Data Generation)                   │         │ INJECTION & ADVERSARY PLANE (Active Red Team)   │
+ ├────────────────────────────────────────────────────────┤         ├─────────────────────────────────────────────────┤
+ │ • matrix-sensor-camera (10.240.0.75):                  │         │ • matrix-adversary (10.240.0.99):               │
+ │   FLIR Thermal Camera (RTSP :8554, WebRTC :8889)       │         │   Live attack generator (nmap, mbpoll, exploit) │
+ │ • matrix-sensor-vibration (10.240.0.76):               │         │                                                 │
+ │   IFM Vibration & Temp Probe (Modbus :502 -> :15502)   │         │ • matrix-traffic-gen (10.240.0.50):             │
+ │ • matrix-sensor-lidar (10.240.0.77):                   │         │   Deterministic replay of certified PCAPs       │
+ │   SICK LiDAR Spatial Scanner (UDP :2368)               │         │   (Industroyer2, TRITON, Stuxnet)               │
+ │ • matrix-sensor-power (10.240.0.78):                   │         └─────────────────────────────────────────────────┘
+ │   PAC3200 Power Quality Meter (Modbus :502 -> :15501)  │
+ │ • matrix-mock-plc (10.240.0.150):                      │
+ │   Continuous RK4 ODE Plant Physics Twin (:502,102,2404)│
+ └────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 1. Overview
+## 3. Network Addressing & Node Matrix
 
-**`sentinel-matrix`** is an encapsulated, fully autonomous, containerized cyber-range and simulation mesh designed to test, validate, and demonstrate the **Aryorithm / Blackbox Sentinel** ecosystem.
-
-Running in an isolated virtual network environment, it creates an end-to-end digital twin of enterprise, industrial, and defense infrastructure:
-* **Tier 6 Command Plane (`sentinel-nexus`):** Centralized fleet management, live telemetry streaming, and collective defense fan-out.
-* **Tier 4 Continual Learning (`xinfer-forge`):** Autonomous background retraining on ambient site telemetry with safety-gated model promotion.
-* **Tier 3 Edge Appliances (`blackbox-sentinel`):** Multiple heterogeneous edge appliances running local eBPF/XDP kernel drop engines and neural threat classifiers.
-* **Traffic & Attack Engine (`traffic-gen`):** Generates high-throughput ambient NetFlow and injects multi-vector cyber-physical attack scenarios on demand.
-* **Live Observability Console (`monitor`):** Real-time dual-panel terminal UI (TUI) and air-gapped web command center.
-
----
-
-## 2. VMware Virtualization & Encapsulation Architecture
-
-To ensure 100% stability, safety, and compatibility inside virtualized environments (such as **VMware Workstation Pro, ESXi, and Fusion**), `sentinel-matrix` incorporates specialized hypervisor adaptations:
-
-1. **Collision-Free Subnet (`10.240.0.0/24`):**  
-   Avoids standard Docker bridge blocks (`172.17.0.0/16` – `172.31.0.0/16`) that frequently conflict with VMware virtual network adapters (VMnet1 / VMnet8).
-2. **Generic SKB Mode eBPF (`XDP_FLAGS_SKB_MODE`):**  
-   VMware virtual network interfaces (`ens33`, `vmxnet3`) and container `veth` pairs do not support native driver-level XDP. Containers use Generic SKB mode with `NET_ADMIN` and `BPF` capabilities, achieving line-rate drops in $< 1\,\mu\text{s}$ without requiring dedicated physical SRIOV hardware.
-3. **vTPM & DMI Hypervisor Identity:**  
-   Emulates physical TPM 2.0 / vTPM hardware attributes (`/sys/class/dmi/id/product_uuid` with VMware hypervisor signatures), satisfying the hardware attestation engine in `blackbox-essential`.
-4. **Host Dynamic Library Bundling (`shared/lib/`):**  
-   Automatically extracts host-compiled shared libraries (`libabsl_*`, `libre2`, `libgrpc++`, `libprotobuf`) into `shared/lib/` and binds them to the container via `LD_LIBRARY_PATH=/usr/local/lib/matrix-deps`, preventing dynamic linker mismatches.
+| Container Name | Service Key | IP Address | Internal Ports | Host Port Forward | Function & Emulated Hardware |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `matrix-nexus` | `nexus` | `10.240.0.10` | 50051, 9443, 9444 | `50051`, `9443`, `9444` | Fleet Orchestration C2, Web Console, and SSE Stream |
+| `matrix-forge` | `forge` | `10.240.0.20` | — | Internal Only | Continual ML Adaptation (PyTorch, Tabular MAE + InfoNCE) |
+| `matrix-traffic-gen` | `traffic-gen` | `10.240.0.50` | — | Internal Only | Synthetic Wire Traffic & Real-World PCAP Replay Blaster |
+| `matrix-monitor` | `monitor` | `10.240.0.60` | — | TTY Console | Split-Panel Terminal User Interface (TUI) Dashboard |
+| `matrix-sensor-camera`| `sensor-camera` | `10.240.0.75` | 8554, 8889, 8189/udp | `8554`, `8889`, `8189/udp`| FLIR Thermal Camera (MediaMTX RTSP / WebRTC WHEP) |
+| `matrix-sensor-vibration`| `sensor-vibration` | `10.240.0.76` | 502 | `15502` | IFM Multi-Axis Bearing Vibration & Temp Transmitter |
+| `matrix-sensor-lidar` | `sensor-lidar` | `10.240.0.77` | 2368/udp | `2368/udp` | SICK microScan3 / Velodyne LiDAR Spatial Scanner |
+| `matrix-sensor-power` | `sensor-power` | `10.240.0.78` | 502 | `15501` | Siemens PAC3200 High-Voltage Power Quality Meter |
+| `matrix-adversary` | `adversary` | `10.240.0.99` | — | Internal Only | Red-Team Live Attack Generator (`nmap`, `mbpoll`) |
+| `matrix-edge-substation-01`| `sentinel-edge-01`| `10.240.0.101` | — | Internal Only | Substation Alpha Edge Sentry (Intel OpenVINO) |
+| `matrix-edge-hospital-02` | `sentinel-edge-02`| `10.240.0.102` | — | Internal Only | Metro General Hospital PACS Sentry (NVIDIA TensorRT) |
+| `matrix-edge-refinery-03` | `sentinel-edge-03`| `10.240.0.103` | — | Internal Only | Coastal Refinery Zone B Sentry (Rockchip RKNN) |
+| `matrix-mock-plc` | `mock-plc` | `10.240.0.150` | 502, 102, 2404 | `502`, `102`, `2404` | RK4 Continuous ODE Physics Twin (Modbus, S7, IEC-104) |
 
 ---
 
-## 3. Container Network Topology & IP Allocations
+## 4. The 6 Functional Layers
 
-All containers communicate over the isolated internal bridge network **`sentinel-grid-net`** (`10.240.0.0/24`):
+### Layer 1: Fleet Command & Visibility Plane
+* **`nexus` (Tier 6):** Central orchestrator. Exposes **gRPC 50051** for sub-50ms rule deployment, **REST 9443** for the mission control dashboard, and **SSE 9444** for real-time telemetry streaming.
+* **`monitor`:** Lightweight terminal UI (`src/monitor/live_dashboard.py`) rendering ANSI status meters, active drops, and live MITRE ATT&CK tactical classifications directly in console.
 
-| Container Name | Role / Subsystem | IP Address | Host Port Mappings | Capabilities / Features |
-| :--- | :--- | :--- | :--- | :--- |
-| **`matrix-nexus`** | Central Command Plane (Tier 6) | `10.240.0.10` | `50051`, `9443`, `9444` | Web SPA, gRPC services, SSE streamer |
-| **`matrix-forge`** | Continuous Retraining (Tier 4) | `10.240.0.20` | Internal | PyTorch MAE, ONNX exporter, dataset watcher |
-| **`matrix-traffic-gen`** | Traffic & Scenario Generator | `10.240.0.50` | Internal | Ambient NetFlow & scenario wave dispatcher |
-| **`matrix-monitor`** | Terminal UI Dashboard (TUI) | `10.240.0.60` | Internal (TTY) | Real-time dual-panel terminal monitor |
-| **`matrix-edge-substation-01`** | Industrial SCADA Substation | `10.240.0.101` | Internal | OpenVINO, Modbus/DNP3, XDP SKB drop |
-| **`matrix-edge-hospital-02`** | Healthcare PACS Medical Enclave | `10.240.0.102` | Internal | TensorRT, DICOM/HL7, XDP SKB drop |
-| **`matrix-edge-refinery-03`** | Refinery Critical Infrastructure| `10.240.0.103` | Internal | RKNN, PROFINET/S7Comm, XDP SKB drop |
+### Layer 2: Continual AI Retraining Engine
+* **`forge` (Tier 4):** Monitors `/var/lib/sentinel-nexus/forge_datasets` for high-entropy anomaly tensors emitted by edge sentries. Controlled by `FORGE_AUTO_RETRAIN=false` to prevent runaway model generation. Operates via `aryo forge run` for controlled local adaptation or asymmetric remote GPU offloading.
+
+### Layer 3: Heterogeneous Edge XDR Sentries
+Three physical archetypes operating with full Linux capabilities (`NET_ADMIN`, `SYS_ADMIN`, `BPF`):
+* **`sentinel-edge-01` (Substation Alpha):** Emulates an Intel x86 IPC running **Intel OpenVINO**. Guards `network_threat_int8.onnx` and `power_quality_anomaly.onnx` over IEC 60870-5-104 and Modbus.
+* **`sentinel-edge-02` (Hospital PACS):** Emulates an AI appliance running **NVIDIA TensorRT**. Guards `thermal_anomaly_vision.onnx` and `lidar_spatial_detector.onnx` over RTSP and DICOM.
+* **`sentinel-edge-03` (Refinery Zone B):** Emulates an industrial embedded ARM node running **Rockchip RKNN**. Guards `network_threat_int8.onnx` and `vibration_spectral_ae.onnx` over Modbus and Siemens S7Comm.
+
+### Layer 4: Physical Plant & Numerical Physics Twin
+* **`mock-plc`:** High-speed POSIX listener running an integrated 4th-Order Runge-Kutta numerical solver (`plant_ode.c`). Simulates physical heating, pressure dynamics, and mechanical vibration with an integration step $\Delta t = 100\,\text{ms}$, evaluating Nagumo forward-invariance inequality:
+$$\dot{h}(x) + \alpha(h(x)) \ge 0$$
+
+### Layer 5: Industrial Multi-Modal Sensor Array
+* **`sensor-camera`:** MediaMTX container looping an authentic thermal infrared video feed over RTSP (port 8554) and WebRTC WHEP (port 8889) for zero-latency browser rendering.
+* **`sensor-vibration`:** Emulates an IFM bearing accelerometer on Modbus port 15502.
+* **`sensor-lidar`:** Emulates a 360-degree perimeter LiDAR scanner streaming UDP packets on port 2368.
+* **`sensor-power`:** Emulates a digital power quality meter measuring grid frequency (50 Hz) and load (kW) on Modbus port 15501.
+
+### Layer 6: Red-Team Adversary & Traffic Replay Plane
+* **`traffic-gen`:** Replays clean and malicious PCAP traffic streams directly onto edge node IP addresses.
+* **`adversary`:** Active attacker container equipped with network reconnaissance and industrial exploit scripts (`nmap`, `mbpoll`, `curl`).
 
 ---
 
-## 4. Complete Repository Tree
+## 5. The 8 Universal Device Archetypes
+
+To eliminate the need for hundreds of static vendor Dockerfiles, `sentinel-matrix` uses **`Dockerfile.device_runtime`** and **`universal_device.py`**. A single base image emulates all 8 industrial device classes via runtime parameters:
+
+```text
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │                      THE UNIVERSAL DEVICE CONTAINER ARCHITECTURE                       │
+ ├────────────────────────────────────────────────────────────────────────────────────────┤
+ │ [Archetype 1: Constrained Sensor]  --archetype sensor --protocol modbus --port 502     │
+ │ [Archetype 2: Industrial PLC/PAC]  --archetype plc --protocol s7comm --port 102        │
+ │ [Archetype 3: Substation IED Relay]--archetype ied --protocol iec104 --port 2404       │
+ │ [Archetype 4: Safety SIS System]   --archetype sis --protocol modbus --port 502        │
+ │ [Archetype 5: Edge IPC / Gateway]  --archetype ipc --protocol tcp --port 8080          │
+ │ [Archetype 6: Vision / LiDAR]      --archetype vision --protocol stream_telemetry      │
+ │ [Archetype 7: 5G UPF Gateway]      --archetype 5g_gateway --protocol gtpu --port 2152  │
+ │ [Archetype 8: Space Transceiver]   --archetype space_telemetry --protocol ccsds        │
+ └────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+Build the universal base image once:
+```bash
+make build-device-runtime
+```
+
+---
+
+## 6. Self-Sovereign Multi-Network Scenarios
+
+Scenarios in `sentinel-matrix` are **100% self-sovereign**. They do not depend on the static `docker-compose.yml` and can declare custom subnets, gateways, and air-gapped zones:
+
+### Scenario Directory Structure:
+```text
+scenarios/water_blackout_defense/
+├── manifest.json            # Declares dependencies (.spkg, .onnx, .pcap) and compliance tags
+├── scenario.yaml            # Sovereign topology, custom subnets, and node definitions
+├── packages/                # (Optional / Embedded) Defense reflex packages (.spkg)
+├── models/                  # (Optional / Embedded) Quantized neural weights (.onnx)
+├── configs/                 # Companion register maps & ODE parameters
+├── pcaps/                   # Ground-truth malware captures
+└── run_demo.sh              # 1-Click turnkey orchestration script
+```
+
+### Scenario CLI Commands:
+```bash
+# Scaffold a new turnkey scenario
+aryo scenario new water_grid_v2 --sector WATER_TREATMENT
+
+# Add dependencies by simple name (resolves automatically without paths!)
+aryo scenario add water_grid_v2 modbus_rate_limiter
+aryo scenario add water_grid_v2 industrial_anomaly_detector
+aryo scenario add water_grid_v2 modbus_unauthorized_write
+
+# Pack scenario (Mode 1: Declarative ~15KB for Hub | Mode 2: Standalone Air-Gapped)
+aryo scenario pack water_grid_v2          # Declarative
+aryo scenario pack water_grid_v2 --embed  # Embedded Standalone
+
+# Load, monitor, and dismantle custom scenarios dynamically
+aryo matrix scenario load scenarios/water_grid_v2/scenario.yaml
+aryo matrix scenario status
+aryo matrix scenario down --name water_grid_v2
+```
+
+---
+
+## 7. The 5 Active Frontier Engines in Matrix
+
+1. **3GPP 5G/6G N3 GTP-U Slicing Guard (Idea B):**
+   * Decapsulates 3GPP GTP-U (UDP 2152) tunnels in-kernel on `sentinel-edge-01`.
+   * Cross-checks 32-bit TEIDs against `teid_slice_map` and drops slice-hopping attempts in $< 0.84\,\mu\text{s}$.
+   * Drill: `aryo 5g blast-test lo`
+2. **Live-SBOM In-Kernel Memory Integrity Engine (Idea C):**
+   * Enforces strict $W\oplus X$ memory invariants via `sys_enter_mprotect` tracepoints.
+   * Terminate unauthorized executable memory allocations with instant `SIGKILL` ($< 1.0\,\mu\text{s}$).
+   * Drill: `aryo sbom test-drift`
+3. **Autonomous Deception Honeynet & Fleet Vaccine Synthesis (Idea D):**
+   * Transparently diverts attackers via eBPF DNAT into `mock-plc`.
+   * Automatically synthesizes signed Ed25519 `.spkg` reflex rules and broadcasts fleet-wide via Nexus in $< 50\text{ ms}$.
+   * Drill: `aryo matrix honeynet-autohunt`
+4. **Industrial AI TRiSM Prompt Injection Firewall (Idea A):**
+   * Inline streaming token firewall ($< 150\,\text{ns}$) neutralizing prompt jailbreaks and delimiter smuggling.
+   * Autonomous tool-call governor blocking physical PLC write commands (`write_single_coil`, `s7_plc_cpu_stop`).
+   * Drill: `aryo trism test-jailbreak`
+5. **Orbital & Space Telemetry Guard (Idea E):**
+   * Sub-120ns C++20 dissector for CCSDS Space Packet Protocol (133.0-B-2) and NATO STANAG 4586.
+   * Enforces sliding-window sequence monotonicity and directional air-gapping to prevent rogue thruster telecommands.
+   * Drill: `aryo space blast-sim`
+
+---
+
+## 8. Quickstart & Installation
+
+### Prerequisites:
+* Linux Host (Ubuntu 22.04 / 24.04 LTS or Debian 12 Bookworm)
+* Docker Engine 24.0+ and Docker Compose v2
+* GCC 10+ / Clang 14+, Make, Python 3.10+
+
+### 1-Click Initialization:
+```bash
+# 1. Clone and navigate to matrix repository
+cd /home/kami/sentinel-matrix
+
+# 2. Build mock_plc, verify all 5 ONNX models, and sync host dependencies
+make init
+
+# 3. Build the universal device runtime image
+make build-device-runtime
+
+# 4. Launch the full 13-node simulation grid in background
+make up
+
+# 5. Verify all containers are healthy
+make status
+```
+
+---
+
+## 9. Full Operational Playbook (Makefile Targets)
+
+```bash
+# Lifecycle & Core Operations
+make init                   # Sync models, compile mock_plc, bundle host shared libraries
+make build                  # Build/rebuild all container images
+make up                     # Launch 13-container grid in background (10.240.0.0/24)
+make down                   # Gracefully dismantle all containers and networks
+make restart                # Clean teardown and launch
+make status                 # Display container health and port bindings
+make logs                   # Stream unified real-time logs (tail=100)
+make clean                  # Purge shared datasets, candidate models, and logs
+
+# Observability
+make tui                    # Launch split-panel Terminal UI (MITRE ATT&CK & Node Health)
+make adversary-logs         # Stream live output from the Red-Team adversary node
+
+# Live Wire Attacks (Attacker Container 10.240.0.99)
+make live-nmap              # Real TCP SYN port scan across edge sentries (T1046)
+make live-scada             # Real Modbus FC05 coil override via mbpoll (T0855)
+make live-api               # High-velocity API abuse attack via curl (T1190)
+
+# Real-World PCAP Replay Streams
+make download-pcaps         # Fetch certified PCAP captures from secure repository
+make attack-real-triton     # Replay genuine TRITON / Trisis SIS attack capture (T0843)
+make attack-real-modbus     # Replay University of Illinois Modbus SCADA capture (T0855)
+make attack-real-s7         # Replay genuine Siemens S7Comm PLC capture (T0831)
+make attack-real-dnp3       # Replay genuine DNP3 substation capture (T0855)
+make attack-real-iec104     # Replay genuine IEC 60870-5-104 grid telecontrol capture (T0855)
+
+# Offline Synthetic PCAP Replays
+make attack-industroyer     # Synthetic Industroyer breaker trip
+make attack-triton          # Synthetic TriStation safety override
+make attack-stuxnet         # Synthetic Stuxnet S7 frequency tamper
+
+# Chaos Engineering & Resilience
+make chaos-latency          # Inject simulated inference latency spike (> 1000 µs)
+make chaos-sever            # Sever Edge Node 01 to verify 0ms graceful disconnect in Nexus
+
+# Extensible Scenario Engine
+make scenario-load SCENARIO=<path.yaml> [MODE=air-gapped]
+make scenario-down
+make scenario-status
+make sim-finetune [MODE=local|air-gapped|cloud]
+```
+
+---
+
+## 10. Cross-Modal Physics & Sensor Fusion Deep-Dive
+
+Traditional firewalls inspect packets as isolated, stateless bytes. Blackbox Sentinel couples packet semantics directly to continuous physical laws inside the `ThreatCorrelator` engine:
+
+```text
+                        ┌────────────────────────────────────────────────────────┐
+                        │      sentinel-edge-03 (Edge XDR Appliance)             │
+                        │      IP: 10.240.0.103                                  │
+                        └─────────────▲────────────────────────────▲─────────────┘
+                                      │                            │
+             Stream A: Cyber Telemetry│                            │Stream B: Physical Telemetry
+             (SCADA Commands on :502) │                            │(Continuous RK4 ODE Probes)
+                                      │                            │
+ ┌────────────────────────────────────┴────────────────────────────┴─────────────────────────────┐
+ │                      mock-plc (RK4 ODE Physics Digital Twin)                                  │
+ │                      IP: 10.240.0.150                                                         │
+ ├───────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ 1. Modbus Server (Port 502):                                                                  │
+ │    • Coil 0x0000 : Main Electric Heater Element (ON = 1.0, OFF = 0.2)                         │
+ │    • Coil 0x0001 : Coolant Drain Emergency Valve (OPEN = 0.8, CLOSED = 0.1)                   │
+ │    • Register 40001: Hydraulic Circulation Pump RPM Speed (0 - 1000 RPM)                     │
+ ├───────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ 2. Live Physical Sensor Registers (Calculated by plant_ode.c every 100 ms):                   │
+ │    • Register 40002 -> Sensor 1: Thermal Probe (Temperature in °C)                            │
+ │    • Register 40003 -> Sensor 2: Accelerometer (Vibration in mm/s)                            │
+ │    • Register 40004 -> Sensor 3: Pressure Transducer (Pressure in PSI)                        │
+ └───────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Stuxnet / Triton Blinding Neutralization:
+1. An attacker writes Modbus **Coil 0 (Heater) = ON**.
+2. Simultaneously, the attacker injects spoofed response packets reporting that temperature is a nominal $25^\circ\text{C}$ (False Data Injection Attack - FDIA).
+3. `sentinel-edge-03` monitors **Sensor Stream B** directly from the physical ODE solver, calculating that true temperature is climbing past $85^\circ\text{C}$ ($\dot{h}(x) < 0$).
+4. The **ThreatCorrelator** identifies the divergence, invalidates the spoofed packet, and orders an in-kernel eBPF drop in **$< 0.84\,\mu\text{s}$**, preserving Lyapunov stability ($\lambda \le 0$) before physical equipment trips.
+
+---
+
+## 11. Directory Tree & File Inventory
 
 ```text
 sentinel-matrix/
-├── .env.example                               # Default environment configuration (ports, subnets)
-├── .gitignore                                 # Git exclusions for models, logs, datasets
-├── Makefile                                   # One-touch control automation (init, build, up, attacks)
-├── README.md                                  # This master architecture and operations guide
-├── docker-compose.yml                         # Master container orchestration mesh
+├── docker-compose.yml                  # 13-node master production mesh
+├── Makefile                            # Full lifecycle, attack replay & chaos target suite
 │
-├── configs/                                   # Declarative Simulation Parameters
-│   ├── matrix.yaml                            # Master controller configuration (timelines, thresholds)
-│   ├── nodes/                                 # Node Profile Customizations
-│   │   ├── default_node_template.yaml         # Base template for dynamic scaling
-│   │   ├── node_01_substation_alpha.yaml      # Industrial SCADA profile (OpenVINO, Modbus/DNP3)
-│   │   ├── node_02_hospital_pacs.yaml         # Healthcare PACS profile (TensorRT, DICOM/HL7)
-│   │   └── node_03_refinery_plc.yaml          # Critical infrastructure profile (RKNN, PROFINET/S7)
-│   ├── scenarios/                             # Declarative Attack Scenarios
-│   │   ├── 01_ambient_baseline.yaml           # Benign ambient NetFlow background
-│   │   ├── 02_scada_modbus_tamper.yaml        # Unauthorized coil manipulation (T0855)
-│   │   ├── 03_c2_beacon_exfil.yaml            # High-entropy C2 egress beacons (T1071)
-│   │   ├── 04_exploit_public_facing.yaml      # Zero-day remote code execution (T1190)
-│   │   ├── 05_distributed_brute_force.yaml    # Line-rate SSH/RDP credential sweep (T1110)
-│   │   ├── 06_sla_latency_breach.yaml         # Latency degradation chaos profile (>1000µs)
-│   │   └── 07_adversarial_poisoning.yaml      # Malicious training sample injection test
-│   └── traffic/                               # Traffic Distribution Profiles
-│       ├── netflow_distributions.yaml         # 32-dimensional normal traffic bounds
-│       └── uncertainty_profile.yaml           # Target distribution for active learning [0.40, 0.60]
+├── docker/                             # Hardened container definitions
+│   ├── Dockerfile.nexus                # Tier 6 Command Plane
+│   ├── Dockerfile.sentinel             # Tier 3 Edge XDR Appliance (eBPF capabilities)
+│   ├── Dockerfile.plc                  # Physical RK4 ODE Mock PLC
+│   ├── Dockerfile.forge                # Tier 4 Continual AI Retraining Daemon
+│   ├── Dockerfile.device_runtime       # The 8 Universal Device Archetypes Base Image
+│   ├── Dockerfile.traffic              # Wire Traffic & PCAP Replay Blaster
+│   ├── Dockerfile.adversary            # Live Red-Team Attack Generator
+│   ├── Dockerfile.monitor              # Terminal User Interface Dashboard
+│   └── entrypoints/                    # Specialized entrypoint shell scripts
 │
-├── docker/                                    # Container Definitions & Build Contexts
-│   ├── Dockerfile.nexus                       # Builds Sentinel Nexus command plane image
-│   ├── Dockerfile.sentinel                    # Builds Blackbox Sentinel edge appliance image
-│   ├── Dockerfile.forge                       # Builds xInfer Forge continuous retraining image
-│   ├── Dockerfile.traffic                     # Builds High-Throughput traffic & attack generator
-│   ├── Dockerfile.monitor                     # Builds Live Terminal Dashboard (TUI)
-│   └── entrypoints/                           # Initialization Scripts (Pre-boot hooks)
-│       ├── nexus_entrypoint.sh                # Sets up bpffs, mounts web assets, starts Nexus
-│       ├── sentinel_entrypoint.sh             # Sets up virtual NIC, vTPM/DMI UUID, starts Sentinel
-│       ├── forge_entrypoint.sh                # Launches continuous dataset watcher daemon
-│       ├── traffic_entrypoint.sh              # Probes Nexus socket, executes master orchestrator
-│       └── monitor_entrypoint.sh              # Boots live curses/rich dashboard
+├── src/                                # Core matrix source implementations
+│   ├── mock_plc.c                      # Multi-threaded POSIX socket listener (502, 102, 2404)
+│   ├── plant_ode.c                     # 4th-order Runge-Kutta continuous numerical solver
+│   ├── device_runtime/                 # Universal device engine (universal_device.py)
+│   ├── loop/                           # Forge watcher daemon (forge_watcher.py)
+│   └── monitor/                        # TUI live dashboard (live_dashboard.py)
 │
-├── src/                                       # Core Simulation & Orchestration Logic
-│   ├── orchestrator/                          # Simulation Lifecycle
-│   │   ├── __init__.py
-│   │   ├── master_controller.py               # Autonomous ambient/attack scheduling loop
-│   │   ├── scenario_runner.py                 # Loads and parses scenario YAMLs
-│   │   ├── process_supervisor.py              # Container process watchdog
-│   │   ├── topology_builder.py                # Maps virtual network connections
-│   │   └── chaos_injector.py                  # Injects latency spikes, packet loss, node drops
-│   │
-│   ├── traffic/                               # Traffic Generation Subsystem
-│   │   ├── __init__.py
-│   │   ├── ambient_generator.py               # Produces benign 32-dim NetFlow vectors
-│   │   ├── attack_generator.py                # Dispatches attack waves & broadcasts threats
-│   │   ├── socket_streamer.py                 # Injects frames directly to network sockets
-│   │   └── vector_synthesizer.py              # Active learning uncertainty synthesizer
-│   │
-│   ├── loop/                                  # Continuous Retraining Automation
-│   │   ├── __init__.py
-│   │   ├── forge_watcher.py                   # Monitors /shared/datasets/ for curated batches
-│   │   ├── canary_progression_engine.py       # Advances model stages (Shadow -> 5% -> Fleet)
-│   │   ├── closed_loop_validator.py           # Validates model v2 catches v1 zero-days
-│   │   └── model_sync_agent.py                # Verifies SHA-256 and copies ONNX to nodes
-│   │
-│   └── monitor/                               # Real-Time Observability
-│       ├── __init__.py
-│       ├── live_dashboard.py                  # Dual-panel Rich terminal UI (Nodes + MITRE)
-│       ├── metrics_aggregator.py              # Computes latency percentiles (p50, p95, p99)
-│       ├── ascii_visualizer.py                # Terminal ASCII network map
-│       └── alert_stream_consumer.py           # SSE stream client for Nexus port 9444
+├── include/                            # Header definitions
+│   └── plant_ode.h                     # Physics state structures & CBF invariance headers
 │
-├── tools/                                     # Operator CLI & Trigger Utilities
-│   ├── inject_attack.py                       # CLI tool to fire an attack wave on demand
-│   ├── inject_chaos.py                        # CLI tool to inject latency breaches or sever nodes
-│   ├── trigger_retrain.py                     # CLI tool to force Forge retraining
-│   ├── dump_simulation_report.py              # CLI tool to export CMMC/IEC 62443 audit reports
-│   └── inspect_mesh_health.py                 # CLI tool to query node drop tallies
+├── configs/                            # System configurations
+│   ├── plc_register_map.json           # Modbus register-to-physics map
+│   ├── model_routes.yaml               # 4-stage ModelRouter pipeline configuration
+│   ├── archetypes/                     # Universal device vendor profiles
+│   ├── nodes/                          # Node-specific routing DAG profiles (01, 02, 03)
+│   └── pcaps/                          # Stored certified attack PCAPs
 │
-└── shared/                                    # Mounted Volumes (Host-to-Container Sync)
-    ├── bin/                                   # Compiled host binaries (nexus, sentinel, nexus-ctl)
-    ├── lib/                                   # Extracted host dynamic libraries (absl, re2, grpc)
-    ├── proto/                                 # Protobuf wire definitions (.proto)
-    ├── certs/                                 # Internal mTLS PKI (CA, server, and client certs)
-    │   └── gen_matrix_certs.sh
-    ├── datasets/                              # Curated NetFlow batches (forge_dataset_*.csv)
-    ├── models/                                # Versioned ONNX model storage (.onnx / .sha256)
-    └── logs/                                  # Centralized simulation runtime traces
-        ├── nexus/
-        ├── nodes/
-        └── forge/
+├── scenarios/                          # Self-sovereign multi-network scenarios
+│   ├── master_grid_scenario.yaml       # Standalone 13-node master mesh
+│   ├── finetune_simulation.yaml        # Local vs. air-gapped vs. cloud training scenario
+│   ├── universal_archetypes_grid.yaml  # 5 device archetypes running on 1 base image
+│   ├── purdue_segmented_grid.yaml      # Multi-zone DMZ / SCADA / Fieldbus mesh
+│   └── water_blackout_defense/         # Turnkey composite scenario bundle
+│
+├── tools/                              # Automation & orchestrator toolchains
+│   ├── scenario_engine.py              # Standalone sovereign scenario compiler
+│   ├── download_real_pcaps.py          # Secure PCAP vault downloader
+│   └── generate_real_pcaps.py          # Offline synthetic PCAP generator
+│
+└── shared/                             # Zero-copy shared host mount volumes
+    ├── bin/                            # Pre-compiled binaries (sentinel, nexus, mock_plc)
+    ├── lib/                            # Host dynamic dependencies (matrix-deps)
+    ├── models/                         # Active ONNX models (the 5 sensor weights)
+    ├── datasets/                       # SLAB binary datasets & curated telemetry
+    └── logs/                           # Persistent multi-tier execution logs
 ```
 
 ---
 
-## 5. Quickstart: Installation & Build Instructions
+## 12. Scientific Citation & Licensing
 
-### Prerequisites
-On your VMware Ubuntu machine, verify that Docker and Docker Compose v2 are installed:
-```bash
-sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 make
-sudo usermod -aG docker $USER
+Sentinel-Matrix is released under the **Apache License 2.0**.
+
+If you utilize Sentinel-Matrix in your research, academic publications, or cyber-range evaluations, please cite the permanent Zenodo research preprint:
+
+### BibTeX:
+```bibtex
+@article{saberifard2026sentinelbench,
+  title={{Sentinel-Bench: A 14-Dimensional Unified Benchmark Standard for Hardware-Aware, Closed-Loop CPS Active Defense}},
+  author={Saberifard, Kamran},
+  journal={CERN / Zenodo Digital Repository},
+  year={2026},
+  doi={10.5281/zenodo.23598779},
+  url={https://doi.org/10.5281/zenodo.23598779}
+}
 ```
 
-### Step 1: Initialize Workspace & Extract Libraries
-The `make init` command creates the shared directories, synchronizes the compiled host binaries (`sentinel-nexus`, `sentinel`, `nexus-ctl`), and automatically bundles all host-compiled dynamic libraries (`libabsl_*`, `libre2`, `libgrpc++`, `libprotobuf`) into `shared/lib/`:
-
-```bash
-cd /home/kami/sentinel-matrix
-make init
-```
-
-### Step 2: Generate Internal mTLS Certificates
-Generate the internal container PKI:
-```bash
-./shared/certs/gen_matrix_certs.sh
-```
-
-### Step 3: Build the Container Images
-Build the 5 container images:
-```bash
-sudo make build
-```
+### IEEE Citation:
+> K. Saberifard, "Sentinel-Bench: A 14-Dimensional Unified Benchmark Standard for Hardware-Aware, Closed-Loop CPS Active Defense," *CERN / Zenodo Digital Repository*, doi: 10.5281/zenodo.23598779, Oct. 2026.
 
 ---
 
-## 6. Running the Simulation Mesh
-
-### Launch the Grid
-Start all 7 containers in the background:
-```bash
-sudo make up
-```
-
-### Verify Container Status
-Check that all containers are online and `matrix-nexus` has passed its health check:
-```bash
-sudo docker compose ps
-```
-
-Expected output:
-```text
-NAME                         STATUS                    PORTS
-matrix-nexus                 Up (healthy) (2s)         0.0.0.0:50051->50051/tcp, 0.0.0.0:9443->9443/tcp, 0.0.0.0:9444->9444/tcp
-matrix-forge                 Up                        
-matrix-traffic-gen           Up                        
-matrix-monitor               Up                        
-matrix-edge-substation-01    Up                        
-matrix-edge-hospital-02      Up                        
-matrix-edge-refinery-03      Up                        
-```
-
----
-
-## 7. Observability Consoles
-
-### A. Air-Gapped Web Command Center
-Open any browser on your host machine (or guest):
-```text
-http://localhost:9443
-```
-* **Active Node Matrix:** Live telemetry from all edge appliances (CPU, RAM, NPU temp, eBPF drop counters, microsecond mitigation latency).
-* **Radial Topology Canvas:** Dynamic HTML5 Canvas rendering radial link connections between edge nodes and Nexus.
-* **Aggregated MITRE ATT&CK Matrix:** Color-coded heatmap showing active tactic hit counters (`T0855`, `T1071`, `T1190`, `T1110`).
-* **Canary Staging Pipeline:** 1-Click controls to promote candidate models (`Shadow Mode` $\rightarrow$ `5% Canary` $\rightarrow$ `Fleet-Wide`) or trigger an immediate Emergency Rollback.
-
-### B. Live Terminal Dashboard (TUI)
-To monitor the simulation in your terminal:
-```bash
-make tui
-```
-Displays a real-time split screen:
-* **Left Panel:** Connected Edge Appliances table (Node ID, Site, CPU, Drops, Microsecond Latency SLA).
-* **Right Panel:** MITRE ATT&CK Detections table with live tactic hit counts.
-
-*(Press `Ctrl+C` to exit the dashboard view without stopping the simulation).*
-
----
-
-## 8. Triggering Attack Waves & Chaos Scenarios
-
-The mesh runs continuous ambient traffic in the background. You can trigger targeted attacks and chaos conditions on demand:
-
-### 1. SCADA Modbus PLC Override Attack (T0855)
-Simulates an attacker attempting an unauthorized valve coil override on `Edge-Substation-01`:
-```bash
-make attack-modbus
-```
-* **What happens:** 
-  1. Substation Node 01 intercepts the packet, executes an in-kernel eBPF drop in $< 1\,\mu\text{s}$, and emits a `ThreatIndicator` upstream to Nexus.
-  2. Nexus broadcasts a `FleetDefenseRule` fleet-wide via bidirectional gRPC.
-  3. Hospital Node 02 and Refinery Node 03 inject the attacker's IP (`198.51.100.44`) into their local kernel's `blocked_ip_map` in **$< 50\,\text{ms}$**.
-  4. The adversary is blocked grid-wide before ever reaching the other two sites.
-
-### 2. C2 Egress Beacon Wave (T1071)
-Simulates high-entropy encrypted C2 outbound traffic from `Edge-Hospital-PACS-02`:
-```bash
-make attack-c2
-```
-* **What happens:** Nexus registers the detection, the MITRE ATT&CK panel in the Web UI and TUI turns red on `T1071 (C2 Application Protocol)`, and the drop counter increments immediately.
-
-### 3. SLA Latency Breach & Automated Rollback
-Simulates a candidate model causing inference degradation ($> 1{,}000\,\mu\text{s}$):
-```bash
-make chaos-latency
-```
-* **What happens:** Nexus's `RollbackGuard` detects the SLA latency breach ($1{,}650\,\mu\text{s} > 1{,}000\,\mu\text{s}$ SLA limit), logs an emergency alert, purges the candidate model, and rolls back the fleet to stable weights.
-
-### 4. Instant 0 ms Graceful Disconnect
-Simulates an edge node abruptly shutting down:
-```bash
-make chaos-sever
-```
-* **What happens:** Node 01 emits a `DeregistrationRequest` frame on `SIGINT`. In the Web Command Center and TUI, Node 01 turns **`OFFLINE` (Red) in 0 milliseconds**, bypassing the standard 15-second heartbeat timeout.
-
-To bring the node back online:
-```bash
-sudo docker compose start sentinel-edge-01
-```
-
----
-
-## 9. Continuous Retraining (The Closed-Loop Flywheel)
-
-The simulation mesh autonomously adapts to site-specific traffic without internet access:
-
-1. As ambient traffic runs, edge nodes identify vectors with prediction uncertainty between $0.40$ and $0.60$ and stream them to Nexus.
-2. Nexus curates these vectors into `/shared/datasets/forge_dataset_*.csv`.
-3. To watch `xinfer-forge` detect the batch, train, and stage the updated model:
-   ```bash
-   sudo docker compose logs -f forge
-   ```
-4. **Automated Sequence:**
-   * Forge trains the self-supervised Masked Autoencoder (MAE).
-   * Forge evaluates against `configs/safety/golden_attacks.yaml` (100% attack retention verified).
-   * Forge compiles `network_threat_v2.onnx` and stages it to Nexus in `SHADOW_MODE`.
-   * Nexus promotes it to `FLEET_WIDE`.
-   * All edge nodes pull the weights, verify the SHA-256 hash, and execute live zero-downtime hot-reloads.
-
----
-
-## 10. Customization Guide
-
-### Scaling the Edge Fleet
-To scale from 3 edge appliances to 10 appliances:
-```bash
-sudo docker compose up -d --scale sentinel-edge-01=10
-```
-
-### Adding Custom Attack Scenarios
-Drop a new scenario file into `configs/scenarios/` (e.g., `08_custom_ransomware.yaml`):
-```yaml
-scenario:
-  name: "Industrial Ransomware IOPS Burst"
-  type: "ADVERSARIAL_WAVE"
-  duration_seconds: 15
-  traffic_eps: 20000
-  target_nodes: ["Edge-Refinery-PLC-03"]
-  mitre_tactic: "T1486"
-  mitre_name: "Data Encrypted for Impact"
-  attacker_ip: "198.51.100.199"
-  target_port: 445
-  expected_outcome:
-    edge_ebpf_drop_us: 0.84
-    threat_broadcast_verified: true
-```
-Execute it immediately:
-```bash
-docker compose exec traffic-gen python3 /app/src/traffic/attack_generator.py --scenario /configs/scenarios/08_custom_ransomware.yaml
-```
-
----
-
-## 11. Troubleshooting Reference
-
-| Issue / Error | Root Cause | Resolution |
-| :--- | :--- | :--- |
-| `Pool overlaps with other one on this address space` | Docker or VMware previously assigned a conflicting `172.x` route block. | `sentinel-matrix` uses `10.240.0.0/24`. Run `sudo docker network prune -f` and restart. |
-| `error while loading shared libraries: libabsl_...` or `libre2...` | Host-compiled binaries require specific dynamic libraries not present in stock container. | Run `make init` to copy host `.so` files into `shared/lib/`. The container mounts them to `/usr/local/lib/matrix-deps` with `LD_LIBRARY_PATH`. |
-| `mkdir /usr/local/lib: read-only file system` | Docker daemon attempted to mount host root path in an environment with AppArmor/Snap confinement. | `docker-compose.yml` mounts local `./shared/lib:/usr/local/lib/matrix-deps:ro`. Do not mount host `/usr/local/lib`. |
-| `Container matrix-nexus is unhealthy` | Port `50051` or `9443` is already held by a host process from prior testing. | Run `sudo pkill -f sentinel-nexus` and `sudo pkill -f sentinel` on the host, then run `sudo make restart`. |
-| `attack-c2` hangs or `make tui` shows 0 threats | Old container image was running without live `./src` mount. | Ensure `- ./src:/app/src:ro` is in `docker-compose.yml` for `traffic-gen` and `monitor`, then run `sudo docker compose up -d --force-recreate traffic-gen monitor`. |
-| `Permission denied` on BPF map injection | Virtual container lacks Linux kernel capabilities. | Ensure `privileged: true` and `cap_add: [NET_ADMIN, SYS_ADMIN, BPF]` are enabled in `docker-compose.yml`. |
-
----
-
-## 12. Teardown & Maintenance
-
-```bash
-# Stop all containers (preserves models and logs)
-sudo make down
-
-# Restart the entire mesh fresh
-sudo make restart
-
-# View aggregated logs across all tiers
-sudo make logs
-
-# Purge all temporary datasets, trained model candidates, and caches
-sudo make clean
-```
+**Developed & Maintained by:**  
+**Aryorithm Technologies B.V.**  
+*Autonomous Sub-Microsecond Edge Defense for Critical Cyber-Physical Infrastructure*  
+Amsterdam, The Netherlands \quad\textbar\quad Website: [https://aryorithm.com](https://aryorithm.com) \quad\textbar\quad Direct Inquiries: `kamran@aryorithm.com`
