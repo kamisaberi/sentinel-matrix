@@ -1,31 +1,70 @@
 # ============================================================================
-# ARYORITHM MODEL ROUTING DAG - COMPILED FROM VISUAL BLUEPRINT
-# Blueprint Name : Substation Alpha SCADA & Thermal Protection Blueprint
-# Blueprint ID   : bp_substation_alpha_v2
+# ARYORITHM MODEL ROUTING DAG: NODE 01 (SUBSTATION ALPHA)
 # ============================================================================
 
-- sensor_id: Substation-Modbus-01
-  sensor_type: SCADA_MODBUS_TCP
-  driver_mode: AF_XDP_UMEM
-  match:
-    port: 502
-    transport: tcp
-    package_id: org.aryorithm.package.modbus_actuator_guard
-    plugin_id: modbus_actuator_guard.so
-    owner_subsystem: 18_cps_sec
-    execution_mode: CASCADE_SHORT_CIRCUIT
-    model_id: network_threat_int8.onnx
-    silicon_target: INTEL_OPENVINO
-    format: ONNX
-    precision: INT8
-    latency_budget_ns: 20000
-    threshold_drop: 0.85
-    xai_explainer: MRD_XAI
+node:
+  identifier: "Edge-Substation-01"
+  site_identifier: "PowerGrid-North-01"
+  hardware:
+    type: "DEVICE_VIRTUAL_TPM"
+    primary_backend: "INTEL_OPENVINO"
+    xdp_driver_mode: "SKB"
 
-# --- CROSS-MODAL PHYSICAL CONSTRAINT FUSION (Stage 4) ---
-- correlation_id: STUXNET_THERMAL_BLINDING
-  cyber_sensor_id: Substation-Modbus-01
-  cyber_max_score: 0.2
-  physical_sensor_id: 101
-  physical_min_temp: 120.0
-  action: KERNEL_DROP_AND_ISOLATE
+nexus:
+  enabled: true
+  host: "10.240.0.10"
+  port: 50051
+  nexus_http_port: 9443
+  active_model_name: "network_threat_int8.onnx"
+  local_models_dir: "/etc/sentinel/models"
+
+subsystems:
+  grid_telecontrol_guard: true
+  monitored_protocols: ["MODBUS", "IEC104", "GTPU"]
+  ebpf_line_rate_drop: true
+
+# --- STAGE 2 & STAGE 3 SENSOR-TO-MODEL ROUTING DAG ---
+routes:
+  - sensor_id: Substation-Modbus-01
+    sensor_type: SCADA_MODBUS_TCP
+    driver_mode: AF_XDP_UMEM
+    match:
+      port: 502
+      transport: tcp
+      package_id: org.aryorithm.package.modbus_actuator_guard
+      plugin_id: modbus_actuator_guard.so
+      owner_subsystem: 18_cps_sec
+      execution_mode: CASCADE_SHORT_CIRCUIT
+      model_id: network_threat_int8.onnx
+      silicon_target: INTEL_OPENVINO
+      format: ONNX
+      precision: INT8
+      latency_budget_ns: 20000
+      threshold_drop: 0.85
+      xai_explainer: MRD_XAI
+
+  - sensor_id: Substation-Power-Quality-02
+    sensor_type: GRID_PAC3200_METER
+    driver_mode: AF_XDP_UMEM
+    match:
+      port: 15501
+      transport: tcp
+      package_id: org.aryorithm.package.c37_118_pmu
+      plugin_id: scada_modbus_plugin.so
+      owner_subsystem: 18_cps_sec
+      execution_mode: CASCADE_SHORT_CIRCUIT
+      model_id: power_quality_anomaly.onnx
+      silicon_target: INTEL_OPENVINO
+      format: ONNX
+      precision: INT8
+      latency_budget_ns: 16000
+      threshold_drop: 0.80
+
+# --- STAGE 4 CROSS-MODAL FUSION INVARIANT ---
+fusion_rules:
+  - correlation_id: SUBSTATION_BUSBAR_PROTECTION
+    cyber_sensor_id: Substation-Modbus-01
+    cyber_max_score: 0.2
+    physical_sensor_id: Substation-Power-Quality-02
+    physical_min_temp: 120.0
+    action: KERNEL_DROP_AND_ISOLATE
