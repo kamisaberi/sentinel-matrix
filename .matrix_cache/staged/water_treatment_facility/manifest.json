@@ -1,0 +1,14 @@
+{
+  "name": "water_treatment_facility",
+  "slug": "water_treatment_facility",
+  "title": "water_treatment_facility",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "sector": "CRITICAL_INFRASTRUCTURE",
+  "complexity": "INTERMEDIATE",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "Digital Twin Scenario for water_treatment_facility",
+  "author_public_key": "d9af7532a37ea3c9c6726adc47720910c44c5f827b408127ec3206c8fc99506c",
+  "compliance": ["IEC-62443-4-2", "NIS2"]
+}
