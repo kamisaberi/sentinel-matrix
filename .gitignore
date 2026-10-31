@@ -1,2 +1,3 @@
 shared/lib
 configs/pcaps
+.matrix_cache
