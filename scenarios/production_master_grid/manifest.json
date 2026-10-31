@@ -16,7 +16,8 @@
       "network_threat_detector.onnx",
       "network_threat_int8.onnx",
       "power_quality_anomaly.onnx",
-      "vibration_spectral_ae.onnx"
+      "vibration_spectral_ae.onnx",
+      "thermal_anomaly_vision.onnx"
     ],
     "pcaps": [
       "industroyer2_substation.pcap",
