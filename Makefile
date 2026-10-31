@@ -86,13 +86,15 @@ help:
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-run" "Execute attack automation script in the active unpacked scenario"
 	@echo ""
 
-	@echo -e "${GREEN}${BOLD}8. DYNAMIC EXTENSIBLE SCENARIO ENGINE${RESET}"
-	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-load" "Compile and launch a dynamic scenario (SCENARIO=<path.yaml>)"
-	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-down" "Dismantle active scenario overlays and custom networks"
-	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-status" "Display live containers across dynamic scenario subnets"
+@echo -e "${GREEN}${BOLD}8. DYNAMIC EXTENSIBLE SCENARIO ENGINE${RESET}"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-up" "Build & launch scenario (default: production_master_grid or SCENARIO=...)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-down" "Dismantle active scenario containers and custom networks (NAME=...)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-restart" "Full teardown and clean re-launch of the active scenario"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-status" "Display live containers across dynamic scenario subnets (NAME=...)"
+	@printf "  ${CYAN}%-22s${RESET} %s\n" "scenario-pack" "Pack a scenario folder into .tar.gz bundle (NAME=... [EMBED=1])"
 	@printf "  ${CYAN}%-22s${RESET} %s\n" "sim-finetune" "Simulate fine-tuning mesh (MODE=local|air-gapped|cloud)"
 	@echo ""
-
+	
 # ==============================================================================
 # TARGET IMPLEMENTATIONS
 # ==============================================================================
