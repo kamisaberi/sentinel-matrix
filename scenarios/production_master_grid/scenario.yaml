@@ -1,7 +1,7 @@
 version: "1.0"
 scenario:
   name: "production_master_grid"
-  description: "Tested Production Grid: Nexus, 3 Edge Appliances, Mock PLC, Forge, Adversary & Traffic-Gen"
+  description: "Complete 13-Container Production Grid with 4 Live Sensors, 3 Edge Nodes, Mock PLC, Nexus & Forge"
 
 networks:
   sentinel-grid-net:
@@ -19,7 +19,9 @@ volumes:
     driver: local
 
 services:
-  # 1. TIER 6: SENTINEL NEXUS (Master Command Plane)
+  # ============================================================================
+  # TIER 6: SENTINEL NEXUS (Master Command Plane)
+  # ============================================================================
   nexus:
     build:
       context: .
@@ -54,7 +56,74 @@ services:
       retries: 5
       start_period: 10s
 
-  # 2. DIGITAL TWIN HARDWARE: MOCK PLC (SCADA Industrial Listener)
+  # ============================================================================
+  # SENSOR 1: FLIR INDUSTRIAL THERMAL CAMERA (RTSP :8554 & WebRTC :8889)
+  # ============================================================================
+  sensor-camera:
+    image: bluenviron/mediamtx:latest-ffmpeg
+    container_name: matrix-sensor-camera
+    hostname: camera.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: "10.240.0.75"
+    ports:
+      - "8554:8554"
+      - "8889:8889"
+      - "8189:8189/udp"
+    environment:
+      - MTX_WEBRTCADDITIONALHOSTS=127.0.0.1
+      - MTX_PATHS_THERMAL_FEED_RUNONINIT=ffmpeg -re -f lavfi -i testsrc=size=640x360:rate=15 -pix_fmt yuv420p -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp rtsp://127.0.0.1:8554/thermal_feed
+      - MTX_PATHS_THERMAL_FEED_RUNONINITRESTART=yes
+
+  # ============================================================================
+  # SENSOR 2: MULTI-AXIS VIBRATION & TEMPERATURE SENSOR (Modbus TCP :15502)
+  # ============================================================================
+  sensor-vibration:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-sensor-vibration
+    hostname: vibration.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: "10.240.0.76"
+    ports:
+      - "15502:502"
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "IFM-Vibration-Temp-Probe"]
+
+  # ============================================================================
+  # SENSOR 3: SICK / VELODYNE INDUSTRIAL LIDAR SPATIAL SCANNER (UDP :2368)
+  # ============================================================================
+  sensor-lidar:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-sensor-lidar
+    hostname: lidar.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: "10.240.0.77"
+    ports:
+      - "2368:2368/udp"
+    command: ["--archetype", "vision", "--protocol", "stream_telemetry", "--port", "2368", "--name", "SICK-LiDAR-Scanner"]
+
+  # ============================================================================
+  # SENSOR 4: SUBSTATION POWER QUALITY SMART METER (Modbus TCP :15501)
+  # ============================================================================
+  sensor-power:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-sensor-power
+    hostname: power-meter.matrix.internal
+    restart: unless-stopped
+    networks:
+      sentinel-grid-net:
+        ipv4_address: "10.240.0.78"
+    ports:
+      - "15501:502"
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Siemens-PAC3200-Power-Meter"]
+
+  # ============================================================================
+  # DIGITAL TWIN HARDWARE: MOCK PLC (SCADA Industrial Protocols Listener)
+  # ============================================================================
   mock-plc:
     build:
       context: .
@@ -74,7 +143,9 @@ services:
       - ./shared/bin/mock_plc:/usr/local/bin/mock_plc:ro
     command: ["/usr/local/bin/mock_plc", "-c", "/opt/sentinel-matrix/configs/plc_register_map.json"]
 
-  # 3. TIER 4: XINFER FORGE (Continuous Learning Daemon)
+  # ============================================================================
+  # TIER 4: XINFER FORGE (Continuous Learning Daemon)
+  # ============================================================================
   forge:
     build:
       context: .
@@ -98,7 +169,9 @@ services:
       - NEXUS_MODELS_DIR=/opt/sentinel-nexus/models
       - VMWARE_CONTAINER=true
 
-  # 4. TIER 3: EDGE APPLIANCE 01 (Industrial Substation - OpenVINO)
+  # ============================================================================
+  # TIER 3: EDGE APPLIANCE 01 (Industrial Substation - OpenVINO)
+  # ============================================================================
   sentinel-edge-01:
     build:
       context: .
@@ -135,7 +208,9 @@ services:
       - NEXUS_HOST=10.240.0.10
       - NEXUS_PORT=50051
 
-  # 5. TIER 3: EDGE APPLIANCE 02 (Hospital PACS - TensorRT Emulation)
+  # ============================================================================
+  # TIER 3: EDGE APPLIANCE 02 (Hospital PACS - TensorRT Emulation)
+  # ============================================================================
   sentinel-edge-02:
     build:
       context: .
@@ -172,7 +247,9 @@ services:
       - NEXUS_HOST=10.240.0.10
       - NEXUS_PORT=50051
 
-  # 6. TIER 3: EDGE APPLIANCE 03 (Refinery SCADA - RKNN Emulation)
+  # ============================================================================
+  # TIER 3: EDGE APPLIANCE 03 (Refinery SCADA - RKNN Emulation)
+  # ============================================================================
   sentinel-edge-03:
     build:
       context: .
@@ -209,7 +286,9 @@ services:
       - NEXUS_HOST=10.240.0.10
       - NEXUS_PORT=50051
 
-  # 7. SYNTHETIC WIRE TRAFFIC & ATTACK WAVE GENERATOR
+  # ============================================================================
+  # SYNTHETIC WIRE TRAFFIC & ATTACK WAVE GENERATOR
+  # ============================================================================
   traffic-gen:
     build:
       context: .
@@ -233,7 +312,9 @@ services:
       - TARGET_NODES=10.240.0.101,10.240.0.102,10.240.0.103
       - VMWARE_SIMULATION_MODE=true
 
-  # 8. TERMINAL REAL-TIME DASHBOARD (TUI)
+  # ============================================================================
+  # TERMINAL REAL-TIME DASHBOARD (TUI)
+  # ============================================================================
   monitor:
     build:
       context: .
@@ -255,7 +336,9 @@ services:
     stdin_open: true
     tty: true
 
-  # 9. LIVE ADVERSARY CONTAINER
+  # ============================================================================
+  # LIVE ADVERSARY CONTAINER (10.240.0.99)
+  # ============================================================================
   adversary:
     build:
       context: .
