@@ -1,19 +1,11 @@
-# Tutorials
+# Tutorials & Walkthroughs
 
-> **Status:** Draft — placeholder content. Final technical prose is forthcoming.
+Hands-on tutorials demonstrating range execution, malware replays, and closed-loop flywheel validation.
 
-Section overview for Tutorials — start with any guide below.
+## Section Navigation
 
-- [Adding Custom Malware PCAP](./adding-custom-malware-pcap.md)
-
-- [Full Closed-Loop Walkthrough](./full-closed-loop-walkthrough.md)
-
-- [Running Matrix in ESXi Headless](./running-matrix-in-esxi-headless.md)
-
-- [Hospital Ransomware Wave](./simulating-hospital-ransomware-wave.md)
-
-- [Substation Blackout Attack](./simulating-substation-blackout-attack.md)
-
----
-
-*Part of the sentinel-matrix documentation set.*
+- [Full Closed-Loop Walkthrough](./tutorials/full-closed-loop-walkthrough.md): Complete 60-second walkthrough from attack to in-kernel drop and OTA hot-reload.
+- [Substation Blackout Attack](./tutorials/simulating-substation-blackout-attack.md): Simulating an Industroyer2 high-voltage switchgear trip against Node 01.
+- [Hospital Ransomware Wave](./tutorials/simulating-hospital-ransomware-wave.md): Simulating DICOM C-MOVE siphoning and high-entropy ransomware on Node 02.
+- [Adding Custom Malware PCAP](./tutorials/adding-custom-malware-pcap.md): Importing Wireshark captures into the shared PCAP replay pipeline.
+- [Running Headless in ESXi](./tutorials/running-matrix-in-esxi-headless.md): Deploying `sentinel-matrix` on headless VMware ESXi 8.0 clusters for CI/CD.

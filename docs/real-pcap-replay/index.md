@@ -1,27 +1,15 @@
-# Real PCAP Replay
+# Real Malware PCAP Replay Pipeline
 
-> **Status:** Draft — placeholder content. Final technical prose is forthcoming.
+`sentinel-matrix` streams authentic binary packet captures (PCAP) from historical malware campaigns directly across the virtual wire.
 
-Section overview for Real PCAP Replay — start with any guide below.
+## Section Navigation
 
-- [Git LFS Downloader](./git-lfs-downloader.md)
-
-- [Offline Binary Generator](./offline-binary-generator.md)
-
-- [Catalog: Industroyer IEC-104](./pcap-catalog-industroyer-iec104.md)
-
-- [Catalog: Modbus SCADA](./pcap-catalog-modbus-scada.md)
-
-- [Catalog: Stuxnet S7Comm](./pcap-catalog-stuxnet-s7comm.md)
-
-- [Catalog: Triton TriStation](./pcap-catalog-triton-tristation.md)
-
-- [PCAP Replay Pipeline Overview](./pcap-replay-pipeline-overview.md)
-
-- [PCAP Streamer Engine](./pcap-streamer-engine.md)
-
-- [Rate Pacing & Wire Injection](./rate-pacing-and-wire-injection.md)
-
----
-
-*Part of the sentinel-matrix documentation set.*
+- [PCAP Replay Pipeline Overview](./pcap-replay-pipeline-overview.md): Why authentic binary malware replays outperform synthetic mocking.
+- [PCAP Streamer Engine](./pcap-streamer-engine.md): `pcap_streamer.py` frame parsing, IP address rewriting, and checksum recalculation.
+- [Git LFS Downloader](./git-lfs-downloader.md): Automated Git LFS resolution script (`download_real_pcaps.py`) fetching binary payloads.
+- [Offline Binary Generator](./offline-binary-generator.md): Air-gapped binary generator (`generate_real_pcaps.py`) synthesizing raw hex captures.
+- [Catalog: Industroyer IEC-104](./pcap-catalog-industroyer-iec104.md): Replaying CrashOverride Type 46 double commands against substation breakers.
+- [Catalog: Triton TriStation](./pcap-catalog-triton-tristation.md): Replaying HatMan TSAP zero-day program downloads targeting safety systems.
+- [Catalog: Stuxnet S7Comm](./pcap-catalog-stuxnet-s7comm.md): Replaying Stuxnet S7Comm DB890 centrifuge frequency write mutations.
+- [Catalog: Modbus SCADA](./pcap-catalog-modbus-scada.md): Replaying University of Illinois SCADA lab Modbus override captures.
+- [Rate Pacing & Wire Injection](./rate-pacing-and-wire-injection.md): High-resolution microsecond rate pacing and packet scheduling algorithms.

@@ -1,19 +1,11 @@
-# Closed-Loop Active Learning
+# Closed-Loop Active Learning Flywheel
 
-> **Status:** Draft — placeholder content. Final technical prose is forthcoming.
+`sentinel-matrix` validates the automated active learning flywheel connecting edge appliances, Nexus hubs, and Forge training loops.
 
-Section overview for Closed-Loop Active Learning — start with any guide below.
+## Section Navigation
 
-- [Continuous Drift Adaptation](./continuous-drift-adaptation.md)
-
-- [Flywheel Lifecycle](./flywheel-lifecycle.md)
-
-- [Forge Watcher Daemon](./forge-watcher-daemon.md)
-
-- [Staged Rollout Progression](./staged-rollout-progression.md)
-
-- [Zero-Downtime Hot-Reload Validation](./zero-downtime-hot-reload-validation.md)
-
----
-
-*Part of the sentinel-matrix documentation set.*
+- [Flywheel Lifecycle](./flywheel-lifecycle.md): 4-phase interactive lifecycle from uncertainty selection to zero-downtime hot-reload.
+- [Forge Watcher Daemon](./forge-watcher-daemon.md): `forge_watcher.py` daemon monitoring `/shared/datasets/` via Linux `inotify`.
+- [Staged Rollout Progression](./staged-rollout-progression.md): Validating model progression (`Shadow Mode` $\to$ `Canary 5%` $\to$ `Fleet-Wide`).
+- [Zero-Downtime Hot Reload](./zero-downtime-hot-reload-validation.md): Proving zero-downtime atomic memory pointer swaps during line-rate floods.
+- [Continuous Drift Adaptation](./continuous-drift-adaptation.md): Maintaining $> 98\%$ accuracy across a 10-minute multi-shift drift scenario.

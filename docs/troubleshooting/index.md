@@ -1,25 +1,14 @@
-# Troubleshooting
+# Troubleshooting & Diagnostic Help Desk
 
-> **Status:** Draft — placeholder content. Final technical prose is forthcoming.
+Diagnostic procedures, error code remediations, and support channels for `sentinel-matrix`.
 
-Section overview for Troubleshooting — start with any guide below.
+## Section Navigation
 
-- [Container Restarting Loops](./container-restarting-loops.md)
-
-- [Docker Subnet Pool Overlaps](./docker-subnet-pool-overlaps.md)
-
-- [Technical FAQ](./faq.md)
-
-- [glibc Version Errors](./glibc-version-not-found-errors.md)
-
-- [Missing Host Libraries](./missing-host-libraries-absl-re2.md)
-
-- [PCAP LFS Pointer Corruption](./pcap-lfs-pointer-corruption.md)
-
-- [Support Channels](./support.md)
-
-- [TUI Empty Appliances](./tui-empty-appliances-debugging.md)
-
----
-
-*Part of the sentinel-matrix documentation set.*
+- [Docker Subnet Overlaps](./troubleshooting/docker-subnet-pool-overlaps.md): Resolving Docker bridge collisions with VMware host-only adapters (`VMnet1`/`VMnet8`).
+- [GLIBC Version Not Found](./troubleshooting/glibc-version-not-found-errors.md): Fixing dynamic linker errors (`GLIBC_2.43`) via `ubuntu:devel` bases.
+- [Missing Host Libraries](./troubleshooting/missing-host-libraries-absl-re2.md): Automated library harvesting (`make init`) bundling `libabsl` and `libgrpc++`.
+- [Container Restarting Loops](./troubleshooting/container-restarting-loops.md): Debugging container exit codes (`127`, `139`) and entrypoint scripts.
+- [TUI Empty Appliances](./troubleshooting/tui-empty-appliances-debugging.md): Resolving empty TUI node lists and `NEXUS_HOST` variable bindings.
+- [PCAP LFS Pointer Corruption](./troubleshooting/pcap-lfs-pointer-corruption.md): Fixing 130-byte Git LFS pointer file corruption via `download_real_pcaps.py`.
+- [Technical FAQ](./faq.md): Frequently asked technical questions regarding hypervisor settings, RAM usage, and attacks.
+- [Support Channels](./support.md): Automated diagnostic bundle generation (`make diag`) and enterprise commercial SLAs.
