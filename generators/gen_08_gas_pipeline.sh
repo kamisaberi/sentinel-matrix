@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/kami/sentinel-matrix/generators/gen_08_gas_pipeline.sh
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,5 +14,3 @@ cp "${MATRIX_ROOT}/shared/datasets/industroyer2_substation.pcap" "${TMP_STAGE}/p
 
 SRC_YAML="${MATRIX_ROOT}/scenarios/transcontinental_gas_pipeline/scenario.yaml"
 pack_scenario_bundle "${NAME}" "Continental Gas Transmission Pipeline" "GAS_PIPELINE" "ADVANCED" "21-node high-pressure gas pipeline with 4 RTUs, compressor turbines, and DNP3 SCADA" "${TMP_STAGE}" "${SRC_YAML}"
-EOF
-chmod +x /home/kami/sentinel-matrix/generators/gen_08_gas_pipeline.sh
