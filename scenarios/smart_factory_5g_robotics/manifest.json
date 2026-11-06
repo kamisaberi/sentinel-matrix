@@ -1,0 +1,25 @@
+{
+  "name": "smart_factory_5g_robotics",
+  "slug": "smart_factory_5g_robotics",
+  "title": "Private 5G Automotive Robotic Assembly Gigafactory",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "SMART_MANUFACTURING",
+  "sector": "SMART_MANUFACTURING",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "24-node private 5G factory digital twin: 4 Edge Nodes, 1 5G UPF Gateway, 3 Siemens S7-1500 PACs, 14 Field Sensors, and in-kernel GTP-U slicing.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "lidar_spatial_detector.onnx",
+      "thermal_anomaly_vision.onnx"
+    ],
+    "pcaps": [
+      "cve_2023_44487_rapid_reset.pcap",
+      "stuxnet_s7comm_injected.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "3GPP-REL-18", "NIS2"]
+}
