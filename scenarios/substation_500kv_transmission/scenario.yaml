@@ -1,0 +1,240 @@
+version: "1.0"
+scenario:
+  name: "substation_500kv_transmission"
+  description: "20-Node 500kV Transmission Substation Protection Grid"
+
+networks:
+  tso_wan_net:
+    driver: bridge
+    subnet: "192.168.50.0/24"
+    gateway: "192.168.50.1"
+    internal: false
+  station_bus_net:
+    driver: bridge
+    subnet: "10.240.10.0/24"
+    gateway: "10.240.10.1"
+    internal: true
+  process_bus_net:
+    driver: bridge
+    subnet: "10.240.20.0/24"
+    gateway: "10.240.20.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-grid-nexus
+    hostname: nexus.grid.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      tso_wan_net: { ipv4_address: "192.168.50.10" }
+      station_bus_net: { ipv4_address: "10.240.10.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 3 EDGE APPLIANCES
+  sentinel-edge-bay01:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-grid-edge-bay01
+    hostname: edge-bay01.grid.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      station_bus_net: { ipv4_address: "10.240.10.101" }
+      process_bus_net: { ipv4_address: "10.240.20.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Grid-Bay01
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.240.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-bay02:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-grid-edge-bay02
+    hostname: edge-bay02.grid.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      station_bus_net: { ipv4_address: "10.240.10.102" }
+      process_bus_net: { ipv4_address: "10.240.20.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Grid-Bay02
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.240.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-busbar:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-grid-edge-busbar
+    hostname: edge-busbar.grid.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      station_bus_net: { ipv4_address: "10.240.10.103" }
+      process_bus_net: { ipv4_address: "10.240.20.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Grid-Busbar
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.240.10.10
+      - NEXUS_PORT=50051
+
+  # 4 SUBSTATION IEDS
+  ied-relion-670:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-ied-relion
+    networks: { process_bus_net: { ipv4_address: "10.240.20.11" } }
+    ports: ["17401:2404"]
+    command: ["--archetype", "ied", "--protocol", "iec104", "--port", "2404", "--name", "ABB-Relion-670-Relay"]
+
+  ied-siprotec-5:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-ied-siprotec
+    networks: { process_bus_net: { ipv4_address: "10.240.20.12" } }
+    ports: ["17402:2404"]
+    command: ["--archetype", "ied", "--protocol", "iec104", "--port", "2404", "--name", "Siemens-SIPROTEC-5"]
+
+  ied-sel-411l:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-ied-sel
+    networks: { process_bus_net: { ipv4_address: "10.240.20.13" } }
+    ports: ["17403:20000"]
+    command: ["--archetype", "ied", "--protocol", "modbus", "--port", "20000", "--name", "SEL-411L-DNP3-Relay"]
+
+  ied-bus-coupler:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-ied-coupler
+    networks: { process_bus_net: { ipv4_address: "10.240.20.14" } }
+    ports: ["17404:2404"]
+    command: ["--archetype", "ied", "--protocol", "iec104", "--port", "2404", "--name", "Busbar-Coupler-IED"]
+
+  # 11 SUBSTATION SENSORS
+  sensor-active-power-mw:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-mw
+    networks: { process_bus_net: { ipv4_address: "10.240.20.21" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9101", "--name", "Active-Power-MW"]
+
+  sensor-reactive-power-mvar:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-mvar
+    networks: { process_bus_net: { ipv4_address: "10.240.20.22" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9102", "--name", "Reactive-Power-MVAR"]
+
+  sensor-grid-frequency:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-freq
+    networks: { process_bus_net: { ipv4_address: "10.240.20.23" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Grid-Frequency-50Hz"]
+
+  sensor-busbar-pt:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-pt
+    networks: { process_bus_net: { ipv4_address: "10.240.20.24" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Busbar-Voltage-PT"]
+
+  sensor-feeder-ct:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-ct
+    networks: { process_bus_net: { ipv4_address: "10.240.20.25" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Feeder-Current-CT"]
+
+  sensor-trafo-winding-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-trafo-temp
+    networks: { process_bus_net: { ipv4_address: "10.240.20.26" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Trafo-Winding-Temp"]
+
+  sensor-trafo-oil-level:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-oil
+    networks: { process_bus_net: { ipv4_address: "10.240.20.27" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9103", "--name", "Trafo-Oil-Level"]
+
+  sensor-sf6-gas-density:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-sf6
+    networks: { process_bus_net: { ipv4_address: "10.240.20.28" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "SF6-Gas-Density"]
+
+  sensor-trip-coil-current:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-trip-coil
+    networks: { process_bus_net: { ipv4_address: "10.240.20.29" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Trip-Coil-Current"]
+
+  sensor-dc-battery-bank:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-dc-battery
+    networks: { process_bus_net: { ipv4_address: "10.240.20.30" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "DC-Battery-Bank"]
+
+  sensor-pmu-synchrophasor:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-grid-sens-pmu
+    networks: { process_bus_net: { ipv4_address: "10.240.20.31" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9104", "--name", "PMU-C37-118-Phasor"]
+
+  # ATTACKERS & SIMULATORS
+  traffic-gen:
+    build: { context: ., dockerfile: docker/Dockerfile.traffic }
+    container_name: matrix-grid-traffic-gen
+    hostname: traffic.grid.internal
+    restart: unless-stopped
+    networks: { station_bus_net: { ipv4_address: "10.240.10.50" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+      - ./pcaps:/shared/datasets:ro
+    environment:
+      - NEXUS_ENDPOINT=10.240.10.10:50051
+      - TARGET_NODES=10.240.10.101,10.240.10.102,10.240.10.103
+
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-grid-adversary
+    hostname: adversary.grid.internal
+    restart: unless-stopped
+    networks: { station_bus_net: { ipv4_address: "10.240.10.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://10.240.10.10:9443
+      - TARGET_NODES=10.240.10.101,10.240.10.102,10.240.10.103
