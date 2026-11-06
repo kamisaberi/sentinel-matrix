@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/kami/sentinel-matrix/generators/gen_01_water_utility.sh
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,5 +14,3 @@ cp "${MATRIX_ROOT}/configs/plc_register_map.json" "${TMP_STAGE}/configs/" 2>/dev
 
 SRC_YAML="${MATRIX_ROOT}/scenarios/water_utility_regional_grid/scenario.yaml"
 pack_scenario_bundle "${NAME}" "Municipal Water Treatment Grid" "WATER_TREATMENT" "ADVANCED" "20-node regional water grid with 3 Edge nodes, 4 PLCs, and 12 sensors" "${TMP_STAGE}" "${SRC_YAML}"
-EOF
-chmod +x /home/kami/sentinel-matrix/generators/gen_01_water_utility.sh
