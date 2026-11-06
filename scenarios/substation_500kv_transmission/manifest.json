@@ -1,0 +1,24 @@
+{
+  "name": "substation_500kv_transmission",
+  "slug": "substation_500kv_transmission",
+  "title": "High-Voltage 500kV Substation & Grid Interconnection",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "POWER_GRID",
+  "sector": "POWER_GRID",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "20-node transmission substation digital twin: 3 Edge Protection Nodes, 4 IEDs (IEC-104 & DNP3), 11 PMU sensors, and Industroyer2 defense.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "power_quality_anomaly.onnx",
+      "vibration_spectral_ae.onnx"
+    ],
+    "pcaps": [
+      "industroyer2_substation.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "NERC-CIP", "NIS2"]
+}
