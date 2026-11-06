@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/kami/sentinel-matrix/generators/gen_all.sh
 #!/usr/bin/env bash
 # ==============================================================================
 # ARYORITHM SENTINEL-MATRIX: MASTER 10-SCENARIO GENERATOR
@@ -35,5 +34,3 @@ source "${SCRIPT_DIR}/common_env.sh"
 echo -e "\n\033[1;32m[SUCCESS] All 10 scenario bundles generated in: ${SCENARIO_CACHE_DIR}\033[0m"
 ls -lh "${SCENARIO_CACHE_DIR}"/scenario_*.tar.gz
 echo -e "\033[1;36m========================================================================\033[0m\n"
-EOF
-chmod +x /home/kami/sentinel-matrix/generators/gen_all.sh
