@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/kami/sentinel-matrix/generators/gen_09_satellite_ground.sh
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,5 +14,3 @@ cp "${MATRIX_ROOT}/configs/space_telemetry.yaml" "${TMP_STAGE}/configs/" 2>/dev/
 
 SRC_YAML="${MATRIX_ROOT}/scenarios/orbital_satellite_ground_station/scenario.yaml"
 pack_scenario_bundle "${NAME}" "Orbital Satellite Ground Link & MOC C2" "AEROSPACE_DEFENSE" "ADVANCED" "18-node satellite ground station with sub-120ns CCSDS Space Packet and STANAG defense" "${TMP_STAGE}" "${SRC_YAML}"
-EOF
-chmod +x /home/kami/sentinel-matrix/generators/gen_09_satellite_ground.sh
