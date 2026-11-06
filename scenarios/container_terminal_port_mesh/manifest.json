@@ -1,0 +1,24 @@
+{
+  "name": "container_terminal_port_mesh",
+  "slug": "container_terminal_port_mesh",
+  "title": "Automated Maritime Container Terminal & Port Logistics",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "MARITIME_LOGISTICS",
+  "sector": "MARITIME_LOGISTICS",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "19-node automated port digital twin: 3 Edge Cranes/AGVs, 1 5G/LoRa Gateway, 3 Crane PLCs, 11 Maritime Sensors, and GPS/AIS anti-spoofing.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "lidar_spatial_detector.onnx",
+      "thermal_anomaly_vision.onnx"
+    ],
+    "pcaps": [
+      "modbus_uiuc_scada_attack.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "ISPS-CODE", "NIS2"]
+}
