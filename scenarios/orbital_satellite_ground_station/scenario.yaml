@@ -1,0 +1,216 @@
+version: "1.0"
+scenario:
+  name: "orbital_satellite_ground_station"
+  description: "18-Node Satellite Ground Station & Ka-Band Spacecraft Telecommand Terminal"
+
+networks:
+  ground_station_c2_net:
+    driver: bridge
+    subnet: "192.168.100.0/24"
+    gateway: "192.168.100.1"
+    internal: false
+  space_radio_demod_net:
+    driver: bridge
+    subnet: "10.220.10.0/24"
+    gateway: "10.220.10.1"
+    internal: true
+  antenna_pedestal_net:
+    driver: bridge
+    subnet: "10.220.20.0/24"
+    gateway: "10.220.20.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-space-nexus
+    hostname: nexus.space.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      ground_station_c2_net: { ipv4_address: "192.168.100.10" }
+      space_radio_demod_net: { ipv4_address: "10.220.10.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 3 EDGE APPLIANCES
+  sentinel-edge-ccsds:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-space-edge-ccsds
+    hostname: edge-ccsds.space.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      space_radio_demod_net: { ipv4_address: "10.220.10.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Space-CCSDS-Dissector
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.220.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-stanag:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-space-edge-stanag
+    hostname: edge-stanag.space.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      space_radio_demod_net: { ipv4_address: "10.220.10.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Space-STANAG-Dissector
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.220.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-pedestal:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-space-edge-pedestal
+    hostname: edge-pedestal.space.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      antenna_pedestal_net: { ipv4_address: "10.220.20.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Space-AntennaPedestal
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.220.10.10
+      - NEXUS_PORT=50051
+
+  # 3 SPACE RADIO TRANSCEIVERS
+  transceiver-leo-cubesat:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-transceiver-leo
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.21" } }
+    ports: ["15100:50100/udp"]
+    command: ["--archetype", "space_telemetry", "--protocol", "ccsds", "--port", "50100", "--name", "LEO-CubeSat-Transceiver"]
+
+  transceiver-uav-stanag:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-transceiver-uav
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.22" } }
+    ports: ["15200:50200/udp"]
+    command: ["--archetype", "space_telemetry", "--protocol", "ccsds", "--port", "50200", "--name", "UAV-STANAG-Transceiver"]
+
+  plc-antenna-servo:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-plc-servo
+    networks: { antenna_pedestal_net: { ipv4_address: "10.220.20.23" } }
+    ports: ["15573:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Antenna-Servo-Drive-PLC"]
+
+  # 11 GROUND LINK SENSORS
+  sensor-azimuth-optical-encoder:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-azimuth
+    networks: { antenna_pedestal_net: { ipv4_address: "10.220.20.41" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9801", "--name", "Antenna-Azimuth-Encoder"]
+
+  sensor-elevation-resolver:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-elevation
+    networks: { antenna_pedestal_net: { ipv4_address: "10.220.20.42" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9802", "--name", "Antenna-Elevation-Resolver"]
+
+  sensor-drive-motor-current:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-motor-curr
+    networks: { antenna_pedestal_net: { ipv4_address: "10.220.20.43" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Azimuth-Drive-Motor-Current"]
+
+  sensor-ka-band-horn-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-horn-temp
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Ka-Band-Feed-Horn-Cryo-Temp"]
+
+  sensor-lna-dc-bias-current:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-lna-bias
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.42" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "LNA-DC-Bias-Current"]
+
+  sensor-if-70mhz-signal-power:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-if-power
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.43" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9803", "--name", "IF-70MHz-Signal-Power"]
+
+  sensor-carrier-to-noise-ratio:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-cn0
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.44" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9804", "--name", "Carrier-Noise-C/N0-dBHz"]
+
+  sensor-ber-pre-viterbi:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-ber
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.45" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9805", "--name", "Pre-Viterbi-Bit-Error-Rate"]
+
+  sensor-atomic-clock-reference:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-atomic-clock
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.46" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Rubidium-10MHz-Reference"]
+
+  sensor-hpa-klystron-rf-power:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-hpa-power
+    networks: { space_radio_demod_net: { ipv4_address: "10.220.10.47" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "HPA-2kW-Forward-RF-Power"]
+
+  sensor-radome-hvac-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-space-sens-radome-temp
+    networks: { antenna_pedestal_net: { ipv4_address: "10.220.20.44" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Radome-HVAC-Temperature"]
+
+  # ATTACKER CONTAINER
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-space-adversary
+    hostname: adversary.space.internal
+    restart: unless-stopped
+    networks: { ground_station_c2_net: { ipv4_address: "192.168.100.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://192.168.100.10:9443
+      - TARGET_NODES=10.220.10.101,10.220.10.102,10.220.20.103
