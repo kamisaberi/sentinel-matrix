@@ -1,0 +1,231 @@
+version: "1.0"
+scenario:
+  name: "container_terminal_port_mesh"
+  description: "19-Node Automated Maritime Port Terminal: STS Cranes, AGV Fleet & 5G Slicing"
+
+networks:
+  terminal_ops_net:
+    driver: bridge
+    subnet: "172.20.0.0/24"
+    gateway: "172.20.0.1"
+    internal: false
+  port_5g_wireless_net:
+    driver: bridge
+    subnet: "10.230.1.0/24"
+    gateway: "10.230.1.1"
+    internal: true
+  crane_fieldbus_net:
+    driver: bridge
+    subnet: "10.230.10.0/24"
+    gateway: "10.230.10.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-port-nexus
+    hostname: nexus.port.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      terminal_ops_net: { ipv4_address: "172.20.0.10" }
+      port_5g_wireless_net: { ipv4_address: "10.230.1.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 5G/LORA TERMINAL GATEWAY
+  port-5g-gateway:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-5g-gateway
+    hostname: gateway.port.internal
+    restart: unless-stopped
+    networks:
+      terminal_ops_net: { ipv4_address: "172.20.0.5" }
+      port_5g_wireless_net: { ipv4_address: "10.230.1.5" }
+    ports: ["12152:2152/udp"]
+    command: ["--archetype", "5g_gateway", "--protocol", "gtpu", "--port", "2152", "--name", "Port-N3-GTPU-Gateway"]
+
+  # 3 EDGE APPLIANCES
+  sentinel-edge-quay-crane:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-port-edge-sts-crane
+    hostname: edge-crane.port.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      port_5g_wireless_net: { ipv4_address: "10.230.1.101" }
+      crane_fieldbus_net: { ipv4_address: "10.230.10.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Port-STS-Crane01
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.230.1.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-stacking-crane:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-port-edge-asc-crane
+    hostname: edge-asc.port.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      port_5g_wireless_net: { ipv4_address: "10.230.1.102" }
+      crane_fieldbus_net: { ipv4_address: "10.230.10.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Port-ASC-Crane02
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.230.1.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-agv-fleet:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-port-edge-agv-fleet
+    hostname: edge-agv.port.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      port_5g_wireless_net: { ipv4_address: "10.230.1.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Port-AGV-Fleet
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.230.1.10
+      - NEXUS_PORT=50051
+
+  # 3 CRANE DRIVE PLCS
+  plc-hoist-winch:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-plc-hoist
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.21" } }
+    ports: ["15521:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Crane-Hoist-Winch-PLC"]
+
+  plc-gantry-travel:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-plc-gantry
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.22" } }
+    ports: ["15522:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Gantry-Travel-PLC"]
+
+  plc-spreader-twistlock:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-plc-twistlock
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.23" } }
+    ports: ["15123:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Spreader-Twistlock-S7-PLC"]
+
+  # 11 MARITIME PORT SENSORS
+  sensor-wind-anemometer:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-anemometer
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.41" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9401", "--name", "Gale-Cutoff-Anemometer"]
+
+  sensor-twistlock-engage:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-twistlock
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.42" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Twistlock-Engagement-Sensor"]
+
+  sensor-hoist-load-cell:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-load-cell
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.43" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Hoist-Load-Cell-Tons"]
+
+  sensor-hoist-motor-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-motor-temp
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.44" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Hoist-Motor-Thermistor"]
+
+  sensor-rail-anticollision-lidar:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-lidar
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.45" } }
+    ports: ["12369:2368/udp"]
+    command: ["--archetype", "vision", "--protocol", "stream_telemetry", "--port", "2368", "--name", "Gantry-AntiCollision-LiDAR"]
+
+  sensor-laser-spreader-align:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-align
+    networks: { crane_fieldbus_net: { ipv4_address: "10.230.10.46" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9402", "--name", "Laser-Spreader-Alignment"]
+
+  sensor-agv-rpm-encoder:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-agv-rpm
+    networks: { port_5g_wireless_net: { ipv4_address: "10.230.1.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "AGV-Drive-RPM-Encoder"]
+
+  sensor-agv-steer-angle:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-agv-steer
+    networks: { port_5g_wireless_net: { ipv4_address: "10.230.1.42" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "AGV-Steering-Angle-Pot"]
+
+  sensor-agv-radar-proximity:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-agv-radar
+    networks: { port_5g_wireless_net: { ipv4_address: "10.230.1.43" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9403", "--name", "AGV-Radar-Proximity"]
+
+  sensor-reefer-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-reefer
+    networks: { port_5g_wireless_net: { ipv4_address: "10.230.1.44" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Reefer-Container-Temp"]
+
+  sensor-high-mast-lighting:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-port-sens-lighting
+    networks: { terminal_ops_net: { ipv4_address: "172.20.0.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Terminal-Lighting-Substation"]
+
+  # ATTACKER CONTAINER
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-port-adversary
+    hostname: adversary.port.internal
+    restart: unless-stopped
+    networks: { port_5g_wireless_net: { ipv4_address: "10.230.1.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://10.230.1.10:9443
+      - TARGET_NODES=10.230.1.101,10.230.1.102,10.230.1.103
