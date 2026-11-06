@@ -1,0 +1,24 @@
+{
+  "name": "nuclear_turbine_island_cooling",
+  "slug": "nuclear_turbine_island_cooling",
+  "title": "Nuclear Power Plant Secondary Island & Turbine Cooling",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "NUCLEAR_ENERGY",
+  "sector": "NUCLEAR_ENERGY",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "22-node nuclear secondary island: 3 Edge Nodes, 4 Teleperm XS/S7 Nuclear I&C Controllers, 14 Field Sensors, and Stuxnet rotor overspeed defense.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "power_quality_anomaly.onnx",
+      "vibration_spectral_ae.onnx"
+    ],
+    "pcaps": [
+      "stuxnet_s7comm_injected.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "IAEA-NSS-17", "NIS2"]
+}
