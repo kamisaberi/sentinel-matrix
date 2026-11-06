@@ -1,0 +1,24 @@
+{
+  "name": "refinery_cracking_sis_triad",
+  "slug": "refinery_cracking_sis_triad",
+  "title": "Petrochemical Refinery Catalytic Cracker & SIS Safety Triad",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "PETROCHEMICAL_REFINING",
+  "sector": "PETROCHEMICAL_REFINING",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "19-node continuous refinery digital twin: 3 Edge Nodes, 1 Triconex SIL-3 SIS TMR Controller, 3 Process PLCs, 13 Sensors, and TRITON malware defense.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "thermal_anomaly_vision.onnx",
+      "vibration_spectral_ae.onnx"
+    ],
+    "pcaps": [
+      "triton_trisis_sis.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "IEC-61511-SIL3", "NIS2"]
+}
