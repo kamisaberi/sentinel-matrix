@@ -1,0 +1,250 @@
+version: "1.0"
+scenario:
+  name: "transcontinental_gas_pipeline"
+  description: "21-Node Continental High-Pressure Natural Gas Pipeline SCADA Grid"
+
+networks:
+  scada_wan_net:
+    driver: bridge
+    subnet: "192.168.80.0/24"
+    gateway: "192.168.80.1"
+    internal: false
+  compressor_station_net:
+    driver: bridge
+    subnet: "10.140.1.0/24"
+    gateway: "10.140.1.1"
+    internal: true
+  pipeline_block_valves_net:
+    driver: bridge
+    subnet: "10.140.2.0/24"
+    gateway: "10.140.2.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-pipeline-nexus
+    hostname: nexus.pipeline.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      scada_wan_net: { ipv4_address: "192.168.80.10" }
+      compressor_station_net: { ipv4_address: "10.140.1.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 4 EDGE APPLIANCES
+  sentinel-edge-compressor:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-pipeline-edge-compressor
+    hostname: edge-comp.pipeline.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      compressor_station_net: { ipv4_address: "10.140.1.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Pipeline-Compressor
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.140.1.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-block-valve:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-pipeline-edge-valve
+    hostname: edge-valve.pipeline.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      pipeline_block_valves_net: { ipv4_address: "10.140.2.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Pipeline-BlockValve14
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.140.1.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-citygate-meter:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-pipeline-edge-citygate
+    hostname: edge-citygate.pipeline.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      compressor_station_net: { ipv4_address: "10.140.1.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Pipeline-CityGate
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.140.1.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-storage:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-pipeline-edge-storage
+    hostname: edge-storage.pipeline.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      compressor_station_net: { ipv4_address: "10.140.1.104" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Pipeline-Storage
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.140.1.10
+      - NEXUS_PORT=50051
+
+  # 4 PIPELINE RTUS
+  rtu-compressor-alpha:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-rtu-compressor
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.21" } }
+    ports: ["15561:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Compressor-Station-Alpha-RTU"]
+
+  rtu-block-valve-14:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-rtu-valve14
+    networks: { pipeline_block_valves_net: { ipv4_address: "10.140.2.22" } }
+    ports: ["17422:20000"]
+    command: ["--archetype", "ied", "--protocol", "modbus", "--port", "20000", "--name", "Mainline-Block-Valve-14-DNP3"]
+
+  rtu-citygate-skid:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-rtu-citygate
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.23" } }
+    ports: ["15563:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "City-Gate-Metering-Skid-RTU"]
+
+  rtu-underground-storage:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-rtu-storage
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.24" } }
+    ports: ["15164:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Underground-Storage-S7-RTU"]
+
+  # 12 PIPELINE SENSORS
+  sensor-suction-pressure:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-suction
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Suction-Gas-Pressure-75bar"]
+
+  sensor-discharge-pressure:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-discharge
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.42" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Discharge-Gas-Pressure-82bar"]
+
+  sensor-turbine-rpm:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-turbine-rpm
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.43" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9701", "--name", "Turbine-Shaft-RPM"]
+
+  sensor-compressor-flow-ultrasonic:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-flow-ultra
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.44" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Compressor-Ultrasonic-Flowmeter"]
+
+  sensor-gas-chromatograph-btu:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-chromatograph
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.45" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "BTU-Wobbe-Index-Analyzer"]
+
+  sensor-hydrocarbon-dew-point:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-dew-point
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.46" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9702", "--name", "Hydrocarbon-DewPoint-Chamber"]
+
+  sensor-valve-hydraulic-press:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-valve-press
+    networks: { pipeline_block_valves_net: { ipv4_address: "10.140.2.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Valve14-Hydraulic-Actuator-Pressure"]
+
+  sensor-soil-strain-seismic:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-soil-strain
+    networks: { pipeline_block_valves_net: { ipv4_address: "10.140.2.42" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9703", "--name", "Pipe-Soil-Strain-Gauge"]
+
+  sensor-cathodic-protection:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-cathodic
+    networks: { pipeline_block_valves_net: { ipv4_address: "10.140.2.43" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Cathodic-Protection-Voltage"]
+
+  sensor-compressor-lel-gas:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-compressor-lel
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.47" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Compressor-Hall-LEL-Sniffer"]
+
+  sensor-fuel-gas-regulator-press:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-fuel-reg
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.48" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Fuel-Gas-Regulator-Pressure"]
+
+  sensor-esd-vent-flow:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-pipeline-sens-esd-vent
+    networks: { compressor_station_net: { ipv4_address: "10.140.1.49" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "ESD-Emergency-Blowdown-Vent"]
+
+  # ATTACKER CONTAINER
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-pipeline-adversary
+    hostname: adversary.pipeline.internal
+    restart: unless-stopped
+    networks: { scada_wan_net: { ipv4_address: "192.168.80.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://192.168.80.10:9443
+      - TARGET_NODES=10.140.1.101,10.140.2.102,10.140.1.103
