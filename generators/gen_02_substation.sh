@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/kami/sentinel-matrix/generators/gen_02_substation.sh
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,5 +14,3 @@ cp "${MATRIX_ROOT}/shared/datasets/industroyer2_substation.pcap" "${TMP_STAGE}/p
 
 SRC_YAML="${MATRIX_ROOT}/scenarios/substation_500kv_transmission/scenario.yaml"
 pack_scenario_bundle "${NAME}" "500kV High-Voltage Substation" "POWER_GRID" "ADVANCED" "20-node transmission grid with IEC-104/DNP3 IEDs and PMU telemetry" "${TMP_STAGE}" "${SRC_YAML}"
-EOF
-chmod +x /home/kami/sentinel-matrix/generators/gen_02_substation.sh
