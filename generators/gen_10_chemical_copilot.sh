@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/kami/sentinel-matrix/generators/gen_10_chemical_copilot.sh
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,5 +14,3 @@ cp "${MATRIX_ROOT}/configs/plc_register_map.json" "${TMP_STAGE}/configs/" 2>/dev
 
 SRC_YAML="${MATRIX_ROOT}/scenarios/chemical_reactor_copilot_trism/scenario.yaml"
 pack_scenario_bundle "${NAME}" "Chemical Reactor with AI Copilot & Live-SBOM" "CHEMICAL_AI_AUTOMATION" "ADVANCED" "20-node exothermic chemical reactor with GenAI Copilot, AI TRiSM firewall, and Live-SBOM" "${TMP_STAGE}" "${SRC_YAML}"
-EOF
-chmod +x /home/kami/sentinel-matrix/generators/gen_10_chemical_copilot.sh
