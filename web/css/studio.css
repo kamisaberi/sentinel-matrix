@@ -282,3 +282,78 @@
     border-color: #00F0FF;
     outline: none;
 }
+
+/* --- Enhanced Inspector Selectors & Buttons --- */
+.inspector-select {
+    background: #070A0F;
+    border: 1px solid #243144;
+    border-radius: 4px;
+    color: #00F0FF;
+    font-size: 11px;
+    padding: 6px 8px;
+    font-family: monospace;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+}
+
+.inspector-select:focus {
+    border-color: #00F0FF;
+    outline: none;
+    box-shadow: 0 0 6px rgba(0, 240, 255, 0.25);
+}
+
+.inspector-select option {
+    background: #0E131B;
+    color: #F8FAFC;
+}
+
+.inspector-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    cursor: pointer;
+}
+
+.inspector-checkbox-row input[type="checkbox"] {
+    accent-color: #00F0FF;
+    cursor: pointer;
+}
+
+.studio-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-right: 1px solid #243144;
+    padding-right: 8px;
+    margin-right: 4px;
+}
+
+.btn-tb {
+    font-size: 10px;
+    padding: 5px 9px;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+}
+
+.btn-tb-green   { background: #10B981; color: #0B0F17; }
+.btn-tb-green:hover { background: #059669; }
+
+.btn-tb-cyan    { background: #00F0FF; color: #0B0F17; }
+.btn-tb-cyan:hover { background: #00C4D4; }
+
+.btn-tb-purple  { background: #8B5CF6; color: #F8FAFC; }
+.btn-tb-purple:hover { background: #7C3AED; }
+
+.btn-tb-dark    { background: #1E293B; color: #94A3B8; border-color: #334155; }
+.btn-tb-dark:hover { background: #283548; color: #F8FAFC; border-color: #00F0FF; }
+
+.btn-tb-danger  { background: #EF4444; color: #F8FAFC; }
+.btn-tb-danger:hover { background: #DC2626; }
