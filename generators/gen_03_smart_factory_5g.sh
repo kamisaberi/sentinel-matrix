@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/kami/sentinel-matrix/generators/gen_03_smart_factory_5g.sh
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,5 +14,3 @@ cp "${MATRIX_ROOT}/shared/datasets/stuxnet_s7comm_injected.pcap" "${TMP_STAGE}/p
 
 SRC_YAML="${MATRIX_ROOT}/scenarios/smart_factory_5g_robotics/scenario.yaml"
 pack_scenario_bundle "${NAME}" "Private 5G Robotic Assembly Plant" "SMART_MANUFACTURING" "ADVANCED" "24-node private 5G SA factory with S7Comm PACs and in-kernel GTP-U slicing" "${TMP_STAGE}" "${SRC_YAML}"
-EOF
-chmod +x /home/kami/sentinel-matrix/generators/gen_03_smart_factory_5g.sh
