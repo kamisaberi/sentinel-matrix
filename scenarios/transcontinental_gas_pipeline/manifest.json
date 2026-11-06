@@ -1,0 +1,24 @@
+{
+  "name": "transcontinental_gas_pipeline",
+  "slug": "transcontinental_gas_pipeline",
+  "title": "Continental High-Pressure Gas Pipeline & Compressor SCADA",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "GAS_PIPELINE",
+  "sector": "GAS_PIPELINE",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "21-node natural gas transmission digital twin: 4 Edge Nodes, 4 Remote RTUs, 12 Pipeline Sensors, DNP3 & Modbus SCADA overpressure defense.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "vibration_spectral_ae.onnx"
+    ],
+    "pcaps": [
+      "industroyer2_substation.pcap",
+      "modbus_uiuc_scada_attack.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "TSA-SD-02D", "NIS2"]
+}
