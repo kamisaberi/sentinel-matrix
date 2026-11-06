@@ -1,0 +1,24 @@
+{
+  "name": "water_utility_regional_grid",
+  "slug": "water_utility_regional_grid",
+  "title": "Municipal Water Treatment & Regional Distribution Grid",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "WATER_TREATMENT",
+  "sector": "WATER_TREATMENT",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "20-node water utility digital twin: 3 Edge Appliances, 4 PLCs, 12 Field Sensors, Nexus C2, and physical multi-stage water treatment.",
+  "dependencies": {
+    "models": [
+      "network_threat_detector.onnx",
+      "network_threat_int8.onnx",
+      "power_quality_anomaly.onnx"
+    ],
+    "pcaps": [
+      "modbus_uiuc_scada_attack.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "NIS2", "WATER_ISAC"]
+}
