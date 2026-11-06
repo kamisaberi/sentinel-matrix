@@ -1,0 +1,256 @@
+version: "1.0"
+scenario:
+  name: "nuclear_turbine_island_cooling"
+  description: "22-Node Nuclear Power Plant Secondary Loop & Turbine Island Protection"
+
+networks:
+  plant_computer_net:
+    driver: bridge
+    subnet: "192.168.10.0/24"
+    gateway: "192.168.10.1"
+    internal: false
+  operational_ic_net:
+    driver: bridge
+    subnet: "10.190.1.0/24"
+    gateway: "10.190.1.1"
+    internal: true
+  turbine_trip_net:
+    driver: bridge
+    subnet: "10.190.2.0/24"
+    gateway: "10.190.2.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-nuclear-nexus
+    hostname: nexus.nuclear.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      plant_computer_net: { ipv4_address: "192.168.10.10" }
+      operational_ic_net: { ipv4_address: "10.190.1.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 3 EDGE APPLIANCES
+  sentinel-edge-secondary-steam:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-nuclear-edge-steam
+    hostname: edge-steam.nuclear.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      operational_ic_net: { ipv4_address: "10.190.1.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Nuclear-SecondarySteam
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.190.1.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-turbine-generator:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-nuclear-edge-turbine
+    hostname: edge-turbine.nuclear.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      operational_ic_net: { ipv4_address: "10.190.1.102" }
+      turbine_trip_net: { ipv4_address: "10.190.2.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Nuclear-TurbineGenerator
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.190.1.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-condenser-cooling:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-nuclear-edge-cooling
+    hostname: edge-cooling.nuclear.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      operational_ic_net: { ipv4_address: "10.190.1.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Nuclear-CondenserCooling
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.190.1.10
+      - NEXUS_PORT=50051
+
+  # 4 NUCLEAR I&C CONTROLLERS (Teleperm XS / S7)
+  ic-steam-generator:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-ic-sg
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.21" } }
+    ports: ["15131:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Steam-Generator-Level-I&C"]
+
+  ic-turbine-speed-governor:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-ic-governor
+    networks: { turbine_trip_net: { ipv4_address: "10.190.2.22" } }
+    ports: ["15132:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Turbine-Speed-Governor"]
+
+  ic-feedwater-pumps:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-ic-feedwater
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.23" } }
+    ports: ["15533:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Aux-Feedwater-Pumps-PLC"]
+
+  ic-cooling-circulator:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-ic-circulator
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.24" } }
+    ports: ["15534:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Condenser-Circulator-PLC"]
+
+  # 14 NUCLEAR SECONDARY SENSORS
+  sensor-main-steam-press:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-steam-press
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Main-Steam-Pressure-70bar"]
+
+  sensor-main-steam-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-steam-temp
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.42" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Main-Steam-Temp-280C"]
+
+  sensor-sg-water-level:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-sg-level
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.43" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9501", "--name", "SG-Narrow-Range-Level"]
+
+  sensor-feedwater-venturi-flow:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-feedwater-flow
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.44" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Feedwater-Venturi-Flow"]
+
+  sensor-turbine-stop-valve:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-stop-valve
+    networks: { turbine_trip_net: { ipv4_address: "10.190.2.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Turbine-Inlet-Stop-Valve"]
+
+  sensor-rotor-rpm-pickup:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-rpm-pickup
+    networks: { turbine_trip_net: { ipv4_address: "10.190.2.42" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9502", "--name", "Rotor-Speed-3000RPM"]
+
+  sensor-shaft-radial-vibration:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-radial-vib
+    networks: { turbine_trip_net: { ipv4_address: "10.190.2.43" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Shaft-Radial-Vibration-Probe"]
+
+  sensor-shaft-axial-thrust:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-axial-thrust
+    networks: { turbine_trip_net: { ipv4_address: "10.190.2.44" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Shaft-Axial-Thrust-Position"]
+
+  sensor-generator-h2-coolant-press:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-h2-press
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.45" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Generator-H2-Coolant-Pressure"]
+
+  sensor-condenser-vacuum:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-condenser-vac
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.46" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9503", "--name", "Condenser-Vacuum-Transmitter"]
+
+  sensor-circulating-intake-flow:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-intake-flow
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.47" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Circulating-Water-Intake-Flow"]
+
+  sensor-trash-rack-difflevel:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-trashrack
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.48" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Trash-Rack-Diff-Water-Level"]
+
+  sensor-n16-steam-radiation:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-n16-rad
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.49" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9504", "--name", "N16-Gamma-Radiation-Monitor"]
+
+  sensor-aux-feedwater-discharge-press:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-nuclear-sens-aux-feedwater
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.50" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Aux-Feedwater-Discharge-Press"]
+
+  # ATTACKERS & SIMULATORS
+  traffic-gen:
+    build: { context: ., dockerfile: docker/Dockerfile.traffic }
+    container_name: matrix-nuclear-traffic-gen
+    hostname: traffic.nuclear.internal
+    restart: unless-stopped
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.55" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+      - ./pcaps:/shared/datasets:ro
+    environment:
+      - NEXUS_ENDPOINT=10.190.1.10:50051
+      - TARGET_NODES=10.190.1.101,10.190.1.102,10.190.1.103
+
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-nuclear-adversary
+    hostname: adversary.nuclear.internal
+    restart: unless-stopped
+    networks: { operational_ic_net: { ipv4_address: "10.190.1.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://10.190.1.10:9443
+      - TARGET_NODES=10.190.1.101,10.190.1.102,10.190.1.103
