@@ -1,0 +1,23 @@
+{
+  "name": "orbital_satellite_ground_station",
+  "slug": "orbital_satellite_ground_station",
+  "title": "Orbital Satellite Ground Telemetry & Mission Control C2",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "AEROSPACE_DEFENSE",
+  "sector": "AEROSPACE_DEFENSE",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "18-node satellite ground link digital twin: 3 Edge Dissectors, 3 Space Transceivers, 11 Sensors, sub-120ns CCSDS Space Packet & STANAG 4586 defense.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "power_quality_anomaly.onnx"
+    ],
+    "pcaps": [
+      "cve_2023_44487_rapid_reset.pcap"
+    ]
+  },
+  "compliance": ["CCSDS-133.0-B-2", "STANAG-4586", "NIS2"]
+}
