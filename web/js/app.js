@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.nav-tab');
     const panes = document.querySelectorAll('.tab-pane');
 
+    let bpStudio = null;
+    let scenStudio = null;
+
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
@@ -21,6 +24,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (targetId === 'tab-pipeline' && window.dagVisualizer) {
                 window.dagVisualizer.resize();
+            }
+
+            // Lazy-load interactive studios on first click
+            if (targetId === 'tab-blueprint-studio') {
+                if (!bpStudio) {
+                    bpStudio = new ThreatBlueprintStudio();
+                } else if (bpStudio.engine) {
+                    bpStudio.engine.updateViewportTransform();
+                }
+            }
+
+            if (targetId === 'tab-scenario-studio') {
+                if (!scenStudio) {
+                    scenStudio = new DigitalTwinScenarioStudio();
+                } else if (scenStudio.engine) {
+                    scenStudio.engine.updateViewportTransform();
+                }
             }
         });
     });
