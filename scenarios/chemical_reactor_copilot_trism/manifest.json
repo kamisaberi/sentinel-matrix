@@ -1,0 +1,24 @@
+{
+  "name": "chemical_reactor_copilot_trism",
+  "slug": "chemical_reactor_copilot_trism",
+  "title": "Exothermic Chemical Reactor with SCADA Copilot & Live-SBOM",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "CHEMICAL_AI_AUTOMATION",
+  "sector": "CHEMICAL_AI_AUTOMATION",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "20-node chemical reactor digital twin: 3 Edge Nodes (TRiSM & Live-SBOM), 1 GenAI SCADA Copilot, 3 PLCs, 12 Sensors, and AI Prompt Injection defense.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "thermal_anomaly_vision.onnx",
+      "vibration_spectral_ae.onnx"
+    ],
+    "pcaps": [
+      "modbus_uiuc_scada_attack.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "OWASP-LLM01-LLM07", "NIS2"]
+}
