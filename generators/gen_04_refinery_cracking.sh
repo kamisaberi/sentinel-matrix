@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/kami/sentinel-matrix/generators/gen_04_refinery_cracking.sh
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,5 +14,3 @@ cp "${MATRIX_ROOT}/shared/datasets/triton_trisis_sis.pcap" "${TMP_STAGE}/pcaps/"
 
 SRC_YAML="${MATRIX_ROOT}/scenarios/refinery_cracking_sis_triad/scenario.yaml"
 pack_scenario_bundle "${NAME}" "Petrochemical Catalytic Cracker & SIS" "PETROCHEMICAL_REFINING" "ADVANCED" "19-node continuous refinery with Triconex SIL-3 SIS TMR safety protection" "${TMP_STAGE}" "${SRC_YAML}"
-EOF
-chmod +x /home/kami/sentinel-matrix/generators/gen_04_refinery_cracking.sh
