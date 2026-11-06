@@ -1,0 +1,246 @@
+version: "1.0"
+scenario:
+  name: "water_utility_regional_grid"
+  description: "20-Node Regional Drinking Water Production & Treatment Grid"
+
+networks:
+  enterprise_dmz_net:
+    driver: bridge
+    subnet: "192.168.10.0/24"
+    gateway: "192.168.10.1"
+    internal: false
+  water_scada_core_net:
+    driver: bridge
+    subnet: "10.210.10.0/24"
+    gateway: "10.210.10.1"
+    internal: true
+  water_fieldbus_net:
+    driver: bridge
+    subnet: "10.210.20.0/24"
+    gateway: "10.210.20.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-water-nexus
+    hostname: nexus.water.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      enterprise_dmz_net: { ipv4_address: "192.168.10.10" }
+      water_scada_core_net: { ipv4_address: "10.210.10.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 3 EDGE APPLIANCES
+  sentinel-edge-intake:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-water-edge-intake
+    hostname: edge-intake.water.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      water_scada_core_net: { ipv4_address: "10.210.10.101" }
+      water_fieldbus_net: { ipv4_address: "10.210.20.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Water-Intake
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.210.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-filtration:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-water-edge-filtration
+    hostname: edge-filtration.water.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      water_scada_core_net: { ipv4_address: "10.210.10.102" }
+      water_fieldbus_net: { ipv4_address: "10.210.20.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Water-Filtration
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.210.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-distribution:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-water-edge-distribution
+    hostname: edge-distribution.water.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      water_scada_core_net: { ipv4_address: "10.210.10.103" }
+      water_fieldbus_net: { ipv4_address: "10.210.20.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Water-Distribution
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.210.10.10
+      - NEXUS_PORT=50051
+
+  # 4 MOCK PLCS
+  plc-intake-pump:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-plc-intake
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.11" } }
+    ports: ["15501:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Intake-Pump-PLC"]
+
+  plc-filtration:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-plc-filter
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.12" } }
+    ports: ["15502:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Filtration-PLC"]
+
+  plc-chlorine-dosing:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-plc-chlorine
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.13" } }
+    ports: ["15503:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Chlorine-Dosing-PLC"]
+
+  plc-reservoir-booster:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-plc-reservoir
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.14" } }
+    ports: ["15102:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Reservoir-S7-PLC"]
+
+  # 12 FIELD SENSORS
+  sensor-flow-intake:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-flow-intake
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.21" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9001", "--name", "Intake-Flowmeter"]
+
+  sensor-suction-pressure:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-suction-press
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.22" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Suction-Pressure-Sensor"]
+
+  sensor-raw-turbidity:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-turbidity
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.23" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Turbidity-Probe"]
+
+  sensor-filter-diffpress:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-diffpress
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.24" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Filter-DiffPressure"]
+
+  sensor-filter-water-level:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-level
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.25" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9002", "--name", "Filter-Water-Level"]
+
+  sensor-backwash-flow:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-backwash
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.26" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Backwash-Flowmeter"]
+
+  sensor-chlorine-residual:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-chlorine
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.27" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Chlorine-Residual-Analyzer"]
+
+  sensor-water-ph:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-ph
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.28" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Water-pH-Sensor"]
+
+  sensor-chem-tank-level:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-chem-tank
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.29" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9003", "--name", "Chemical-Tank-Level"]
+
+  sensor-booster-vibration:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-vibration
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.30" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Booster-Pump-Vibration"]
+
+  sensor-discharge-pressure:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-discharge-press
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.31" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Discharge-Pressure-Transmitter"]
+
+  sensor-substation-power:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-water-sens-power
+    networks: { water_fieldbus_net: { ipv4_address: "10.210.20.32" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "PAC3200-Power-Meter"]
+
+  # ATTACKERS & SIMULATORS
+  traffic-gen:
+    build: { context: ., dockerfile: docker/Dockerfile.traffic }
+    container_name: matrix-water-traffic-gen
+    hostname: traffic.water.internal
+    restart: unless-stopped
+    networks: { water_scada_core_net: { ipv4_address: "10.210.10.50" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+      - ./pcaps:/shared/datasets:ro
+    environment:
+      - NEXUS_ENDPOINT=10.210.10.10:50051
+      - TARGET_NODES=10.210.10.101,10.210.10.102,10.210.10.103
+
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-water-adversary
+    hostname: adversary.water.internal
+    restart: unless-stopped
+    networks: { water_scada_core_net: { ipv4_address: "10.210.10.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://10.210.10.10:9443
+      - TARGET_NODES=10.210.10.101,10.210.10.102,10.210.10.103
