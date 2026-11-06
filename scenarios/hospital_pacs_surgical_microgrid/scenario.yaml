@@ -1,0 +1,209 @@
+version: "1.0"
+scenario:
+  name: "hospital_pacs_surgical_microgrid"
+  description: "18-Node Hospital Clinical PACS & Emergency Surgical Microgrid"
+
+networks:
+  hospital_enterprise_net:
+    driver: bridge
+    subnet: "10.10.0.0/24"
+    gateway: "10.10.0.1"
+    internal: false
+  medical_pacs_vlan:
+    driver: bridge
+    subnet: "10.10.50.0/24"
+    gateway: "10.10.50.1"
+    internal: true
+  hospital_bms_power_net:
+    driver: bridge
+    subnet: "10.10.90.0/24"
+    gateway: "10.10.90.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-hospital-nexus
+    hostname: nexus.hospital.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      hospital_enterprise_net: { ipv4_address: "10.10.0.10" }
+      medical_pacs_vlan: { ipv4_address: "10.10.50.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 3 EDGE APPLIANCES
+  sentinel-edge-pacs:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-hospital-edge-pacs
+    hostname: edge-pacs.hospital.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      medical_pacs_vlan: { ipv4_address: "10.10.50.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Hospital-PACS
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.10.50.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-microgrid:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-hospital-edge-microgrid
+    hostname: edge-microgrid.hospital.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      hospital_bms_power_net: { ipv4_address: "10.10.90.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Hospital-Microgrid
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.10.0.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-medgas:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-hospital-edge-medgas
+    hostname: edge-medgas.hospital.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      hospital_bms_power_net: { ipv4_address: "10.10.90.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Hospital-MedGas
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.10.0.10
+      - NEXUS_PORT=50051
+
+  # 2 BUILDING & MEDICAL PLCS
+  plc-chiller-cryo:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-plc-chiller
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.21" } }
+    ports: ["15551:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "MRI-Cryo-Chiller-PLC"]
+
+  plc-ats-generator:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-plc-ats
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.22" } }
+    ports: ["15152:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Emergency-ATS-S7-PLC"]
+
+  # 11 HEALTHCARE SENSORS & INSTRUMENTS
+  sensor-mri-cryo-press:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-mri-press
+    networks: { medical_pacs_vlan: { ipv4_address: "10.10.50.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "MRI-Liquid-Helium-Pressure"]
+
+  sensor-mri-magnet-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-mri-temp
+    networks: { medical_pacs_vlan: { ipv4_address: "10.10.50.42" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9601", "--name", "MRI-Superconducting-Magnet-Temp"]
+
+  sensor-liquid-oxygen-bulk:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-oxygen-bulk
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.41" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Bulk-Liquid-Oxygen-Tank-Level"]
+
+  sensor-med-vacuum-press:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-vacuum-press
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.42" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Medical-Vacuum-Line-Pressure"]
+
+  sensor-surgical-hepa-diffpress:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-hepa-diffpress
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.43" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Surgical-HEPA-DiffPressure"]
+
+  sensor-surgical-humidity:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-humidity
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.44" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9602", "--name", "Operating-Room-Humidity"]
+
+  sensor-blood-bank-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-blood-bank
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.45" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Blood-Bank-UltraLow-Freezer"]
+
+  sensor-vaccine-storage-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-vaccine-storage
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.46" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Critical-Vaccine-Cold-Storage"]
+
+  sensor-diesel-gen-coolant:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-gen-coolant
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.47" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Backup-Generator-Coolant-Temp"]
+
+  sensor-ups-inverter-freq:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-ups-freq
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.48" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "UPS-Inverter-50Hz-Monitor"]
+
+  sensor-ground-fault-current:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-hospital-sens-ground-fault
+    networks: { hospital_bms_power_net: { ipv4_address: "10.10.90.49" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9603", "--name", "Isolation-Transformer-Ground-Fault"]
+
+  # ATTACKER CONTAINER
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-hospital-adversary
+    hostname: adversary.hospital.internal
+    restart: unless-stopped
+    networks: { medical_pacs_vlan: { ipv4_address: "10.10.50.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://10.10.0.10:9443
+      - TARGET_NODES=10.10.50.101,10.10.90.102,10.10.90.103
