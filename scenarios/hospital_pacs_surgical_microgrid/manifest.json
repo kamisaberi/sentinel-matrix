@@ -1,0 +1,25 @@
+{
+  "name": "hospital_pacs_surgical_microgrid",
+  "slug": "hospital_pacs_surgical_microgrid",
+  "title": "Hospital Clinical PACS & Surgical Ward Microgrid",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "HEALTHCARE_IOMT",
+  "sector": "HEALTHCARE_IOMT",
+  "complexity": "ADVANCED",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "18-node healthcare digital twin: 3 Edge Nodes, 2 BMS PLCs, 11 IoMT Sensors, DICOM C-STORE inspection, and MRI chiller sabotage defense.",
+  "dependencies": {
+    "models": [
+      "network_threat_int8.onnx",
+      "thermal_anomaly_vision.onnx",
+      "power_quality_anomaly.onnx"
+    ],
+    "pcaps": [
+      "cve_2023_44487_rapid_reset.pcap",
+      "modbus_uiuc_scada_attack.pcap"
+    ]
+  },
+  "compliance": ["IEC-62443-4-2", "HIPAA-SECURITY", "NIS2"]
+}
