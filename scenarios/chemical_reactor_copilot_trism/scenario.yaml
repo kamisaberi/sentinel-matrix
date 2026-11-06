@@ -1,0 +1,250 @@
+version: "1.0"
+scenario:
+  name: "chemical_reactor_copilot_trism"
+  description: "20-Node Exothermic Chemical Reactor with GenAI SCADA Copilot & Live-SBOM Invariant"
+
+networks:
+  plant_operations_dmz:
+    driver: bridge
+    subnet: "192.168.200.0/24"
+    gateway: "192.168.200.1"
+    internal: false
+  reactor_safety_net:
+    driver: bridge
+    subnet: "10.160.10.0/24"
+    gateway: "10.160.10.1"
+    internal: true
+  ai_tool_calling_bus:
+    driver: bridge
+    subnet: "10.160.20.0/24"
+    gateway: "10.160.20.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-reactor-nexus
+    hostname: nexus.reactor.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      plant_operations_dmz: { ipv4_address: "192.168.200.10" }
+      reactor_safety_net: { ipv4_address: "10.160.10.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 3 EDGE APPLIANCES (TRISM, REACTOR, SBOM)
+  sentinel-edge-trism:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-reactor-edge-trism
+    hostname: edge-trism.reactor.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      plant_operations_dmz: { ipv4_address: "192.168.200.101" }
+      ai_tool_calling_bus: { ipv4_address: "10.160.20.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Chemical-AI-TRiSM
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=192.168.200.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-reactor:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-reactor-edge-cooling
+    hostname: edge-cooling.reactor.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      reactor_safety_net: { ipv4_address: "10.160.10.102" }
+      ai_tool_calling_bus: { ipv4_address: "10.160.20.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Chemical-ReactorCooling
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.160.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-sbom:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-reactor-edge-sbom
+    hostname: edge-sbom.reactor.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      reactor_safety_net: { ipv4_address: "10.160.10.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Chemical-LiveSBOM
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.160.10.10
+      - NEXUS_PORT=50051
+
+  # GENAI INDUSTRIAL COPILOT AGENT
+  copilot-agent:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-copilot
+    hostname: copilot.reactor.internal
+    restart: unless-stopped
+    networks:
+      plant_operations_dmz: { ipv4_address: "192.168.200.15" }
+      ai_tool_calling_bus: { ipv4_address: "10.160.20.15" }
+    ports: ["18080:8080"]
+    command: ["--archetype", "ipc", "--protocol", "tcp", "--port", "8080", "--name", "Industrial-SCADA-Copilot-LLM"]
+
+  # 3 CHEMICAL PLCS
+  plc-polymer-reactor:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-plc-core
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.21" } }
+    ports: ["15581:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Polymerization-Core-PLC"]
+
+  plc-jacket-cooling:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-plc-jacket
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.22" } }
+    ports: ["15582:502"]
+    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Jacket-Coolant-Recirc-PLC"]
+
+  plc-monomer-feed:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-plc-monomer
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.23" } }
+    ports: ["15183:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Monomer-Feed-S7-PLC"]
+
+  # 12 CHEMICAL REACTOR SENSORS
+  sensor-core-pyrometer:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-core-temp
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.41" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9901", "--name", "Core-Thermal-Pyrometer-180C"]
+
+  sensor-jacket-inlet-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-inlet-temp
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.42" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Jacket-Inlet-Coolant-Temp"]
+
+  sensor-jacket-outlet-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-outlet-temp
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.43" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Jacket-Outlet-Coolant-Temp"]
+
+  sensor-coolant-flow:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-coolant-flow
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.44" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Coolant-Recirculation-Flowmeter"]
+
+  sensor-internal-pressure:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-internal-press
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.45" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Reactor-Internal-Pressure-Bar"]
+
+  sensor-rupture-disc-transducer:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-rupture-disc
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.46" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Emergency-Rupture-Disc-Sensor"]
+
+  sensor-monomer-mass-flow:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-monomer-flow
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.47" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Monomer-Catalyst-MassFlow"]
+
+  sensor-agitator-rpm:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-agitator-rpm
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.48" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9902", "--name", "Agitator-Shaft-RPM"]
+
+  sensor-agitator-power-kw:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-agitator-kw
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.49" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Agitator-Drive-Motor-Power-kW"]
+
+  sensor-agitator-bearing-vib:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-agitator-vib
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.50" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Agitator-Bearing-Vibration-mms"]
+
+  sensor-bottom-discharge-valve:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-discharge-valve
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.51" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Bottom-Discharge-Valve-Position"]
+
+  sensor-flue-gas-co-sniffer:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-reactor-sens-flue-gas
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.52" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9903", "--name", "Toxic-Flue-Gas-CO-Sniffer"]
+
+  # ATTACKERS & SIMULATORS
+  traffic-gen:
+    build: { context: ., dockerfile: docker/Dockerfile.traffic }
+    container_name: matrix-reactor-traffic-gen
+    hostname: traffic.reactor.internal
+    restart: unless-stopped
+    networks: { reactor_safety_net: { ipv4_address: "10.160.10.55" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+      - ./pcaps:/shared/datasets:ro
+    environment:
+      - NEXUS_ENDPOINT=10.160.10.10:50051
+      - TARGET_NODES=10.160.10.102,10.160.10.103
+
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-reactor-adversary
+    hostname: adversary.reactor.internal
+    restart: unless-stopped
+    networks: { plant_operations_dmz: { ipv4_address: "192.168.200.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://192.168.200.10:9443
+      - TARGET_NODES=192.168.200.101,10.160.10.102,10.160.10.103
