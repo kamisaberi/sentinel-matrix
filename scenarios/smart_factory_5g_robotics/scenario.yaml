@@ -1,0 +1,291 @@
+version: "1.0"
+scenario:
+  name: "smart_factory_5g_robotics"
+  description: "24-Node Private 5G Automotive Assembly Gigafactory"
+
+networks:
+  factory_it_net:
+    driver: bridge
+    subnet: "172.16.10.0/24"
+    gateway: "172.16.10.1"
+    internal: false
+  private_5g_n3_tunnel:
+    driver: bridge
+    subnet: "10.250.10.0/24"
+    gateway: "10.250.10.1"
+    internal: true
+  urllc_robot_cell_net:
+    driver: bridge
+    subnet: "10.250.20.0/24"
+    gateway: "10.250.20.1"
+    internal: true
+
+volumes:
+  shared-models: { driver: local }
+  shared-datasets: { driver: local }
+  shared-logs: { driver: local }
+
+services:
+  # C2 COMMAND PLANE
+  nexus:
+    build: { context: ., dockerfile: docker/Dockerfile.nexus }
+    container_name: matrix-5g-nexus
+    hostname: nexus.factory.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      factory_it_net: { ipv4_address: "172.16.10.10" }
+      private_5g_n3_tunnel: { ipv4_address: "10.250.10.10" }
+    ports: ["50051:50051", "9443:9443", "9444:9444"]
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./models:/opt/sentinel-nexus/models
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - VMWARE_ENVIRONMENT=true
+      - NEXUS_ENV=simulation
+
+  # 3GPP STANDALONE UPF GATEWAY
+  upf-gateway:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-upf
+    hostname: upf.factory.internal
+    restart: unless-stopped
+    networks:
+      factory_it_net: { ipv4_address: "172.16.10.5" }
+      private_5g_n3_tunnel: { ipv4_address: "10.250.10.5" }
+    ports: ["2152:2152/udp"]
+    command: ["--archetype", "5g_gateway", "--protocol", "gtpu", "--port", "2152", "--name", "N3-GTPU-UPF-Gateway"]
+
+  # 4 EDGE APPLIANCES
+  sentinel-edge-welding:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-5g-edge-welding
+    hostname: edge-welding.factory.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      private_5g_n3_tunnel: { ipv4_address: "10.250.10.101" }
+      urllc_robot_cell_net: { ipv4_address: "10.250.20.101" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-5G-Welding
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.250.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-paint:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-5g-edge-paint
+    hostname: edge-paint.factory.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      private_5g_n3_tunnel: { ipv4_address: "10.250.10.102" }
+      urllc_robot_cell_net: { ipv4_address: "10.250.20.102" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-5G-Paint
+      - PRIMARY_BACKEND=NVIDIA_TENSORRT
+      - NEXUS_HOST=10.250.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-battery:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-5g-edge-battery
+    hostname: edge-battery.factory.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      private_5g_n3_tunnel: { ipv4_address: "10.250.10.103" }
+      urllc_robot_cell_net: { ipv4_address: "10.250.20.103" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-5G-Battery
+      - PRIMARY_BACKEND=ROCKCHIP_RKNN
+      - NEXUS_HOST=10.250.10.10
+      - NEXUS_PORT=50051
+
+  sentinel-edge-agv:
+    build: { context: ., dockerfile: docker/Dockerfile.sentinel }
+    container_name: matrix-5g-edge-agv
+    hostname: edge-agv.factory.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    networks:
+      private_5g_n3_tunnel: { ipv4_address: "10.250.10.104" }
+      urllc_robot_cell_net: { ipv4_address: "10.250.20.104" }
+    volumes:
+      - ./configs:/etc/sentinel/configs:ro
+      - ./models:/etc/sentinel/models:rw
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-5G-AGV
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.250.10.10
+      - NEXUS_PORT=50051
+
+  # 3 SIEMENS S7-1500 PACS
+  pac-welding-turntable:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-pac-turntable
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.11" } }
+    ports: ["15102:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Welding-Turntable-S7"]
+
+  pac-elevator-lift:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-pac-lift
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.12" } }
+    ports: ["15103:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Elevator-Lift-S7"]
+
+  pac-chassis-transfer:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-pac-transfer
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.13" } }
+    ports: ["15104:102"]
+    command: ["--archetype", "plc", "--protocol", "s7comm", "--port", "102", "--name", "Chassis-Transfer-S7"]
+
+  # 14 FIELD SENSORS & ACTUATORS
+  sensor-kuka-torque:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-torque
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.21" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9201", "--name", "KUKA-Joint-Torque"]
+
+  sensor-kuka-motor-temp:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-temp
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.22" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "KUKA-Motor-Temp"]
+
+  sensor-laser-seam-cam:
+    image: bluenviron/mediamtx:latest-ffmpeg
+    container_name: matrix-5g-sens-camera
+    hostname: camera.factory.internal
+    restart: unless-stopped
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.23" } }
+    ports: ["18554:8554"]
+    environment:
+      - MTX_WEBRTCADDITIONALHOSTS=127.0.0.1
+      - MTX_PATHS_THERMAL_FEED_RUNONINIT=ffmpeg -re -f lavfi -i testsrc=size=640x360:rate=15 -pix_fmt yuv420p -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp rtsp://127.0.0.1:8554/thermal_feed
+
+  sensor-weld-pyrometer:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-pyro
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.24" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Infrared-Weld-Pyrometer"]
+
+  sensor-sick-microscan-lidar:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-lidar
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.25" } }
+    ports: ["12368:2368/udp"]
+    command: ["--archetype", "vision", "--protocol", "stream_telemetry", "--port", "2368", "--name", "SICK-MicroScan-LiDAR"]
+
+  sensor-light-curtain:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-curtain
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.26" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Optical-Light-Curtain"]
+
+  sensor-paint-voc-gas:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-voc
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.27" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Paint-VOC-Gas-Sensor"]
+
+  sensor-paint-airflow:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-airflow
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.28" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Paint-Airflow-Transmitter"]
+
+  sensor-agv-odometry:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-agv-odom
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.29" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9202", "--name", "AGV-Wheel-Odometry"]
+
+  sensor-agv-proximity-lidar:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-agv-lidar
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.30" } }
+    command: ["--archetype", "vision", "--protocol", "stream_telemetry", "--port", "9203", "--name", "AGV-Proximity-LiDAR"]
+
+  sensor-agv-battery-soc:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-battery
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.31" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "AGV-Battery-SoC"]
+
+  sensor-battery-insertion-press:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-insert-press
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.32" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Insertion-Pneumatic-Press"]
+
+  sensor-conveyor-speed:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-conveyor
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.33" } }
+    command: ["--archetype", "sensor", "--protocol", "stream_telemetry", "--port", "9204", "--name", "Conveyor-Speed-Encoder"]
+
+  sensor-compressed-air-header:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-5g-sens-air-header
+    networks: { urllc_robot_cell_net: { ipv4_address: "10.250.20.34" } }
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Compressed-Air-Header"]
+
+  # ATTACKERS & SIMULATORS
+  traffic-gen:
+    build: { context: ., dockerfile: docker/Dockerfile.traffic }
+    container_name: matrix-5g-traffic-gen
+    hostname: traffic.factory.internal
+    restart: unless-stopped
+    networks: { private_5g_n3_tunnel: { ipv4_address: "10.250.10.50" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+      - ./pcaps:/shared/datasets:ro
+    environment:
+      - NEXUS_ENDPOINT=10.250.10.10:50051
+      - TARGET_NODES=10.250.10.101,10.250.10.102,10.250.10.103,10.250.10.104
+
+  adversary:
+    build: { context: ., dockerfile: docker/Dockerfile.adversary }
+    container_name: matrix-5g-adversary
+    hostname: adversary.factory.internal
+    restart: unless-stopped
+    networks: { private_5g_n3_tunnel: { ipv4_address: "10.250.10.99" } }
+    volumes:
+      - ./configs:/configs:ro
+      - ./src:/app/src:ro
+    environment:
+      - NEXUS_REST_URL=http://10.250.10.10:9443
+      - TARGET_NODES=10.250.10.101,10.250.10.102,10.250.10.103,10.250.10.104
