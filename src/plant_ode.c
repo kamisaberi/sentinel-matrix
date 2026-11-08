@@ -5,7 +5,7 @@
 static void plant_dynamics(const plant_state_t *state, const plant_control_t *control, plant_state_t *dstate)
 {
     // 1. Thermal ODE: dT/dt = 2.5 * heater_power - 0.05 * (T - 25.0) - 0.1 * valve_opening
-    dstate->temperature = (2.5 * control->heater_power) - (0.05 * (state->temperature - 25.0)) - (0.1 * control->valve_opening);
+    dstate->temperature = (5.0 * control->heater_power) - (0.05 * (state->temperature - 65.0)) - (0.1 * control->valve_opening);
 
     // 2. Vibration ODE: dV/dt = 10.0 * pump_speed - 0.2 * (V - 1000.0)
     dstate->vibration = (10.0 * control->pump_speed) - (0.2 * (state->vibration - 1000.0));
