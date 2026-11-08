@@ -178,7 +178,7 @@
             color: #000;
         }
 
-        /* Topology Canvas */
+        /* Topology Nodes */
         .topo-node {
             display: inline-block;
             padding: 4px 8px;
@@ -215,7 +215,7 @@
         }
 
         .terminal-body {
-            height: 180px;
+            height: 200px;
             overflow-y: auto;
             font-size: 11px;
             line-height: 1.5;
@@ -393,33 +393,36 @@
 
             // Safe region green background
             ctx1.fillStyle = 'rgba(16, 185, 129, 0.05)';
-            ctx1.fillRect(0, 0, w * 0.8, h);
+            ctx1.fillRect(0, 0, w * 0.75, h);
 
             // Unsafe region red boundary
             ctx1.fillStyle = 'rgba(239, 68, 68, 0.15)';
-            ctx1.fillRect(w * 0.8, 0, w * 0.2, h);
+            ctx1.fillRect(w * 0.75, 0, w * 0.25, h);
 
-            // Barrier Line h(x) = 0
+            // Barrier Line h(x) = 0 (120°C limit)
             ctx1.strokeStyle = '#ef4444';
             ctx1.lineWidth = 2;
             ctx1.setLineDash([5, 5]);
             ctx1.beginPath();
-            ctx1.moveTo(w * 0.8, 0);
-            ctx1.lineTo(w * 0.8, h);
+            ctx1.moveTo(w * 0.75, 0);
+            ctx1.lineTo(w * 0.75, h);
             ctx1.stroke();
             ctx1.setLineDash([]);
 
-            // Label Barrier
             ctx1.fillStyle = '#ef4444';
             ctx1.font = '10px monospace';
-            ctx1.fillText('h(x)=0 (120°C Limit)', w * 0.8 - 140, 18);
+            ctx1.fillText('h(x)=0 (120°C Limit)', w * 0.75 - 140, 18);
 
-            // Map dynamic temperature to X-axis
-            const x = Math.max(10, Math.min((temp / 130) * w, w - 10));
-            const y = h * 0.5 + Math.sin(Date.now() / 400) * 15;
+            // Map temperature (80°C to 130°C) across the canvas width
+            // At 85°C -> X is around 20%
+            // At 120°C -> X reaches the 75% boundary line!
+            const minTemp = 80.0, maxTemp = 130.0;
+            const normTemp = Math.max(0.0, Math.min(1.0, (temp - minTemp) / (maxTemp - minTemp)));
+            const x = Math.max(15, Math.min(normTemp * w, w - 15));
+            const y = h * 0.5 + Math.sin(Date.now() / 350) * 12;
 
             trajectory.push({ x, y });
-            if (trajectory.length > 40) trajectory.shift();
+            if (trajectory.length > 45) trajectory.shift();
 
             ctx1.strokeStyle = '#06b6d4';
             ctx1.lineWidth = 2;
@@ -430,10 +433,10 @@
             }
             ctx1.stroke();
 
-            // Current particle
-            ctx1.fillStyle = (temp >= 115) ? '#ef4444' : '#10b981';
+            // Current state particle (Turns red as it approaches or crosses the boundary)
+            ctx1.fillStyle = (temp >= 115) ? '#ef4444' : ((temp >= 100) ? '#f59e0b' : '#10b981');
             ctx1.beginPath();
-            ctx1.arc(x, y, 6, 0, Math.PI * 2);
+            ctx1.arc(x, y, 7, 0, Math.PI * 2);
             ctx1.fill();
         }
 
@@ -448,7 +451,6 @@
 
             ctx2.clearRect(0, 0, w, h);
 
-            // Draw Gumbel curve
             ctx2.strokeStyle = '#06b6d4';
             ctx2.lineWidth = 2;
             ctx2.beginPath();
@@ -462,7 +464,6 @@
             }
             ctx2.stroke();
 
-            // Draw p99.999% line at 1.82 us
             let x999 = (1.82 / 3.0) * w;
             ctx2.strokeStyle = '#10b981';
             ctx2.lineWidth = 2;
@@ -518,9 +519,12 @@
                         const term = document.getElementById('terminalBody');
                         term.innerText = data.logs;
                         term.scrollTop = term.scrollHeight;
+                        document.getElementById('log-status').innerText = 'UPDATED ' + new Date().toLocaleTimeString();
                     }
                 }
-            } catch (e) { }
+            } catch (e) {
+                document.getElementById('log-status').innerText = 'POLL RETRYING...';
+            }
         }
 
         async function inject(action) {
@@ -532,11 +536,12 @@
                     body: JSON.stringify({ action: action })
                 });
                 const d = await res.json();
-                document.getElementById('deck-status').innerText = 'RUNNING: ' + d.action.toUpperCase();
+                document.getElementById('deck-status').innerText = 'EXECUTING: ' + d.action.toUpperCase();
             } catch (e) {
-                document.getElementById('deck-status').innerText = 'SENT: ' + action.toUpperCase();
+                document.getElementById('deck-status').innerText = 'TRIGGERED';
             }
             setTimeout(pollLogs, 300);
+            setTimeout(pollLogs, 1000);
         }
 
         async function exportScorecard() {
@@ -550,7 +555,7 @@
             a.click();
         }
 
-        setInterval(updateTelemetry, 500);
+        setInterval(updateTelemetry, 400);
         setInterval(pollLogs, 800);
         updateTelemetry();
         pollLogs();
