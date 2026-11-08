@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aryorithm Sentinel Nexus | Sovereign Fleet Command Center</title>
+    <!-- 100% Zero-CDN Local Air-Gapped Styling -->
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/topology_map.css">
+    <link rel="stylesheet" href="css/studio.css">
+    <style>
+        
+        /* Dedicated Lab Cockpit Air-Gapped Theme */
+        .lab-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .lab-card {
+            background: rgba(14, 19, 27, 0.95);
+            border: 1px solid #243144;
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .lab-card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #00F0FF;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lab-canvas {
+            width: 100%;
+            height: 190px;
+            background: #050811;
+            border-radius: 4px;
+            border: 1px solid #1E293B;
+            display: block;
+        }
+
+        .lab-metrics-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .lab-metric-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #F8FAFC;
+            font-family: monospace;
+        }
+
+        .lab-metric-lbl {
+            font-size: 10px;
+            color: #94A3B8;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        .lab-deck-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .lab-btn {
+            background: #1E293B;
+            color: #F8FAFC;
+            border: 1px solid #334155;
+            padding: 8px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lab-btn:hover {
+            background: #334155;
+            border-color: #00F0FF;
+            color: #00F0FF;
+        }
+
+        .lab-btn-spike {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #F59E0B;
+            color: #F59E0B;
+        }
+
+        .lab-btn-spike:hover {
+            background: #F59E0B;
+            color: #000;
+        }
+
+        .lab-btn-success {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10B981;
+            color: #10B981;
+        }
+
+        .lab-btn-success:hover {
+            background: #10B981;
+            color: #000;
+        }
+
+        .lab-btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #EF4444;
+            color: #EF4444;
+        }
+
+        .lab-btn-danger:hover {
+            background: #EF4444;
+            color: #FFF;
+        }
+
+        .lab-terminal {
+            background: #030712;
+            border: 1px solid #243144;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .lab-terminal-header {
+            display: flex;
+            justify-content: space-between;
+            color: #94A3B8;
+            font-size: 10px;
+            border-bottom: 1px solid #1F2937;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+
+        .lab-terminal-body {
+            height: 180px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #38BDF8;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+
+    <div class="boxed-frame">
+
+        <!-- Top Navigation Bar -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="brand-logo-hex"></div>
+                <div class="brand-text">
+                    <span class="brand-title">ARYORITHM SENTINEL NEXUS</span>
+                    <span class="brand-subtitle">FLEET COMMAND PLANE &middot; SUB-50MS DEFENSE GRID</span>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs (With Added Lab Cockpit Tab) -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-tab="tab-mission-control">MISSION CONTROL</button>
+                <button class="nav-tab" data-tab="tab-topology">FLEET TOPOLOGY</button>
+                <button class="nav-tab" data-tab="tab-extensions">ARTIFACTS &amp; VAULT</button>
+                <button class="nav-tab" data-tab="tab-pipeline">PIPELINE DAG</button>
+                <button class="nav-tab" data-tab="tab-threats">MITRE ATT&amp;CK</button>
+                <button class="nav-tab" data-tab="tab-ota">CANARY OTA</button>
+                <button class="nav-tab" data-tab="tab-compliance">COMPLIANCE</button>
+                <button class="nav-tab" data-tab="tab-blueprint-studio">BLUEPRINT STUDIO</button>
+                <button class="nav-tab" data-tab="tab-scenario-studio">SCENARIO STUDIO</button>
+                <button class="nav-tab" data-tab="tab-lab-cockpit"
+                    style="color: #00F0FF; border-bottom-color: #00F0FF;">🔬 RESEARCH LAB</button>
+            </nav>
+
+            <div class="nav-status">
+                <div class="status-pill status-pill-airgap">
+                    <span class="dot pulse-green"></span>
+                    <span class="status-text">AIR-GAPPED SOVEREIGN</span>
+                </div>
+                <div class="status-pill status-pill-nodes">
+                    <span id="active-node-count">3</span> NODES
+                </div>
+            </div>
+        </header>
+
+        <!-- Global KPI Ribbon -->
+        <section class="kpi-ribbon">
+            <div class="kpi-card">
+                <span class="kpi-label">GLOBAL FLEET THROUGHPUT</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value" id="kpi-eps">1,250,000</span>
+                    <span class="kpi-unit">EPS</span>
+                </div>
+                <span class="kpi-sub">AF_XDP UMEM Zero-Copy Active</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">DRIVER MITIGATION SLA</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value text-cyan" id="kpi-mitigation-sla">0.84</span>
+                    <span class="kpi-unit">µs</span>
+                </div>
+                <span class="kpi-sub">In-Kernel eBPF CO-RE Drop</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">FAST-PATH REFLEX LATENCY</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value text-green" id="kpi-reflex-latency">88</span>
+                    <span class="kpi-unit">ns</span>
+                </div>
+                <span class="kpi-sub">Tier A Native C++20 Dissector</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">COLLECTIVE DEFENSE FANOUT</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value text-purple" id="kpi-fanout-speed">38.4</span>
+                    <span class="kpi-unit">ms</span>
+                </div>
+                <span class="kpi-sub">Sub-50ms Fleet gRPC SLA</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">FAULT ISOLATION STATUS</span>
+                <div class="kpi-value-row">
+                    <span class="kpi-value text-green" id="kpi-quarantine-status">SECURE</span>
+                </div>
+                <span class="kpi-sub" id="kpi-quarantine-sub">0 Plugins Quarantined</span>
+            </div>
+        </section>
+
+        <!-- Master Viewports -->
+        <main class="dashboard-viewport">
+
+            <!-- TAB 0: MISSION CONTROL -->
+            <div class="tab-pane active" id="tab-mission-control">
+                <div class="mc-master-bar"
+                    style="background: rgba(14, 19, 27, 0.9); border: 1px solid #243144; border-radius: 6px; padding: 12px 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span
+                            style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00F0FF; box-shadow: 0 0 10px #00F0FF;"></span>
+                        <label for="mc-node-select"
+                            style="font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: #F8FAFC; text-transform: uppercase;">
+                            TARGET ENCLAVE / ACTIVE EDGE SENTRY:
+                        </label>
+                        <select id="mc-node-select" class="form-select-sm"
+                            style="background: #0A0E14; color: #00F0FF; border: 1px solid #00F0FF; font-family: monospace; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="badge badge-cyan" id="mc-node-backend-badge">INTEL OPENVINO</span>
+                        <span class="badge badge-purple" id="mc-target-ip-badge">TARGET: 10.240.0.101</span>
+                        <span class="badge badge-green">IN-KERNEL ACTIVE DEFENSE</span>
+                    </div>
+                </div>
+
+                <div class="mission-control-grid">
+                    <!-- FRAME 1: MULTI-CAMERA VISION WALL -->
+                    <div class="mc-frame">
+                        <div class="panel-header">
+                            <div class="frame-title-group">
+                                <span class="frame-index">FRAME 01</span>
+                                <h3>VISION WALL &amp; CAMERA FEED</h3>
+                            </div>
+                            <span class="badge badge-green" id="cam-protocol-tag">RTSP :8554 / WHEP</span>
+                        </div>
+                        <div class="video-wall-container" id="mc-video-wall"></div>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="btn-attack btn-attack-danger" id="btn-cam-anomaly"
+                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
+                                [!] TRIGGER THERMAL RUNAWAY
+                            </button>
+                            <button class="btn-attack btn-attack-success" id="btn-cam-normalize"
+                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
+                                [+] NORMALIZE CAMERA FEED
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FRAME 2: DYNAMIC SENSORS -->
+                    <div class="mc-frame">
+                        <div class="panel-header">
+                            <div class="frame-title-group">
+                                <span class="frame-index">FRAME 02</span>
+                                <h3>DYNAMIC SENSORS &amp; CBF BARRIER</h3>
+                            </div>
+                            <span class="badge badge-cyan" id="mc-sensor-count-badge">4 CHANNELS ACTIVE</span>
+                        </div>
+                        <div class="dynamic-sensor-grid" id="mc-sensor-grid"></div>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="btn-attack btn-attack-danger" id="btn-sensor-surge"
+                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
+                                [!] SURGE SENSORS (Violate h(x) &lt; 0)
+                            </button>
+                            <button class="btn-attack btn-attack-success" id="btn-sensor-stabilize"
+                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
+                                [+] STABILIZE SENSORS (Lyapunov Safe)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FRAME 3: IN-KERNEL eBPF MITIGATION FEED -->
+                    <div class="mc-frame">
+                        <div class="panel-header">
+                            <div class="frame-title-group">
+                                <span class="frame-index">FRAME 03</span>
+                                <h3>IN-KERNEL eBPF DROPS (&lt; 0.84 µs SLA)</h3>
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <button id="btn-clear-drops" class="btn-ctrl"
+                                    style="font-size: 10px; padding: 2px 8px; background: #1E293B; border: 1px solid #334155; color: #94A3B8; border-radius: 4px; cursor: pointer;">CLEAR</button>
+                                <span class="badge badge-green" id="mc-filter-status">AF_XDP LINE-RATE</span>
+                            </div>
+                        </div>
+                        <div class="drop-log-feed" id="mc-drop-feed" style="height: 240px; overflow-y: auto;">
+                            <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical
+                                interfaces...</div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button class="btn-attack" id="btn-test-ebpf-drop"
+                                style="width: 100%; padding: 6px 10px; font-size: 10px; border-color: #00F0FF; color: #00F0FF;">
+                                [>] TEST DRIVER-RING PACKET DROP (&lt; 0.84 µs)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FRAME 4: RED-TEAM ATTACK INJECTION -->
+                    <div class="mc-frame">
+                        <div class="panel-header">
+                            <div class="frame-title-group">
+                                <span class="frame-index">FRAME 04</span>
+                                <h3>RED-TEAM INDUSTRIAL PROTOCOL EXPLOITS</h3>
+                            </div>
+                            <span class="badge badge-purple">LIVE INJECTION</span>
+                        </div>
+                        <p style="font-size: 10px; color: #94A3B8; margin-bottom: 10px;">Replay industrial zero-day
+                            exploits targeting the selected active sentry:</p>
+                        <div class="attack-button-grid"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <button class="btn-attack" data-attack="MODBUS_FC05_OVERRIDE">Modbus Coil Override
+                                (FC05)</button>
+                            <button class="btn-attack" data-attack="S7COMM_CPU_STOP">S7Comm CPU STOP (0x29)</button>
+                            <button class="btn-attack" data-attack="5G_GTPU_SLICE_HOP">5G TEID Slice-Hopping</button>
+                            <button class="btn-attack" data-attack="AI_PROMPT_INJECTION">AI TRiSM Prompt
+                                Jailbreak</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: 🔬 SENTINEL-LAB AIR-GAPPED SCIENTIFIC RESEARCH COCKPIT -->
+            <div class="tab-pane" id="tab-lab-cockpit">
+                <div class="mc-master-bar"
+                    style="background: rgba(14, 19, 27, 0.95); border: 1px solid #243144; border-radius: 6px; padding: 12px 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span
+                            style="font-size: 14px; font-weight: 800; color: #00F0FF; letter-spacing: 0.8px;">SENTINEL-BENCH:
+                            14-DIMENSIONAL SCIENTIFIC TESTBED</span>
+                        <span class="badge badge-green">DOI: 10.5281/zenodo.23598779</span>
+                    </div>
+                    <button class="btn-sm" onclick="exportLabScorecard()"
+                        style="background: #10B981; color: #0B0F17; font-weight: 700; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer;">
+                        Export LaTeX Scorecard
+                    </button>
+                </div>
+
+                <div class="lab-grid">
+                    <!-- PANE 1: Physical Phase-Plane & Safety Barrier Canvas -->
+                    <div class="lab-card">
+                        <div class="lab-card-title">
+                            <span>PANE 1: REAL-TIME PHYSICAL THERMAL OSCILLOSCOPE &amp; BARRIER h(x)</span>
+                            <span id="cbf-status-badge" class="badge badge-green">h(x) &ge; 0 SAFE</span>
+                        </div>
+                        <canvas id="cbfCanvas" class="lab-canvas"></canvas>
+                        <div class="lab-metrics-row">
+                            <div>
+                                <div id="val-temp" class="lab-metric-val">85.0 °C</div>
+                                <div class="lab-metric-lbl">Plant Temp T(t)</div>
+                            </div>
+                            <div>
+                                <div id="val-barrier" class="lab-metric-val" style="color: #10B981;">+35.000</div>
+                                <div class="lab-metric-lbl">Barrier h(x)</div>
+                            </div>
+                            <div>
+                                <div id="val-lyapunov" class="lab-metric-val" style="color: #00F0FF;">-0.150</div>
+                                <div class="lab-metric-lbl">Lyapunov &lambda;</div>
+                            </div>
+                            <div>
+                                <div id="val-tcrit" class="lab-metric-val">38.4 ms</div>
+                                <div class="lab-metric-lbl">T_crit Margin</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANE 2: EVT WCET Tail Latency & PMU Hardware Counters -->
+                    <div class="lab-card">
+                        <div class="lab-card-title">
+                            <span>PANE 2: EVT WCET GUMBEL TAIL &amp; PMU HARDWARE METRICS</span>
+                            <span class="badge badge-cyan">p99.999% &le; 1.82 &mu;s</span>
+                        </div>
+                        <canvas id="evtCanvas" class="lab-canvas"></canvas>
+                        <div class="lab-metrics-row">
+                            <div>
+                                <div id="val-wcet" class="lab-metric-val">1.82 &mu;s</div>
+                                <div class="lab-metric-lbl">p99.999% WCET</div>
+                            </div>
+                            <div>
+                                <div id="val-ipc" class="lab-metric-val" style="color: #10B981;">2.42</div>
+                                <div class="lab-metric-lbl">PMU IPC</div>
+                            </div>
+                            <div>
+                                <div id="val-llc" class="lab-metric-val" style="color: #10B981;">1.24%</div>
+                                <div class="lab-metric-lbl">LLC Cache Miss</div>
+                            </div>
+                            <div>
+                                <div id="val-drop" class="lab-metric-val" style="color: #00F0FF;">0.84 &mu;s</div>
+                                <div class="lab-metric-lbl">eBPF Drop SLA</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANE 3: Live Grid Mesh Telemetry & Kernel Subsystems -->
+                    <div class="lab-card">
+                        <div class="lab-card-title">
+                            <span>PANE 3: 13-NODE TOPOLOGY &amp; KERNEL INVARIANTS</span>
+                            <span class="badge badge-green">13 NODES ONLINE</span>
+                        </div>
+                        <div
+                            style="background: #050811; padding: 10px; border-radius: 4px; border: 1px solid #1E293B; height: 190px; overflow-y: auto;">
+                            <div style="color: #94A3B8; font-size: 10px; margin-bottom: 4px;">TOPOLOGY NODES
+                                (10.240.0.0/24):</div>
+                            <span class="badge badge-cyan">nexus:10</span>
+                            <span class="badge badge-cyan">mock-plc:150</span>
+                            <span class="badge badge-cyan">forge:20</span>
+                            <span class="badge badge-cyan">edge-01:101</span>
+                            <span class="badge badge-cyan">edge-02:102</span>
+                            <span class="badge badge-cyan">edge-03:103</span>
+                            <span class="badge badge-cyan">cam:75</span>
+                            <span class="badge badge-cyan">vib:76</span>
+                            <span class="badge badge-cyan">pwr:78</span>
+                            <span class="badge badge-cyan">adv:99</span>
+                            <hr style="border: 0; border-top: 1px solid #1E293B; margin: 8px 0;">
+                            <div style="color: #94A3B8; font-size: 10px; margin-bottom: 4px;">ACTIVE INVARIANTS:</div>
+                            <span class="badge badge-green">3GPP 5G Slicing</span>
+                            <span class="badge badge-green">Live-SBOM W^X</span>
+                            <span class="badge badge-green">AI TRiSM Guard</span>
+                            <span class="badge badge-green">Space CCSDS</span>
+                            <span class="badge badge-green">Honeynet Vaccine</span>
+                        </div>
+                        <div class="lab-metrics-row">
+                            <div>
+                                <div class="lab-metric-val">40.0M+</div>
+                                <div class="lab-metric-lbl">RSS Line Rate</div>
+                            </div>
+                            <div>
+                                <div class="lab-metric-val">0</div>
+                                <div class="lab-metric-lbl">Memory Drift</div>
+                            </div>
+                            <div>
+                                <div class="lab-metric-val">0</div>
+                                <div class="lab-metric-lbl">5G Violations</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANE 4: Interactive Scientific Stress-Test & Attack Injection Deck -->
+                    <div class="lab-card">
+                        <div class="lab-card-title">
+                            <span>PANE 4: 14-MODULE INTERACTIVE INJECTION DECK</span>
+                            <span id="deck-status" class="badge badge-cyan">READY</span>
+                        </div>
+                        <div class="lab-deck-grid" style="height: 190px; align-content: center;">
+                            <button class="lab-btn" onclick="injectLab('cbf')">1. CBF Barrier Stress</button>
+                            <button class="lab-btn" onclick="injectLab('hil')">2. Run HIL Co-Sim</button>
+                            <button class="lab-btn" onclick="injectLab('fuzzer')">3. Diff SCADA Fuzzer</button>
+                            <button class="lab-btn" onclick="injectLab('blast')">4. Wire-Speed Blaster</button>
+                            <button class="lab-btn" onclick="injectLab('evasion')">5. Grammar Mutation</button>
+                            <button class="lab-btn" onclick="injectLab('5g_slice_hop')">6. 5G Slice-Hop</button>
+                            <button class="lab-btn" onclick="injectLab('trism_jailbreak')">7. AI TRiSM
+                                Jailbreak</button>
+                            <button class="lab-btn lab-btn-spike" onclick="injectLab('heater_spike')">🔥 Thermal
+                                Spike</button>
+                            <button class="lab-btn lab-btn-success" onclick="injectLab('heater_normal')">❄️ Thermal
+                                Safe</button>
+                            <button class="lab-btn lab-btn-danger" style="grid-column: span 3;"
+                                onclick="injectLab('reset')">⏹ Emergency All-Stop &amp; Clear Log</button>
+                        </div>
+                        <div style="font-size: 10px; color: #94A3B8; margin-top: 8px; text-align: center;">
+                            Trigger actions asynchronously and stream scientific output into the console below.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANE 5: LIVE REAL-TIME TERMINAL LOG CONSOLE -->
+                <div class="lab-terminal">
+                    <div class="lab-terminal-header">
+                        <span>LIVE RESEARCH MODULE EXECUTION CONSOLE (STDOUT / STDERR)</span>
+                        <span id="lab-log-status">POLLING ACTIVE</span>
+                    </div>
+                    <div id="labTerminalBody" class="lab-terminal-body">[*] Sentinel-Lab live log buffer initialized.
+                        Click any injection button to execute.</div>
+                </div>
+            </div>
+
+            <!-- TAB 1: FLEET TOPOLOGY -->
+            <div class="tab-pane" id="tab-topology">
+                <div class="pane-split">
+                    <div class="canvas-container">
+                        <canvas id="topologyCanvas"></canvas>
+                        <div class="canvas-overlay-controls">
+                            <button class="btn-ctrl" id="btn-zoom-in">+</button>
+                            <button class="btn-ctrl" id="btn-zoom-out">-</button>
+                            <button class="btn-ctrl" id="btn-reset-view">&#8635;</button>
+                        </div>
+                    </div>
+                    <div class="side-panel">
+                        <div class="panel-header">
+                            <h3>ACTIVE FLEET ENCLAVES</h3>
+                            <span class="badge badge-cyan" id="fleet-enclave-count">3 ENCLAVES</span>
+                        </div>
+                        <div class="enclave-list" id="enclave-list"></div>
+                        <div class="panel-header mt-4">
+                            <h3>REAL-TIME eBPF DROP LOGS</h3>
+                        </div>
+                        <div class="drop-log-feed" id="drop-log-feed"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: UNIVERSAL 7-ARTIFACT REGISTRY VAULT -->
+            <div class="tab-pane" id="tab-extensions">
+                <div class="extensions-layout">
+                    <div class="spkg-upload-col">
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3>UNIVERSAL ARTIFACT INGESTION</h3>
+                                <span class="badge badge-purple">7 ASSET TYPES</span>
+                            </div>
+                            <p class="panel-desc">Drag and drop any verified artifact (.spkg, .onnx, .slab, .pcap,
+                                .tar.gz, .blueprint, .aryopack) to inspect headers and deploy locally.</p>
+                            <div class="dropzone" id="spkg-dropzone">
+                                <input type="file" id="spkg-file-input"
+                                    accept=".spkg,.onnx,.slab,.pcap,.gz,.tar,.blueprint,.aryopack"
+                                    class="file-input-hidden">
+                                <div class="dropzone-content">
+                                    <div class="dropzone-icon">&#10515;</div>
+                                    <span class="dropzone-title">Drop artifact container here</span>
+                                    <span class="dropzone-sub">Accepts .spkg, .onnx, .slab, .pcap, .tar.gz, .blueprint,
+                                        .aryopack</span>
+                                </div>
+                            </div>
+                            <div class="package-preview hidden" id="package-preview">
+                                <div class="preview-header">
+                                    <span class="preview-badge" id="prev-tier-badge">PACKAGE</span>
+                                    <span class="preview-filename font-mono" id="prev-filename">-</span>
+                                </div>
+                                <div class="preview-details">
+                                    <div class="detail-row"><span class="lbl">Asset Type:</span><span
+                                            class="val font-mono" id="prev-type">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Format / Spec:</span><span
+                                            class="val text-cyan" id="prev-spec">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Payload Size:</span><span class="val"
+                                            id="prev-size">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Signature:</span><span
+                                            class="val text-green" id="prev-sig">VERIFIED ED25519</span></div>
+                                </div>
+                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">STAGE / DEPLOY TO LOCAL
+                                    RUNTIME</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="extensions-table-col">
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3>AIR-GAPPED SYSTEM VAULT INVENTORY</h3>
+                                <div class="header-actions">
+                                    <button class="btn-sm" id="btn-refresh-ext">Refresh Vault</button>
+                                </div>
+                            </div>
+
+                            <div class="artifact-filter-bar"
+                                style="display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px 0;">
+                                <button class="btn-ctrl active" data-filter="all"
+                                    style="font-size: 10px; padding: 4px 10px; background: #00F0FF; color: #0B0F17; font-weight: 700; border-radius: 4px; border: none; cursor: pointer;">ALL
+                                    (7 TYPES)</button>
+                                <button class="btn-ctrl" data-filter="package"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">PACKAGES
+                                    (.spkg)</button>
+                                <button class="btn-ctrl" data-filter="model"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">MODELS
+                                    (.onnx)</button>
+                                <button class="btn-ctrl" data-filter="dataset"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">DATASETS
+                                    (.slab)</button>
+                                <button class="btn-ctrl" data-filter="pcap"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">PCAPS
+                                    (.pcap)</button>
+                                <button class="btn-ctrl" data-filter="scenario"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">SCENARIOS
+                                    (.tar.gz)</button>
+                                <button class="btn-ctrl" data-filter="blueprint"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">BLUEPRINTS
+                                    (.blueprint)</button>
+                                <button class="btn-ctrl" data-filter="appliance"
+                                    style="font-size: 10px; padding: 4px 10px; background: #1E293B; color: #94A3B8; border-radius: 4px; border: 1px solid #334155; cursor: pointer;">APPLIANCES
+                                    (.aryopack)</button>
+                            </div>
+
+                            <table class="data-table" id="table-extensions">
+                                <thead>
+                                    <tr>
+                                        <th>ASSET IDENTIFIER</th>
+                                        <th>TYPE</th>
+                                        <th>FORMAT / SPEC</th>
+                                        <th>RUNTIME TARGET</th>
+                                        <th>SIZE</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="extensions-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: PIPELINE DAG -->
+            <div class="tab-pane" id="tab-pipeline">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>HIERARCHICAL SENSOR-TO-MODEL ROUTING DAG (configs/model_routes.yaml)</h3>
+                        <span class="badge badge-cyan">4-STAGE CASCADE PIPELINE</span>
+                    </div>
+                    <div class="dag-canvas-container"><canvas id="pipelineDagCanvas"></canvas></div>
+                </div>
+            </div>
+
+            <!-- TAB 4: MITRE ATT&CK -->
+            <div class="tab-pane" id="tab-threats">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>DYNAMIC MITRE ATT&amp;CK FOR ICS TACTICAL HEATMAP</h3>
+                    </div>
+                    <div id="mitre-grid" class="mitre-grid"></div>
+                </div>
+            </div>
+
+            <!-- TAB 5: CANARY OTA -->
+            <div class="tab-pane" id="tab-ota">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>OVER-THE-AIR (OTA) MODEL ROLLOUT &amp; ROLLBACKGUARD</h3>
+                    </div>
+                    <div id="ota-controls" class="ota-controls"></div>
+                </div>
+            </div>
+
+            <!-- TAB 6: COMPLIANCE -->
+            <div class="tab-pane" id="tab-compliance">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>STATUTORY COMPLIANCE &amp; HARDWARE AUDIT VAULT</h3>
+                    </div>
+                    <div class="compliance-actions">
+                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171
+                            Report</button>
+                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial
+                            Report</button>
+                    </div>
+                    <pre class="report-preview-box"
+                        id="report-output">Select standard above to compile audit report...</pre>
+                </div>
+            </div>
+
+            <!-- TAB: THREAT BLUEPRINT STUDIO -->
+            <div class="tab-pane" id="tab-blueprint-studio">
+                <div class="panel-card" style="padding:0; overflow:hidden;">
+                    <div class="studio-container" id="blueprint-studio-container"></div>
+                </div>
+            </div>
+
+            <!-- TAB: MATRIX SCENARIO STUDIO -->
+            <div class="tab-pane" id="tab-scenario-studio">
+                <div class="panel-card" style="padding:0; overflow:hidden;">
+                    <div class="studio-container" id="scenario-studio-container"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="boxed-footer">
+            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical
+                Defense</span>
+            <span class="text-muted font-mono">v1.0.0-core-ebpf</span>
+        </footer>
+
+    </div>
+
+    <!-- Self-Contained Local Vendor Scripts (Zero-CDN) -->
+    <script src="vendor/whep_player.js"></script>
+    <script src="vendor/sparkline_gauge.js"></script>
+
+    <!-- Application Controllers -->
+    <script src="js/ws_client.js"></script>
+    <script src="js/fleet_topology.js"></script>
+    <script src="js/threat_matrix.js"></script>
+    <script src="js/ota_manager.js"></script>
+    <script src="js/extensions_manager.js"></script>
+    <script src="js/pipeline_dag.js"></script>
+    <script src="js/mission_control.js"></script>
+    <script src="js/visio_studio.js"></script>
+    <script src="js/blueprint_studio.js"></script>
+    <script src="js/scenario_studio.js"></script>
+    <script src="js/lab_cockpit.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
