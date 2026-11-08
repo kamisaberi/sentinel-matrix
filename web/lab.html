@@ -71,7 +71,6 @@
         .grid-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto;
             gap: 16px;
         }
 
@@ -84,21 +83,23 @@
         }
 
         .card-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             color: var(--cyan);
             letter-spacing: 0.5px;
             margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
         canvas {
             width: 100%;
-            height: 220px;
+            height: 200px;
             background: #050811;
             border-radius: 6px;
             border: 1px solid var(--border);
+            display: block;
         }
 
         .metrics-row {
@@ -109,13 +110,13 @@
         }
 
         .metric-val {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #fff;
         }
 
         .metric-lbl {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--muted);
             margin-top: 2px;
         }
@@ -124,16 +125,16 @@
         .deck-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 8px;
         }
 
         button {
             background: #1f2937;
             color: #fff;
             border: 1px solid #374151;
-            padding: 10px;
+            padding: 8px 10px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -166,20 +167,61 @@
             color: #fff;
         }
 
+        button.btn-spike {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: var(--yellow);
+            color: var(--yellow);
+        }
+
+        button.btn-spike:hover {
+            background: var(--yellow);
+            color: #000;
+        }
+
         /* Topology Canvas */
         .topo-node {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 4px 8px;
             background: #1e293b;
             border-radius: 4px;
-            font-size: 11px;
-            margin: 4px;
+            font-size: 10px;
+            margin: 3px;
             border: 1px solid #334155;
         }
 
         .topo-node.active {
             border-color: var(--green);
             color: var(--green);
+        }
+
+        /* Terminal Console */
+        .terminal-container {
+            margin-top: 16px;
+            background: #030712;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 11px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #1f2937;
+            padding-bottom: 6px;
+        }
+
+        .terminal-body {
+            height: 180px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #38bdf8;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -188,14 +230,14 @@
 
     <header>
         <div>
-            <span style="font-size: 18px; font-weight: bold; color: #fff;">SENTINEL-LAB: AIR-GAPPED SCIENTIFIC RESEARCH
-                COCKPIT</span>
-            <span class="badge badge-cyan">PORT 9443 AIR-GAP</span>
+            <span style="font-size: 18px; font-weight: bold; color: #fff;">SENTINEL-LAB: LIVE AIR-GAPPED SCIENTIFIC
+                CONSOLE</span>
+            <span class="badge badge-cyan">PORT 9443</span>
             <span class="badge badge-green">DOI: 10.5281/zenodo.23598779</span>
         </div>
         <div>
-            <button onclick="window.location.href='/'">Back to C2 Console</button>
-            <button class="btn-success" onclick="exportScorecard()">Download LaTeX Scorecard</button>
+            <button onclick="window.location.href='/'">C2 Fleet View</button>
+            <button class="btn-success" onclick="exportScorecard()">Export LaTeX Scorecard</button>
         </div>
     </header>
 
@@ -204,8 +246,8 @@
         <!-- PANE 1: Physical Phase-Plane & Safety Barrier Canvas -->
         <div class="card">
             <div class="card-title">
-                <span>PANE 1: PHYSICAL PHASE-PLANE & CONTROL BARRIER h(x)</span>
-                <span id="cbf-status-badge" class="badge badge-green">h(x) &ge; 0 INVARIANT</span>
+                <span>PANE 1: PHYSICAL PHASE-PLANE &amp; BARRIER h(x)</span>
+                <span id="cbf-status-badge" class="badge badge-green">h(x) &ge; 0 SAFE</span>
             </div>
             <canvas id="cbfCanvas"></canvas>
             <div class="metrics-row">
@@ -223,15 +265,15 @@
                 </div>
                 <div>
                     <div id="val-tcrit" class="metric-val">38.4 ms</div>
-                    <div class="metric-lbl">Clearing T_crit</div>
+                    <div class="metric-lbl">T_crit Margin</div>
                 </div>
             </div>
         </div>
 
-        <!-- PANE 2: EVT WCET Latency Tail & PMU Hardware Counters -->
+        <!-- PANE 2: EVT WCET Tail Latency & PMU Hardware Counters -->
         <div class="card">
             <div class="card-title">
-                <span>PANE 2: EVT WCET GUMBEL TAIL & PMU COUNTERS</span>
+                <span>PANE 2: EVT WCET GUMBEL TAIL &amp; PMU METRICS</span>
                 <span class="badge badge-cyan">p99.999% &le; 1.82 &mu;s</span>
             </div>
             <canvas id="evtCanvas"></canvas>
@@ -258,12 +300,12 @@
         <!-- PANE 3: Live Grid Mesh Telemetry & Kernel Subsystems -->
         <div class="card">
             <div class="card-title">
-                <span>PANE 3: LIVE GRID MESH & ACTIVE SUB-SYSTEMS</span>
+                <span>PANE 3: GRID MESH &amp; ACTIVE SUB-SYSTEMS</span>
                 <span class="badge badge-green">13 NODES ONLINE</span>
             </div>
             <div
-                style="background: #050811; padding: 12px; border-radius: 6px; border: 1px solid var(--border); min-height: 220px;">
-                <div style="color: var(--muted); font-size: 11px; margin-bottom: 6px;">TOPOLOGY NODES (10.240.0.0/24):
+                style="background: #050811; padding: 10px; border-radius: 6px; border: 1px solid var(--border); min-height: 200px;">
+                <div style="color: var(--muted); font-size: 10px; margin-bottom: 4px;">TOPOLOGY NODES (10.240.0.0/24):
                 </div>
                 <span class="topo-node active">nexus:10</span>
                 <span class="topo-node active">mock-plc:150</span>
@@ -276,8 +318,8 @@
                 <span class="topo-node active">sensor-lidar:77</span>
                 <span class="topo-node active">sensor-power:78</span>
                 <span class="topo-node active">adversary:99</span>
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
-                <div style="color: var(--muted); font-size: 11px; margin-bottom: 6px;">KERNEL INVARIANTS STATUS:</div>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;">
+                <div style="color: var(--muted); font-size: 10px; margin-bottom: 4px;">ACTIVE KERNEL INVARIANTS:</div>
                 <span class="badge badge-cyan">3GPP 5G Slicing: ACTIVE</span>
                 <span class="badge badge-cyan">Live-SBOM W^X: ENFORCED</span>
                 <span class="badge badge-cyan">AI TRiSM Guard: ACTIVE</span>
@@ -304,9 +346,9 @@
         <div class="card">
             <div class="card-title">
                 <span>PANE 4: 14-MODULE INTERACTIVE INJECTION DECK</span>
-                <span class="badge badge-cyan">SCIENTIFIC STRESS ENGINE</span>
+                <span id="deck-status" class="badge badge-cyan">READY</span>
             </div>
-            <div class="deck-grid" style="min-height: 220px; align-content: center;">
+            <div class="deck-grid">
                 <button onclick="inject('cbf')">1. CBF Barrier Stress</button>
                 <button onclick="inject('hil')">2. Run HIL Co-Sim</button>
                 <button onclick="inject('fuzzer')">3. Diff SCADA Fuzzer</button>
@@ -314,18 +356,26 @@
                 <button onclick="inject('evasion')">5. Grammar Mutation</button>
                 <button onclick="inject('5g_slice_hop')">6. 5G Slice-Hop</button>
                 <button onclick="inject('trism_jailbreak')">7. AI TRiSM Jailbreak</button>
-                <button class="btn-danger" onclick="inject('reset')">Emergency All-Stop</button>
-                <button class="btn-success" onclick="inject('patch_regression')">Honeynet Autohunt</button>
+                <button class="btn-spike" onclick="inject('heater_spike')">🔥 Thermal Spike (Heater ON)</button>
+                <button class="btn-success" onclick="inject('heater_normal')">❄️ Thermal Safe (Heater OFF)</button>
+                <button class="btn-danger" style="grid-column: span 3;" onclick="inject('reset')">⏹ Emergency All-Stop
+                    &amp; Clear Log</button>
             </div>
-            <div class="metrics-row">
-                <div>
-                    <div id="deck-status" class="metric-val" style="font-size: 14px; color: var(--cyan);">IDLE / READY
-                    </div>
-                    <div class="metric-lbl">Last Injection Status</div>
-                </div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 8px; text-align: center;">
+                Click any action to execute the real module and stream live terminal logs below.
             </div>
         </div>
 
+    </div>
+
+    <!-- PANE 5: LIVE REAL-TIME TERMINAL LOG CONSOLE -->
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <span>LIVE RESEARCH MODULE EXECUTION CONSOLE (STDOUT / STDERR)</span>
+            <span id="log-status">POLLING ACTIVE</span>
+        </div>
+        <div id="terminalBody" class="terminal-body">[*] Sentinel-Lab live log buffer initialized. Click any injection
+            button to execute.</div>
     </div>
 
     <script>
@@ -362,14 +412,14 @@
             // Label Barrier
             ctx1.fillStyle = '#ef4444';
             ctx1.font = '10px monospace';
-            ctx1.fillText('h(x) = 0 (Unsafe Barrier 120°C)', w * 0.8 - 180, 20);
+            ctx1.fillText('h(x)=0 (120°C Limit)', w * 0.8 - 140, 18);
 
-            // Plot Trajectory
-            const x = Math.min((temp / 140) * w, w - 10);
-            const y = h * 0.5 + Math.sin(Date.now() / 300) * 20;
+            // Map dynamic temperature to X-axis
+            const x = Math.max(10, Math.min((temp / 130) * w, w - 10));
+            const y = h * 0.5 + Math.sin(Date.now() / 400) * 15;
 
             trajectory.push({ x, y });
-            if (trajectory.length > 50) trajectory.shift();
+            if (trajectory.length > 40) trajectory.shift();
 
             ctx1.strokeStyle = '#06b6d4';
             ctx1.lineWidth = 2;
@@ -380,8 +430,8 @@
             }
             ctx1.stroke();
 
-            // Current Particle
-            ctx1.fillStyle = '#10b981';
+            // Current particle
+            ctx1.fillStyle = (temp >= 115) ? '#ef4444' : '#10b981';
             ctx1.beginPath();
             ctx1.arc(x, y, 6, 0, Math.PI * 2);
             ctx1.fill();
@@ -404,7 +454,7 @@
             ctx2.beginPath();
 
             for (let x = 0; x < w; x++) {
-                let z = (x / w) * 3.0; // 0 to 3 us
+                let z = (x / w) * 3.0;
                 let yNorm = Math.exp(-(z - 0.84) - Math.exp(-(z - 0.84)));
                 let y = h - (yNorm * h * 2.2);
                 if (x === 0) ctx2.moveTo(x, y);
@@ -418,17 +468,19 @@
             ctx2.lineWidth = 2;
             ctx2.setLineDash([4, 4]);
             ctx2.beginPath();
-            ctx2.moveTo(x999, 20);
+            ctx2.moveTo(x999, 15);
             ctx2.lineTo(x999, h);
             ctx2.stroke();
             ctx2.setLineDash([]);
 
             ctx2.fillStyle = '#10b981';
             ctx2.font = '10px monospace';
-            ctx2.fillText('p99.999% = 1.82 µs', x999 + 6, 35);
+            ctx2.fillText('p99.999% = 1.82 µs', x999 + 6, 28);
         }
 
-        // --- Real-Time Poller ---
+        // --- Real-Time Telemetry & Log Poller ---
+        let lastLogContent = "";
+
         async function updateTelemetry() {
             try {
                 const resp = await fetch('/api/v1/lab/telemetry');
@@ -443,7 +495,7 @@
                     const badge = document.getElementById('cbf-status-badge');
                     if (ps.is_safe) {
                         badge.className = 'badge badge-green';
-                        badge.innerText = 'h(x) ≥ 0 INVARIANT (SAFE)';
+                        badge.innerText = 'h(x) ≥ 0 SAFE';
                     } else {
                         badge.className = 'badge badge-red';
                         badge.innerText = 'SAFETY BARRIER BREACHED';
@@ -451,14 +503,28 @@
                     drawCBF(ps.temperature_c, ps.cbf_barrier_h);
                 }
             } catch (e) {
-                // Fallback simulation when offline
                 drawCBF(85.0, 35.0);
             }
             drawEVT();
         }
 
+        async function pollLogs() {
+            try {
+                const resp = await fetch('/api/v1/lab/logs');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.logs && data.logs !== lastLogContent) {
+                        lastLogContent = data.logs;
+                        const term = document.getElementById('terminalBody');
+                        term.innerText = data.logs;
+                        term.scrollTop = term.scrollHeight;
+                    }
+                }
+            } catch (e) { }
+        }
+
         async function inject(action) {
-            document.getElementById('deck-status').innerText = 'INJECTING: ' + action.toUpperCase() + '...';
+            document.getElementById('deck-status').innerText = 'DISPATCHING: ' + action.toUpperCase();
             try {
                 const res = await fetch('/api/v1/lab/inject', {
                     method: 'POST',
@@ -466,10 +532,11 @@
                     body: JSON.stringify({ action: action })
                 });
                 const d = await res.json();
-                document.getElementById('deck-status').innerText = 'ACTIVE: ' + d.action.toUpperCase();
+                document.getElementById('deck-status').innerText = 'RUNNING: ' + d.action.toUpperCase();
             } catch (e) {
-                document.getElementById('deck-status').innerText = 'DISPATCHED: ' + action.toUpperCase();
+                document.getElementById('deck-status').innerText = 'SENT: ' + action.toUpperCase();
             }
+            setTimeout(pollLogs, 300);
         }
 
         async function exportScorecard() {
@@ -484,7 +551,9 @@
         }
 
         setInterval(updateTelemetry, 500);
+        setInterval(pollLogs, 800);
         updateTelemetry();
+        pollLogs();
     </script>
 </body>
 
