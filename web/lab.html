@@ -243,10 +243,10 @@
 
     <div class="grid-container">
 
-        <!-- PANE 1: Physical Phase-Plane & Safety Barrier Canvas -->
+        <!-- PANE 1: Scrolling Time-Series Thermal Wave & Barrier Limit -->
         <div class="card">
             <div class="card-title">
-                <span>PANE 1: PHYSICAL PHASE-PLANE &amp; BARRIER h(x)</span>
+                <span>PANE 1: REAL-TIME PHYSICAL THERMAL OSCILLOSCOPE &amp; BARRIER h(x)</span>
                 <span id="cbf-status-badge" class="badge badge-green">h(x) &ge; 0 SAFE</span>
             </div>
             <canvas id="cbfCanvas"></canvas>
@@ -379,10 +379,11 @@
     </div>
 
     <script>
-        // --- PANE 1: Phase-Plane Canvas Drawing ---
+        // --- PANE 1: Scrolling Oscilloscope Time-Series (Left-to-Right Wave) ---
         const cbfCanvas = document.getElementById('cbfCanvas');
         const ctx1 = cbfCanvas.getContext('2d');
-        let trajectory = [];
+        let tempHistory = [];
+        const maxHistoryPoints = 80;
 
         function drawCBF(temp, barrier) {
             cbfCanvas.width = cbfCanvas.clientWidth;
@@ -391,53 +392,77 @@
 
             ctx1.clearRect(0, 0, w, h);
 
-            // Safe region green background
-            ctx1.fillStyle = 'rgba(16, 185, 129, 0.05)';
-            ctx1.fillRect(0, 0, w * 0.75, h);
+            // Temperature Scale: 70°C (bottom) to 130°C (top)
+            const minT = 70.0, maxT = 130.0;
+            function getY(t) {
+                let norm = (t - minT) / (maxT - minT);
+                return h - (norm * h);
+            }
 
-            // Unsafe region red boundary
+            // 1. Red Unsafe Shaded Area (Above 120°C)
+            const yBarrier = getY(120.0);
             ctx1.fillStyle = 'rgba(239, 68, 68, 0.15)';
-            ctx1.fillRect(w * 0.75, 0, w * 0.25, h);
+            ctx1.fillRect(0, 0, w, yBarrier);
 
-            // Barrier Line h(x) = 0 (120°C limit)
+            // 2. 120°C Barrier Threshold Line
             ctx1.strokeStyle = '#ef4444';
             ctx1.lineWidth = 2;
-            ctx1.setLineDash([5, 5]);
+            ctx1.setLineDash([4, 4]);
             ctx1.beginPath();
-            ctx1.moveTo(w * 0.75, 0);
-            ctx1.lineTo(w * 0.75, h);
+            ctx1.moveTo(0, yBarrier);
+            ctx1.lineTo(w, yBarrier);
             ctx1.stroke();
             ctx1.setLineDash([]);
 
             ctx1.fillStyle = '#ef4444';
             ctx1.font = '10px monospace';
-            ctx1.fillText('h(x)=0 (120°C Limit)', w * 0.75 - 140, 18);
+            ctx1.fillText('h(x)=0 Safety Barrier (120°C Limit)', 10, yBarrier - 5);
 
-            // Map temperature (80°C to 130°C) across the canvas width
-            // At 85°C -> X is around 20%
-            // At 120°C -> X reaches the 75% boundary line!
-            const minTemp = 80.0, maxTemp = 130.0;
-            const normTemp = Math.max(0.0, Math.min(1.0, (temp - minTemp) / (maxTemp - minTemp)));
-            const x = Math.max(15, Math.min(normTemp * w, w - 15));
-            const y = h * 0.5 + Math.sin(Date.now() / 350) * 12;
-
-            trajectory.push({ x, y });
-            if (trajectory.length > 45) trajectory.shift();
-
-            ctx1.strokeStyle = '#06b6d4';
-            ctx1.lineWidth = 2;
+            // 3. 85°C Nominal Baseline Line
+            const yNominal = getY(85.0);
+            ctx1.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+            ctx1.lineWidth = 1;
+            ctx1.setLineDash([2, 4]);
             ctx1.beginPath();
-            for (let i = 0; i < trajectory.length; i++) {
-                if (i === 0) ctx1.moveTo(trajectory[i].x, trajectory[i].y);
-                else ctx1.lineTo(trajectory[i].x, trajectory[i].y);
-            }
+            ctx1.moveTo(0, yNominal);
+            ctx1.lineTo(w, yNominal);
             ctx1.stroke();
+            ctx1.setLineDash([]);
 
-            // Current state particle (Turns red as it approaches or crosses the boundary)
-            ctx1.fillStyle = (temp >= 115) ? '#ef4444' : ((temp >= 100) ? '#f59e0b' : '#10b981');
-            ctx1.beginPath();
-            ctx1.arc(x, y, 7, 0, Math.PI * 2);
-            ctx1.fill();
+            ctx1.fillStyle = 'rgba(16, 185, 129, 0.7)';
+            ctx1.font = '10px monospace';
+            ctx1.fillText('85°C Nominal Baseline', 10, yNominal - 5);
+
+            // Push new temperature point into scrolling history
+            tempHistory.push(temp);
+            if (tempHistory.length > maxHistoryPoints) {
+                tempHistory.shift();
+            }
+
+            // 4. Draw Scrolling Temperature Wave
+            if (tempHistory.length > 1) {
+                ctx1.strokeStyle = (temp >= 120.0) ? '#ef4444' : ((temp >= 105.0) ? '#f59e0b' : '#06b6d4');
+                ctx1.lineWidth = 2.5;
+                ctx1.beginPath();
+
+                for (let i = 0; i < tempHistory.length; i++) {
+                    let px = (i / (maxHistoryPoints - 1)) * w;
+                    let py = getY(tempHistory[i]);
+                    if (i === 0) ctx1.moveTo(px, py);
+                    else ctx1.lineTo(px, py);
+                }
+                ctx1.stroke();
+
+                // Glowing Current Lead Head Particle
+                let lastIdx = tempHistory.length - 1;
+                let lastX = (lastIdx / (maxHistoryPoints - 1)) * w;
+                let lastY = getY(tempHistory[lastIdx]);
+
+                ctx1.fillStyle = (temp >= 120.0) ? '#ef4444' : ((temp >= 105.0) ? '#f59e0b' : '#10b981');
+                ctx1.beginPath();
+                ctx1.arc(lastX, lastY, 6, 0, Math.PI * 2);
+                ctx1.fill();
+            }
         }
 
         // --- PANE 2: EVT Gumbel Curve Drawing ---
@@ -540,8 +565,8 @@
             } catch (e) {
                 document.getElementById('deck-status').innerText = 'TRIGGERED';
             }
-            setTimeout(pollLogs, 300);
-            setTimeout(pollLogs, 1000);
+            setTimeout(pollLogs, 250);
+            setTimeout(pollLogs, 800);
         }
 
         async function exportScorecard() {
@@ -555,8 +580,8 @@
             a.click();
         }
 
-        setInterval(updateTelemetry, 400);
-        setInterval(pollLogs, 800);
+        setInterval(updateTelemetry, 350);
+        setInterval(pollLogs, 700);
         updateTelemetry();
         pollLogs();
     </script>
