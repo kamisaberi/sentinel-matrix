@@ -1,0 +1,20 @@
+sensor_id: "siemens_sitrans_p320"
+vendor: "Siemens"
+model: "SITRANS P320"
+category: "PRESSURE"
+target_protocol: "MODBUS_TCP"
+default_port: 15501
+physics:
+  engine: "fluid_pressure_ode"
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 16.0
+  noise_sigma: 0.04
+registers:
+  holding_registers:
+    40001: { name: "pressure_bar", type: "float32", scale: 1.0, unit: "bar" }
+    40003: { name: "temperature_c", type: "float32", scale: 1.0, unit: "C" }
+fault_hooks:
+  - id: "water_hammer_spike"
+    action: "step_increase"
+    delta: 8.5
