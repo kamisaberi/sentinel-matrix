@@ -1,0 +1,19 @@
+sensor_id: "yokogawa_ph450"
+vendor: "Yokogawa"
+model: "PH450G pH/ORP Transmitter"
+category: "CHEMICAL"
+target_protocol: "MODBUS_TCP"
+default_port: 15506
+physics:
+  engine: "chemical_nernst"
+  baseline_value: 7.2
+  min_value: 0.0
+  max_value: 14.0
+  noise_sigma: 0.02
+registers:
+  holding_registers:
+    40050: { name: "ph_value", type: "float32", scale: 1.0, unit: "pH" }
+fault_hooks:
+  - id: "acid_dosing_runaway"
+    action: "drop_to_val"
+    target_value: 2.1
