@@ -1,0 +1,30 @@
+sensor_id: s517_rocket_booster_grid_fins_03
+domain_id: 73
+domain_name: Rocket Booster Grid Fins
+model: 'Rocket Booster Grid Fins Telemetry Node #03'
+category: AEROSPACE
+target_protocol: MODBUS_TCP
+default_port: 15517
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -25.0
+  max_value: 27.5
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40171:
+      name: s517_rocket_booster_grid_fins_03_pv
+      type: float32
+      scale: 1.0
+      unit: deg
+    40173:
+      name: s517_rocket_booster_grid_fins_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s517_rocket_booster_grid_fins_03_fault
+  action: step_increase
+  value: 8.5

@@ -1,0 +1,30 @@
+sensor_id: s568_maglev_levitation_gap_05
+domain_id: 80
+domain_name: Maglev Levitation Gap
+model: 'Maglev Levitation Gap Telemetry Node #05'
+category: MAGLEV
+target_protocol: MODBUS_TCP
+default_port: 15568
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: kinematic_encoder
+  baseline_value: 13.2
+  min_value: 2.0
+  max_value: 30.0
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40681:
+      name: s568_maglev_levitation_gap_05_pv
+      type: float32
+      scale: 1.0
+      unit: mm
+    40683:
+      name: s568_maglev_levitation_gap_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s568_maglev_levitation_gap_05_fault
+  action: step_decrease
+  value: -6.2

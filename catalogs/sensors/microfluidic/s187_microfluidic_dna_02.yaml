@@ -1,0 +1,30 @@
+sensor_id: s187_microfluidic_dna_02
+domain_id: 26
+domain_name: Microfluidic DNA
+model: 'Microfluidic DNA Telemetry Node #02'
+category: MICROFLUIDIC
+target_protocol: MODBUS_TCP
+default_port: 15187
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: bioprocess_cell
+  baseline_value: 54.0
+  min_value: 0.0
+  max_value: 525.0
+  noise_sigma: 0.2
+registers:
+  holding_registers:
+    40871:
+      name: s187_microfluidic_dna_02_pv
+      type: float32
+      scale: 1.0
+      unit: pL
+    40873:
+      name: s187_microfluidic_dna_02_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s187_microfluidic_dna_02_fault
+  action: step_decrease
+  value: -20.0

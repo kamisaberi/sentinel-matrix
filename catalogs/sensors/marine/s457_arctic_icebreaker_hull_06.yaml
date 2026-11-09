@@ -1,0 +1,30 @@
+sensor_id: s457_arctic_icebreaker_hull_06
+domain_id: 64
+domain_name: Arctic Icebreaker Hull
+model: 'Arctic Icebreaker Hull Telemetry Node #06'
+category: MARINE
+target_protocol: MODBUS_TCP
+default_port: 15457
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 25.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.2
+registers:
+  holding_registers:
+    40571:
+      name: s457_arctic_icebreaker_hull_06_pv
+      type: float32
+      scale: 1.0
+      unit: MPa
+    40573:
+      name: s457_arctic_icebreaker_hull_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s457_arctic_icebreaker_hull_06_fault
+  action: step_increase
+  value: 45.0

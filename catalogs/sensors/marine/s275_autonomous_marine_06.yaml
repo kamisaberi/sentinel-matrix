@@ -1,0 +1,30 @@
+sensor_id: s275_autonomous_marine_06
+domain_id: 38
+domain_name: Autonomous Marine
+model: 'Autonomous Marine Telemetry Node #06'
+category: MARINE
+target_protocol: MODBUS_TCP
+default_port: 15275
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: subsea_acoustic
+  baseline_value: 154.0
+  min_value: 0.0
+  max_value: 312.5
+  noise_sigma: 0.5
+registers:
+  holding_registers:
+    40751:
+      name: s275_autonomous_marine_06_pv
+      type: float32
+      scale: 1.0
+      unit: rpm
+    40753:
+      name: s275_autonomous_marine_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s275_autonomous_marine_06_fault
+  action: harmonic_multiplier
+  value: 3.5

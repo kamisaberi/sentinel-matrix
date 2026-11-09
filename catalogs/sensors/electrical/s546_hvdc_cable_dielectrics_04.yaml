@@ -1,0 +1,30 @@
+sensor_id: s546_hvdc_cable_dielectrics_04
+domain_id: 77
+domain_name: HVDC Cable Dielectrics
+model: 'HVDC Cable Dielectrics Telemetry Node #04'
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15546
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: grid_harmonics
+  baseline_value: 22.94
+  min_value: 0.0
+  max_value: 57.5
+  noise_sigma: 0.1
+registers:
+  holding_registers:
+    40461:
+      name: s546_hvdc_cable_dielectrics_04_pv
+      type: float32
+      scale: 1.0
+      unit: kV/mm
+    40463:
+      name: s546_hvdc_cable_dielectrics_04_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s546_hvdc_cable_dielectrics_04_fault
+  action: step_increase
+  value: 12.0

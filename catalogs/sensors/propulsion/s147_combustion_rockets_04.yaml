@@ -1,0 +1,30 @@
+sensor_id: s147_combustion_rockets_04
+domain_id: 20
+domain_name: Combustion & Rockets
+model: 'Combustion & Rockets Telemetry Node #04'
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15147
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: combustion_ode
+  baseline_value: 55.8
+  min_value: 0.0
+  max_value: 287.5
+  noise_sigma: 0.5
+registers:
+  holding_registers:
+    40471:
+      name: s147_combustion_rockets_04_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40473:
+      name: s147_combustion_rockets_04_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s147_combustion_rockets_04_fault
+  action: step_increase
+  value: 30.0

@@ -1,0 +1,30 @@
+sensor_id: s556_continuous_granulation_07
+domain_id: 78
+domain_name: Continuous Granulation
+model: 'Continuous Granulation Telemetry Node #07'
+category: PHARMA
+target_protocol: MODBUS_TCP
+default_port: 15556
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: bioprocess_cell
+  baseline_value: 2.96
+  min_value: 0.5
+  max_value: 13.0
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40561:
+      name: s556_continuous_granulation_07_pv
+      type: float32
+      scale: 1.0
+      unit: LOD_pct
+    40563:
+      name: s556_continuous_granulation_07_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s556_continuous_granulation_07_fault
+  action: step_increase
+  value: 3.5

@@ -1,0 +1,30 @@
+sensor_id: s157_extreme_geological_07
+domain_id: 21
+domain_name: Extreme Geological
+model: 'Extreme Geological Telemetry Node #07'
+category: GEOLOGICAL
+target_protocol: MODBUS_TCP
+default_port: 15157
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: seismic_geophone
+  baseline_value: 0.03
+  min_value: 0.0
+  max_value: 130.0
+  noise_sigma: 0.005
+registers:
+  holding_registers:
+    40571:
+      name: s157_extreme_geological_07_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40573:
+      name: s157_extreme_geological_07_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s157_extreme_geological_07_fault
+  action: step_increase
+  value: 12.0

@@ -1,0 +1,30 @@
+sensor_id: s426_tokamak_fusion_03
+domain_id: 60
+domain_name: Tokamak Fusion
+model: 'Tokamak Fusion Telemetry Node #03'
+category: FUSION
+target_protocol: MODBUS_TCP
+default_port: 15426
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: magnetic_flux
+  baseline_value: 17.4
+  min_value: 0.0
+  max_value: 27.5
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40261:
+      name: s426_tokamak_fusion_03_pv
+      type: float32
+      scale: 1.0
+      unit: MA
+    40263:
+      name: s426_tokamak_fusion_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s426_tokamak_fusion_03_fault
+  action: step_decrease
+  value: -10.0

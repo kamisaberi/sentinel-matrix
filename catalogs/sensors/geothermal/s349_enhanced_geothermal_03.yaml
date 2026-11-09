@@ -1,0 +1,30 @@
+sensor_id: s349_enhanced_geothermal_03
+domain_id: 49
+domain_name: Enhanced Geothermal
+model: 'Enhanced Geothermal Telemetry Node #03'
+category: GEOTHERMAL
+target_protocol: MODBUS_TCP
+default_port: 15349
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 324.8
+  min_value: 50.0
+  max_value: 440.0
+  noise_sigma: 0.5
+registers:
+  holding_registers:
+    40491:
+      name: s349_enhanced_geothermal_03_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40493:
+      name: s349_enhanced_geothermal_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s349_enhanced_geothermal_03_fault
+  action: step_decrease
+  value: -65.0

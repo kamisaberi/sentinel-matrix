@@ -1,0 +1,30 @@
+sensor_id: s128_bioprocess_pharma_06
+domain_id: 17
+domain_name: Bioprocess & Pharma
+model: 'Bioprocess & Pharma Telemetry Node #06'
+category: BIOPROCESS
+target_protocol: MODBUS_TCP
+default_port: 15128
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: bioprocess_cell
+  baseline_value: 7.7
+  min_value: 0.0
+  max_value: 62.5
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40281:
+      name: s128_bioprocess_pharma_06_pv
+      type: float32
+      scale: 1.0
+      unit: g/L
+    40283:
+      name: s128_bioprocess_pharma_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s128_bioprocess_pharma_06_fault
+  action: step_decrease
+  value: -3.2

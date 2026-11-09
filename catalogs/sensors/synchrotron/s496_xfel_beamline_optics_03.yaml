@@ -1,0 +1,30 @@
+sensor_id: s496_xfel_beamline_optics_03
+domain_id: 70
+domain_name: XFEL Beamline Optics
+model: 'XFEL Beamline Optics Telemetry Node #03'
+category: SYNCHROTRON
+target_protocol: MODBUS_TCP
+default_port: 15496
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: optical_laser
+  baseline_value: 2.784
+  min_value: 0.0
+  max_value: 11.0
+  noise_sigma: 0.02
+registers:
+  holding_registers:
+    40961:
+      name: s496_xfel_beamline_optics_03_pv
+      type: float32
+      scale: 1.0
+      unit: mJ
+    40963:
+      name: s496_xfel_beamline_optics_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s496_xfel_beamline_optics_03_fault
+  action: step_increase
+  value: 4.5

@@ -1,0 +1,30 @@
+sensor_id: s002_microarchitectural_cpu_02
+domain_id: 1
+domain_name: Microarchitectural & CPU
+model: 'Microarchitectural & CPU Telemetry Node #02'
+category: MICROARCH
+target_protocol: PMU_PERF
+default_port: 15002
+interface: Linux PMU
+physics:
+  engine: pmu_microarch
+  baseline_value: 1.296
+  min_value: 0.1
+  max_value: 4.2
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40021:
+      name: s002_microarchitectural_cpu_02_pv
+      type: float32
+      scale: 1.0
+      unit: IPC
+    40023:
+      name: s002_microarchitectural_cpu_02_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s002_microarchitectural_cpu_02_fault
+  action: step_decrease
+  value: -0.8

@@ -1,0 +1,30 @@
+sensor_id: s300_transmission_line_dlr_03
+domain_id: 42
+domain_name: Transmission Line DLR
+model: 'Transmission Line DLR Telemetry Node #03'
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15300
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: grid_harmonics
+  baseline_value: 29.0
+  min_value: 5.0
+  max_value: 88.0
+  noise_sigma: 0.2
+registers:
+  holding_registers:
+    40001:
+      name: s300_transmission_line_dlr_03_pv
+      type: float32
+      scale: 1.0
+      unit: kN
+    40003:
+      name: s300_transmission_line_dlr_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s300_transmission_line_dlr_03_fault
+  action: step_decrease
+  value: -10.0

@@ -1,0 +1,30 @@
+sensor_id: s264_subsea_well_chokes_02
+domain_id: 37
+domain_name: Subsea Well Chokes
+model: 'Subsea Well Chokes Telemetry Node #02'
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15264
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 9180.0
+  min_value: 0.0
+  max_value: 15750.0
+  noise_sigma: 15.0
+registers:
+  holding_registers:
+    40641:
+      name: s264_subsea_well_chokes_02_pv
+      type: float32
+      scale: 1.0
+      unit: psi
+    40643:
+      name: s264_subsea_well_chokes_02_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s264_subsea_well_chokes_02_fault
+  action: step_decrease
+  value: -2500.0

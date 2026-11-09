@@ -1,0 +1,30 @@
+sensor_id: s483_direct_air_capture_co2_04
+domain_id: 68
+domain_name: Direct Air Capture CO2
+model: 'Direct Air Capture CO2 Telemetry Node #04'
+category: DAC_CARBON
+target_protocol: MODBUS_TCP
+default_port: 15483
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: chemical_nernst
+  baseline_value: 123.504
+  min_value: 90.0
+  max_value: 115.0
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40831:
+      name: s483_direct_air_capture_co2_04_pv
+      type: float32
+      scale: 1.0
+      unit: pct
+    40833:
+      name: s483_direct_air_capture_co2_04_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s483_direct_air_capture_co2_04_fault
+  action: step_decrease
+  value: -8.5

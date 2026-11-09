@@ -1,0 +1,30 @@
+sensor_id: s052_photonic_optical_04
+domain_id: 7
+domain_name: Photonic & Optical
+model: 'Photonic & Optical Telemetry Node #04'
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15052
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: optical_laser
+  baseline_value: -0.62
+  min_value: -40.0
+  max_value: 11.5
+  noise_sigma: 0.02
+registers:
+  holding_registers:
+    40521:
+      name: s052_photonic_optical_04_pv
+      type: float32
+      scale: 1.0
+      unit: dB
+    40523:
+      name: s052_photonic_optical_04_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s052_photonic_optical_04_fault
+  action: step_decrease
+  value: -15.0

@@ -1,0 +1,30 @@
+sensor_id: s237_petrochemical_fcc_03
+domain_id: 33
+domain_name: Petrochemical FCC
+model: 'Petrochemical FCC Telemetry Node #03'
+category: PETROCHEM
+target_protocol: MODBUS_TCP
+default_port: 15237
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 3.248
+  min_value: 0.0
+  max_value: 44.0
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40371:
+      name: s237_petrochemical_fcc_03_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40373:
+      name: s237_petrochemical_fcc_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s237_petrochemical_fcc_03_fault
+  action: step_decrease
+  value: -1.5

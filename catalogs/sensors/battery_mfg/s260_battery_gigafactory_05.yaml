@@ -1,0 +1,30 @@
+sensor_id: s260_battery_gigafactory_05
+domain_id: 36
+domain_name: Battery Gigafactory
+model: 'Battery Gigafactory Telemetry Node #05'
+category: BATTERY_MFG
+target_protocol: MODBUS_TCP
+default_port: 15260
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: kinematic_encoder
+  baseline_value: 237.6
+  min_value: 100.0
+  max_value: 360.0
+  noise_sigma: 0.8
+registers:
+  holding_registers:
+    40601:
+      name: s260_battery_gigafactory_05_pv
+      type: float32
+      scale: 1.0
+      unit: g/m2
+    40603:
+      name: s260_battery_gigafactory_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s260_battery_gigafactory_05_fault
+  action: step_increase
+  value: 25.0

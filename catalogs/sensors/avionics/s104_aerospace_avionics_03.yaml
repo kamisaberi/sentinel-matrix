@@ -1,0 +1,30 @@
+sensor_id: s104_aerospace_avionics_03
+domain_id: 14
+domain_name: Aerospace & Avionics
+model: 'Aerospace & Avionics Telemetry Node #03'
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15104
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: avionics_pitot
+  baseline_value: 324.8
+  min_value: 0.0
+  max_value: 660.0
+  noise_sigma: 1.5
+registers:
+  holding_registers:
+    40041:
+      name: s104_aerospace_avionics_03_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40043:
+      name: s104_aerospace_avionics_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s104_aerospace_avionics_03_fault
+  action: step_decrease
+  value: -90.0

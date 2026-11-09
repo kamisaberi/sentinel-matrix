@@ -1,0 +1,30 @@
+sensor_id: s230_hypersonic_re_entry_03
+domain_id: 32
+domain_name: Hypersonic Re-entry
+model: 'Hypersonic Re-entry Telemetry Node #03'
+category: HYPERSONIC
+target_protocol: MODBUS_TCP
+default_port: 15230
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 6.032
+  min_value: 0.0
+  max_value: 55.0
+  noise_sigma: 0.1
+registers:
+  holding_registers:
+    40301:
+      name: s230_hypersonic_re_entry_03_pv
+      type: float32
+      scale: 1.0
+      unit: MW/m2
+    40303:
+      name: s230_hypersonic_re_entry_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s230_hypersonic_re_entry_03_fault
+  action: step_increase
+  value: 12.0

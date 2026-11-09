@@ -1,0 +1,30 @@
+sensor_id: s380_euv_litho_optics_06
+domain_id: 53
+domain_name: EUV Litho Optics
+model: 'EUV Litho Optics Telemetry Node #06'
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15380
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: vacuum_plasma
+  baseline_value: 95.9
+  min_value: 40.0
+  max_value: 93.75
+  noise_sigma: 0.1
+registers:
+  holding_registers:
+    40801:
+      name: s380_euv_litho_optics_06_pv
+      type: float32
+      scale: 1.0
+      unit: pct
+    40803:
+      name: s380_euv_litho_optics_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s380_euv_litho_optics_06_fault
+  action: step_decrease
+  value: -15.0

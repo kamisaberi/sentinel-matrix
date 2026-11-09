@@ -1,0 +1,30 @@
+sensor_id: s163_autonomous_drive_by_wire_06
+domain_id: 22
+domain_name: Autonomous Drive-by-Wire
+model: 'Autonomous Drive-by-Wire Telemetry Node #06'
+category: AUTOMOTIVE
+target_protocol: MODBUS_TCP
+default_port: 15163
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: kinematic_encoder
+  baseline_value: 4.9
+  min_value: -50.0
+  max_value: 62.5
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40631:
+      name: s163_autonomous_drive_by_wire_06_pv
+      type: float32
+      scale: 1.0
+      unit: Nm
+    40633:
+      name: s163_autonomous_drive_by_wire_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s163_autonomous_drive_by_wire_06_fault
+  action: step_increase
+  value: 15.0

@@ -1,0 +1,30 @@
+sensor_id: s075_chemical_gas_03
+domain_id: 10
+domain_name: Chemical & Gas
+model: 'Chemical & Gas Telemetry Node #03'
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15075
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: chemical_nernst
+  baseline_value: 8.352
+  min_value: 0.0
+  max_value: 15.4
+  noise_sigma: 0.02
+registers:
+  holding_registers:
+    40751:
+      name: s075_chemical_gas_03_pv
+      type: float32
+      scale: 1.0
+      unit: pH
+    40753:
+      name: s075_chemical_gas_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s075_chemical_gas_03_fault
+  action: drop_to_val
+  value: 2.1

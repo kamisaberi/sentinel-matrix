@@ -19,7 +19,8 @@ RED = "\033[1;31m"
 RESET = "\033[0m"
 
 def cmd_list():
-    profiles = sorted(list(CATALOG_DIR.glob("*.yaml")))
+    
+    profiles = sorted(list(CATALOG_DIR.rglob("*.yaml")))
     print(f"{CYAN}========================================================================================================{RESET}")
     print(f"\033[1;37m        ARYORITHM SENSOR CATALOG: 550+ INDUSTRIAL ASSET ARCHETYPES                      {RESET}")
     print(f"{CYAN}========================================================================================================{RESET}")
@@ -47,7 +48,7 @@ def cmd_list():
 def cmd_inspect(sensor_id):
     target_yaml = CATALOG_DIR / f"{sensor_id}.yaml"
     if not target_yaml.exists():
-        matches = list(CATALOG_DIR.glob(f"*{sensor_id}*.yaml"))
+        matches = list(CATALOG_DIR.rglob(f"*{sensor_id}*.yaml"))
         if matches:
             target_yaml = matches[0]
         else:

@@ -1,0 +1,30 @@
+sensor_id: s090_high_voltage_electrical_03
+domain_id: 12
+domain_name: High-Voltage Electrical
+model: 'High-Voltage Electrical Telemetry Node #03'
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15090
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: grid_harmonics
+  baseline_value: 127.6
+  min_value: 0.0
+  max_value: 550.0
+  noise_sigma: 0.8
+registers:
+  holding_registers:
+    40901:
+      name: s090_high_voltage_electrical_03_pv
+      type: float32
+      scale: 1.0
+      unit: kV
+    40903:
+      name: s090_high_voltage_electrical_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s090_high_voltage_electrical_03_fault
+  action: step_increase
+  value: 45.0

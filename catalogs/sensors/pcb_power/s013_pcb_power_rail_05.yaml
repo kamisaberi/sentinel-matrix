@@ -1,0 +1,30 @@
+sensor_id: s013_pcb_power_rail_05
+domain_id: 2
+domain_name: PCB & Power-Rail
+model: 'PCB & Power-Rail Telemetry Node #05'
+category: PCB_POWER
+target_protocol: MODBUS_TCP
+default_port: 15013
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: pcb_power_glitch
+  baseline_value: 1584.0
+  min_value: 900.0
+  max_value: 1680.0
+  noise_sigma: 5.0
+registers:
+  holding_registers:
+    40131:
+      name: s013_pcb_power_rail_05_pv
+      type: float32
+      scale: 1.0
+      unit: mV
+    40133:
+      name: s013_pcb_power_rail_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s013_pcb_power_rail_05_fault
+  action: step_decrease
+  value: -250.0

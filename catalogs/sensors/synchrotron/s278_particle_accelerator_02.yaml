@@ -1,0 +1,30 @@
+sensor_id: s278_particle_accelerator_02
+domain_id: 39
+domain_name: Particle Accelerator
+model: 'Particle Accelerator Telemetry Node #02'
+category: SYNCHROTRON
+target_protocol: MODBUS_TCP
+default_port: 15278
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 0.0
+  min_value: -500.0
+  max_value: 525.0
+  noise_sigma: 0.1
+registers:
+  holding_registers:
+    40781:
+      name: s278_particle_accelerator_02_pv
+      type: float32
+      scale: 1.0
+      unit: um
+    40783:
+      name: s278_particle_accelerator_02_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s278_particle_accelerator_02_fault
+  action: step_increase
+  value: 120.0

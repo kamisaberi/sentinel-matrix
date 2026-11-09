@@ -1,0 +1,30 @@
+sensor_id: s007_microarchitectural_cpu_07
+domain_id: 1
+domain_name: Microarchitectural & CPU
+model: 'Microarchitectural & CPU Telemetry Node #07'
+category: MICROARCH
+target_protocol: PMU_PERF
+default_port: 15007
+interface: Linux PMU
+physics:
+  engine: pmu_microarch
+  baseline_value: 1.776
+  min_value: 0.1
+  max_value: 5.2
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40071:
+      name: s007_microarchitectural_cpu_07_pv
+      type: float32
+      scale: 1.0
+      unit: IPC
+    40073:
+      name: s007_microarchitectural_cpu_07_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s007_microarchitectural_cpu_07_fault
+  action: step_decrease
+  value: -0.8

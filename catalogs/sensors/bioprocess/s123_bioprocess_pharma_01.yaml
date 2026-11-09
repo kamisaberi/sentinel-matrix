@@ -1,0 +1,30 @@
+sensor_id: s123_bioprocess_pharma_01
+domain_id: 17
+domain_name: Bioprocess & Pharma
+model: 'Bioprocess & Pharma Telemetry Node #01'
+category: BIOPROCESS
+target_protocol: MODBUS_TCP
+default_port: 15123
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: bioprocess_cell
+  baseline_value: 5.5
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40231:
+      name: s123_bioprocess_pharma_01_pv
+      type: float32
+      scale: 1.0
+      unit: g/L
+    40233:
+      name: s123_bioprocess_pharma_01_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s123_bioprocess_pharma_01_fault
+  action: step_decrease
+  value: -3.2

@@ -1,0 +1,30 @@
+sensor_id: s405_7t_mri_safety_03
+domain_id: 57
+domain_name: 7T MRI Safety
+model: '7T MRI Safety Telemetry Node #03'
+category: MEDICAL
+target_protocol: MODBUS_TCP
+default_port: 15405
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: magnetic_flux
+  baseline_value: 2.088
+  min_value: 0.0
+  max_value: 8.8
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40051:
+      name: s405_7t_mri_safety_03_pv
+      type: float32
+      scale: 1.0
+      unit: W/kg
+    40053:
+      name: s405_7t_mri_safety_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s405_7t_mri_safety_03_fault
+  action: step_increase
+  value: 3.2

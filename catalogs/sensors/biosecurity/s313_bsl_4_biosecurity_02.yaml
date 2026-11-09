@@ -1,0 +1,30 @@
+sensor_id: s313_bsl_4_biosecurity_02
+domain_id: 44
+domain_name: BSL-4 Biosecurity
+model: 'BSL-4 Biosecurity Telemetry Node #02'
+category: BIOSECURITY
+target_protocol: MODBUS_TCP
+default_port: 15313
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: -48.6
+  min_value: -150.0
+  max_value: 0.0
+  noise_sigma: 0.5
+registers:
+  holding_registers:
+    40131:
+      name: s313_bsl_4_biosecurity_02_pv
+      type: float32
+      scale: 1.0
+      unit: Pa
+    40133:
+      name: s313_bsl_4_biosecurity_02_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s313_bsl_4_biosecurity_02_fault
+  action: step_increase
+  value: 40.0

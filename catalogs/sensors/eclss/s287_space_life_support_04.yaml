@@ -1,0 +1,30 @@
+sensor_id: s287_space_life_support_04
+domain_id: 40
+domain_name: Space Life Support
+model: 'Space Life Support Telemetry Node #04'
+category: ECLSS
+target_protocol: MODBUS_TCP
+default_port: 15287
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: chemical_nernst
+  baseline_value: 26.04
+  min_value: 15.0
+  max_value: 34.5
+  noise_sigma: 0.1
+registers:
+  holding_registers:
+    40871:
+      name: s287_space_life_support_04_pv
+      type: float32
+      scale: 1.0
+      unit: kPa
+    40873:
+      name: s287_space_life_support_04_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s287_space_life_support_04_fault
+  action: step_decrease
+  value: -5.5

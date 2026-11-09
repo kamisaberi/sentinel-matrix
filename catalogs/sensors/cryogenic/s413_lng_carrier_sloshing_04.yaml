@@ -1,0 +1,30 @@
+sensor_id: s413_lng_carrier_sloshing_04
+domain_id: 58
+domain_name: LNG Carrier Sloshing
+model: 'LNG Carrier Sloshing Telemetry Node #04'
+category: CRYOGENIC
+target_protocol: MODBUS_TCP
+default_port: 15413
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 55.8
+  min_value: 0.0
+  max_value: 575.0
+  noise_sigma: 1.2
+registers:
+  holding_registers:
+    40131:
+      name: s413_lng_carrier_sloshing_04_pv
+      type: float32
+      scale: 1.0
+      unit: kPa
+    40133:
+      name: s413_lng_carrier_sloshing_04_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s413_lng_carrier_sloshing_04_fault
+  action: step_increase
+  value: 180.0

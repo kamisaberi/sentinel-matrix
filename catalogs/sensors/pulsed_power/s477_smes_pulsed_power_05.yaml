@@ -1,0 +1,30 @@
+sensor_id: s477_smes_pulsed_power_05
+domain_id: 67
+domain_name: SMES Pulsed Power
+model: 'SMES Pulsed Power Telemetry Node #05'
+category: PULSED_POWER
+target_protocol: MODBUS_TCP
+default_port: 15477
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: grid_harmonics
+  baseline_value: 59.4
+  min_value: 0.0
+  max_value: 180.0
+  noise_sigma: 0.2
+registers:
+  holding_registers:
+    40771:
+      name: s477_smes_pulsed_power_05_pv
+      type: float32
+      scale: 1.0
+      unit: kA
+    40773:
+      name: s477_smes_pulsed_power_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s477_smes_pulsed_power_05_fault
+  action: step_increase
+  value: 60.0

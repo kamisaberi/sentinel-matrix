@@ -1,0 +1,30 @@
+sensor_id: s100_nuclear_particle_06
+domain_id: 13
+domain_name: Nuclear & Particle
+model: 'Nuclear & Particle Telemetry Node #06'
+category: NUCLEAR
+target_protocol: MODBUS_TCP
+default_port: 15100
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: nuclear_decay
+  baseline_value: 0.21
+  min_value: 0.0
+  max_value: 1250.0
+  noise_sigma: 0.01
+registers:
+  holding_registers:
+    40001:
+      name: s100_nuclear_particle_06_pv
+      type: float32
+      scale: 1.0
+      unit: uSv/h
+    40003:
+      name: s100_nuclear_particle_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s100_nuclear_particle_06_fault
+  action: step_increase
+  value: 150.0

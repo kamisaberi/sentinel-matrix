@@ -1,0 +1,30 @@
+sensor_id: s274_autonomous_marine_05
+domain_id: 38
+domain_name: Autonomous Marine
+model: 'Autonomous Marine Telemetry Node #05'
+category: MARINE
+target_protocol: MODBUS_TCP
+default_port: 15274
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: subsea_acoustic
+  baseline_value: 145.2
+  min_value: 0.0
+  max_value: 300.0
+  noise_sigma: 0.5
+registers:
+  holding_registers:
+    40741:
+      name: s274_autonomous_marine_05_pv
+      type: float32
+      scale: 1.0
+      unit: rpm
+    40743:
+      name: s274_autonomous_marine_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s274_autonomous_marine_05_fault
+  action: harmonic_multiplier
+  value: 3.5

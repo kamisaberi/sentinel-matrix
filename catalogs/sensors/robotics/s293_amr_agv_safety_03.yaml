@@ -1,0 +1,30 @@
+sensor_id: s293_amr_agv_safety_03
+domain_id: 41
+domain_name: AMR & AGV Safety
+model: 'AMR & AGV Safety Telemetry Node #03'
+category: ROBOTICS
+target_protocol: MODBUS_TCP
+default_port: 15293
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: kinematic_encoder
+  baseline_value: 1.74
+  min_value: 0.0
+  max_value: 4.4
+  noise_sigma: 0.02
+registers:
+  holding_registers:
+    40931:
+      name: s293_amr_agv_safety_03_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40933:
+      name: s293_amr_agv_safety_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s293_amr_agv_safety_03_fault
+  action: step_increase
+  value: 1.8

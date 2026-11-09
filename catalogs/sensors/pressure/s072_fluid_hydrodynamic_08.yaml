@@ -1,0 +1,30 @@
+sensor_id: s072_fluid_hydrodynamic_08
+domain_id: 9
+domain_name: Fluid & Hydrodynamic
+model: 'Fluid & Hydrodynamic Telemetry Node #08'
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15072
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 9.672
+  min_value: 0.0
+  max_value: 135.0
+  noise_sigma: 0.04
+registers:
+  holding_registers:
+    40721:
+      name: s072_fluid_hydrodynamic_08_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40723:
+      name: s072_fluid_hydrodynamic_08_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s072_fluid_hydrodynamic_08_fault
+  action: step_increase
+  value: 8.5

@@ -1,0 +1,30 @@
+sensor_id: s222_metal_3d_printing_02
+domain_id: 31
+domain_name: Metal 3D Printing
+model: 'Metal 3D Printing Telemetry Node #02'
+category: ADDITIVE_MFG
+target_protocol: MODBUS_TCP
+default_port: 15222
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 1998.0
+  min_value: 1200.0
+  max_value: 2625.0
+  noise_sigma: 5.0
+registers:
+  holding_registers:
+    40221:
+      name: s222_metal_3d_printing_02_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40223:
+      name: s222_metal_3d_printing_02_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s222_metal_3d_printing_02_fault
+  action: step_decrease
+  value: -350.0

@@ -1,0 +1,30 @@
+sensor_id: s302_transmission_line_dlr_05
+domain_id: 42
+domain_name: Transmission Line DLR
+model: 'Transmission Line DLR Telemetry Node #05'
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15302
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: grid_harmonics
+  baseline_value: 33.0
+  min_value: 5.0
+  max_value: 96.0
+  noise_sigma: 0.2
+registers:
+  holding_registers:
+    40021:
+      name: s302_transmission_line_dlr_05_pv
+      type: float32
+      scale: 1.0
+      unit: kN
+    40023:
+      name: s302_transmission_line_dlr_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s302_transmission_line_dlr_05_fault
+  action: step_decrease
+  value: -10.0

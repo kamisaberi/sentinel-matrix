@@ -1,0 +1,30 @@
+sensor_id: s429_tokamak_fusion_06
+domain_id: 60
+domain_name: Tokamak Fusion
+model: 'Tokamak Fusion Telemetry Node #06'
+category: FUSION
+target_protocol: MODBUS_TCP
+default_port: 15429
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: magnetic_flux
+  baseline_value: 21.0
+  min_value: 0.0
+  max_value: 31.25
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40291:
+      name: s429_tokamak_fusion_06_pv
+      type: float32
+      scale: 1.0
+      unit: MA
+    40293:
+      name: s429_tokamak_fusion_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s429_tokamak_fusion_06_fault
+  action: step_decrease
+  value: -10.0

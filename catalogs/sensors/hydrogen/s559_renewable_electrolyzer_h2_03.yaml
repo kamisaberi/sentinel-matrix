@@ -1,0 +1,30 @@
+sensor_id: s559_renewable_electrolyzer_h2_03
+domain_id: 79
+domain_name: Renewable Electrolyzer H2
+model: 'Renewable Electrolyzer H2 Telemetry Node #03'
+category: HYDROGEN
+target_protocol: MODBUS_TCP
+default_port: 15559
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: chemical_nernst
+  baseline_value: 0.29
+  min_value: 0.0
+  max_value: 4.4
+  noise_sigma: 0.01
+registers:
+  holding_registers:
+    40591:
+      name: s559_renewable_electrolyzer_h2_03_pv
+      type: float32
+      scale: 1.0
+      unit: pct_H2
+    40593:
+      name: s559_renewable_electrolyzer_h2_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s559_renewable_electrolyzer_h2_03_fault
+  action: step_increase
+  value: 1.8

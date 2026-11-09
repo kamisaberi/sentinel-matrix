@@ -1,0 +1,30 @@
+sensor_id: s377_euv_litho_optics_03
+domain_id: 53
+domain_name: EUV Litho Optics
+model: 'EUV Litho Optics Telemetry Node #03'
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15377
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: vacuum_plasma
+  baseline_value: 79.46
+  min_value: 40.0
+  max_value: 82.5
+  noise_sigma: 0.1
+registers:
+  holding_registers:
+    40771:
+      name: s377_euv_litho_optics_03_pv
+      type: float32
+      scale: 1.0
+      unit: pct
+    40773:
+      name: s377_euv_litho_optics_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s377_euv_litho_optics_03_fault
+  action: step_decrease
+  value: -15.0

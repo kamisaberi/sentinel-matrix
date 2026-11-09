@@ -1,0 +1,30 @@
+sensor_id: s532_smr_passive_safety_04
+domain_id: 75
+domain_name: SMR Passive Safety
+model: 'SMR Passive Safety Telemetry Node #04'
+category: NUCLEAR
+target_protocol: MODBUS_TCP
+default_port: 15532
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 353.4
+  min_value: 20.0
+  max_value: 402.5
+  noise_sigma: 0.5
+registers:
+  holding_registers:
+    40321:
+      name: s532_smr_passive_safety_04_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40323:
+      name: s532_smr_passive_safety_04_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s532_smr_passive_safety_04_fault
+  action: step_increase
+  value: 45.0

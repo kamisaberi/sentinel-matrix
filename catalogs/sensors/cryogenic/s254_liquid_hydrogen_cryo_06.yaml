@@ -1,0 +1,30 @@
+sensor_id: s254_liquid_hydrogen_cryo_06
+domain_id: 35
+domain_name: Liquid Hydrogen Cryo
+model: 'Liquid Hydrogen Cryo Telemetry Node #06'
+category: CRYOGENIC
+target_protocol: MODBUS_TCP
+default_port: 15254
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 28.42
+  min_value: 14.0
+  max_value: 375.0
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40541:
+      name: s254_liquid_hydrogen_cryo_06_pv
+      type: float32
+      scale: 1.0
+      unit: K
+    40543:
+      name: s254_liquid_hydrogen_cryo_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s254_liquid_hydrogen_cryo_06_fault
+  action: step_increase
+  value: 15.0

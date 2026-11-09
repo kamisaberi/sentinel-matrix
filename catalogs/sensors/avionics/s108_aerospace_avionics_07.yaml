@@ -1,0 +1,30 @@
+sensor_id: s108_aerospace_avionics_07
+domain_id: 14
+domain_name: Aerospace & Avionics
+model: 'Aerospace & Avionics Telemetry Node #07'
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15108
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: avionics_pitot
+  baseline_value: 414.4
+  min_value: 0.0
+  max_value: 780.0
+  noise_sigma: 1.5
+registers:
+  holding_registers:
+    40081:
+      name: s108_aerospace_avionics_07_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40083:
+      name: s108_aerospace_avionics_07_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s108_aerospace_avionics_07_fault
+  action: step_decrease
+  value: -90.0

@@ -1,0 +1,30 @@
+sensor_id: s526_submarine_asw_sonar_05
+domain_id: 74
+domain_name: Submarine ASW Sonar
+model: 'Submarine ASW Sonar Telemetry Node #05'
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15526
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: subsea_acoustic
+  baseline_value: 23.76
+  min_value: 0.0
+  max_value: 72.0
+  noise_sigma: 0.2
+registers:
+  holding_registers:
+    40261:
+      name: s526_submarine_asw_sonar_05_pv
+      type: float32
+      scale: 1.0
+      unit: kN
+    40263:
+      name: s526_submarine_asw_sonar_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s526_submarine_asw_sonar_05_fault
+  action: step_increase
+  value: 25.0

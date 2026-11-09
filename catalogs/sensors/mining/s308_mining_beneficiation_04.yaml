@@ -1,0 +1,30 @@
+sensor_id: s308_mining_beneficiation_04
+domain_id: 43
+domain_name: Mining Beneficiation
+model: 'Mining Beneficiation Telemetry Node #04'
+category: MINING
+target_protocol: MODBUS_TCP
+default_port: 15308
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: fluid_flow_ode
+  baseline_value: 1.798
+  min_value: 1.0
+  max_value: 2.875
+  noise_sigma: 0.01
+registers:
+  holding_registers:
+    40081:
+      name: s308_mining_beneficiation_04_pv
+      type: float32
+      scale: 1.0
+      unit: g/cm3
+    40083:
+      name: s308_mining_beneficiation_04_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s308_mining_beneficiation_04_fault
+  action: step_decrease
+  value: -0.35

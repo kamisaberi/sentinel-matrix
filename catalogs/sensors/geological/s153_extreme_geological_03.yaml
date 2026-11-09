@@ -1,0 +1,30 @@
+sensor_id: s153_extreme_geological_03
+domain_id: 21
+domain_name: Extreme Geological
+model: 'Extreme Geological Telemetry Node #03'
+category: GEOLOGICAL
+target_protocol: MODBUS_TCP
+default_port: 15153
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: seismic_geophone
+  baseline_value: 0.023
+  min_value: 0.0
+  max_value: 110.0
+  noise_sigma: 0.005
+registers:
+  holding_registers:
+    40531:
+      name: s153_extreme_geological_03_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40533:
+      name: s153_extreme_geological_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s153_extreme_geological_03_fault
+  action: step_increase
+  value: 12.0

@@ -1,0 +1,30 @@
+sensor_id: s081_magnetic_mhd_01
+domain_id: 11
+domain_name: Magnetic & MHD
+model: 'Magnetic & MHD Telemetry Node #01'
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15081
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: magnetic_flux
+  baseline_value: 45.0
+  min_value: -500.0
+  max_value: 500.0
+  noise_sigma: 0.5
+registers:
+  holding_registers:
+    40811:
+      name: s081_magnetic_mhd_01_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40813:
+      name: s081_magnetic_mhd_01_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s081_magnetic_mhd_01_fault
+  action: step_increase
+  value: 120.0

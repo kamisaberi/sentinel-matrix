@@ -1,0 +1,30 @@
+sensor_id: s240_petrochemical_fcc_06
+domain_id: 33
+domain_name: Petrochemical FCC
+model: 'Petrochemical FCC Telemetry Node #06'
+category: PETROCHEM
+target_protocol: MODBUS_TCP
+default_port: 15240
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 3.92
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40401:
+      name: s240_petrochemical_fcc_06_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40403:
+      name: s240_petrochemical_fcc_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s240_petrochemical_fcc_06_fault
+  action: step_decrease
+  value: -1.5

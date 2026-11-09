@@ -1,0 +1,30 @@
+sensor_id: s447_tandem_perovskite_fab_03
+domain_id: 63
+domain_name: Tandem Perovskite Fab
+model: 'Tandem Perovskite Fab Telemetry Node #03'
+category: SOLAR_FAB
+target_protocol: MODBUS_TCP
+default_port: 15447
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: optical_laser
+  baseline_value: 870.0
+  min_value: 700.0
+  max_value: 935.0
+  noise_sigma: 0.1
+registers:
+  holding_registers:
+    40471:
+      name: s447_tandem_perovskite_fab_03_pv
+      type: float32
+      scale: 1.0
+      unit: nm
+    40473:
+      name: s447_tandem_perovskite_fab_03_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s447_tandem_perovskite_fab_03_fault
+  action: step_increase
+  value: 25.0

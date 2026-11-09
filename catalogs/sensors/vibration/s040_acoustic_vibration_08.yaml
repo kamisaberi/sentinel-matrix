@@ -1,0 +1,30 @@
+sensor_id: s040_acoustic_vibration_08
+domain_id: 5
+domain_name: Acoustic & Vibration
+model: 'Acoustic & Vibration Telemetry Node #08'
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15040
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.872
+  min_value: 0.0
+  max_value: 67.5
+  noise_sigma: 0.05
+registers:
+  holding_registers:
+    40401:
+      name: s040_acoustic_vibration_08_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40403:
+      name: s040_acoustic_vibration_08_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s040_acoustic_vibration_08_fault
+  action: harmonic_multiplier
+  value: 6.5

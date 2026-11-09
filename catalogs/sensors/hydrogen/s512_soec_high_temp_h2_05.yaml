@@ -1,0 +1,30 @@
+sensor_id: s512_soec_high_temp_h2_05
+domain_id: 72
+domain_name: SOEC High-Temp H2
+model: 'SOEC High-Temp H2 Telemetry Node #05'
+category: HYDROGEN
+target_protocol: MODBUS_TCP
+default_port: 15512
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: chemical_nernst
+  baseline_value: 1.69
+  min_value: 0.8
+  max_value: 2.16
+  noise_sigma: 0.005
+registers:
+  holding_registers:
+    40121:
+      name: s512_soec_high_temp_h2_05_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40123:
+      name: s512_soec_high_temp_h2_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s512_soec_high_temp_h2_05_fault
+  action: step_decrease
+  value: -0.45

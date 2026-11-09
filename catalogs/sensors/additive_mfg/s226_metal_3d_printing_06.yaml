@@ -1,0 +1,30 @@
+sensor_id: s226_metal_3d_printing_06
+domain_id: 31
+domain_name: Metal 3D Printing
+model: 'Metal 3D Printing Telemetry Node #06'
+category: ADDITIVE_MFG
+target_protocol: MODBUS_TCP
+default_port: 15226
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 2590.0
+  min_value: 1200.0
+  max_value: 3125.0
+  noise_sigma: 5.0
+registers:
+  holding_registers:
+    40261:
+      name: s226_metal_3d_printing_06_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40263:
+      name: s226_metal_3d_printing_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s226_metal_3d_printing_06_fault
+  action: step_decrease
+  value: -350.0

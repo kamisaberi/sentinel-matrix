@@ -1,0 +1,30 @@
+sensor_id: s114_deep_marine_subsea_06
+domain_id: 15
+domain_name: Deep Marine & Subsea
+model: 'Deep Marine & Subsea Telemetry Node #06'
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15114
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: subsea_acoustic
+  baseline_value: 2100.0
+  min_value: 1400.0
+  max_value: 2000.0
+  noise_sigma: 0.5
+registers:
+  holding_registers:
+    40141:
+      name: s114_deep_marine_subsea_06_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40143:
+      name: s114_deep_marine_subsea_06_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s114_deep_marine_subsea_06_fault
+  action: step_decrease
+  value: -35.0

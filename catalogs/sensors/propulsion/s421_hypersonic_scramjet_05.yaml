@@ -1,0 +1,30 @@
+sensor_id: s421_hypersonic_scramjet_05
+domain_id: 59
+domain_name: Hypersonic Scramjet
+model: 'Hypersonic Scramjet Telemetry Node #05'
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15421
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 16.5
+  min_value: 0.0
+  max_value: 96.0
+  noise_sigma: 0.2
+registers:
+  holding_registers:
+    40211:
+      name: s421_hypersonic_scramjet_05_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40213:
+      name: s421_hypersonic_scramjet_05_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s421_hypersonic_scramjet_05_fault
+  action: step_decrease
+  value: -6.5

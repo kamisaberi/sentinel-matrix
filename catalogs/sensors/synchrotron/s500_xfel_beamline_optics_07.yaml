@@ -1,0 +1,30 @@
+sensor_id: s500_xfel_beamline_optics_07
+domain_id: 70
+domain_name: XFEL Beamline Optics
+model: 'XFEL Beamline Optics Telemetry Node #07'
+category: SYNCHROTRON
+target_protocol: MODBUS_TCP
+default_port: 15500
+interface: Modbus/RS-485 / Analog ADC
+physics:
+  engine: optical_laser
+  baseline_value: 3.552
+  min_value: 0.0
+  max_value: 13.0
+  noise_sigma: 0.02
+registers:
+  holding_registers:
+    40001:
+      name: s500_xfel_beamline_optics_07_pv
+      type: float32
+      scale: 1.0
+      unit: mJ
+    40003:
+      name: s500_xfel_beamline_optics_07_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s500_xfel_beamline_optics_07_fault
+  action: step_increase
+  value: 4.5
