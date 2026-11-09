@@ -20,24 +20,21 @@ CATALOG_DIR = Path("/home/kami/sentinel-matrix/catalogs/sensors")
 # THE 6 GENERALIZED MATHEMATICAL PHYSICS ENGINES
 # ==============================================================================
 class PhysicsEngines:
+# --- IN PhysicsEngines (sensor_multiplexer.py) ---
     @staticmethod
-    def rk4_mechanical_vibe(t, state, dt, freq, noise_sig):
-        # 4th-Order Runge-Kutta mechanical oscillator + Brownian vibration noise
-        omega = 2.0 * math.pi * freq
-        # State: [x, v]
-        def derivatives(s):
-            return [s[1], - (omega ** 2) * s[0] - 0.05 * s[1]]
+    def rk4_mechanical_vibe(t, state, dt, freq, noise_sig, baseline=1.2):
+        # Stable ISO 10816 vibration synthesis: baseline RMS + rotational harmonics + noise
+        omega = 2.0 * math.pi * min(freq, 60.0)  # Bound rotational frequency
+        harmonic_1x = 0.20 * math.sin(omega * t)
+        harmonic_2x = 0.08 * math.sin(2.0 * omega * t + 0.4)
+        harmonic_3x = 0.03 * math.sin(3.14 * omega * t + 1.1)
         
-        k1 = derivatives(state)
-        k2 = derivatives([state[0] + 0.5 * dt * k1[0], state[1] + 0.5 * dt * k1[1]])
-        k3 = derivatives([state[0] + 0.5 * dt * k2[0], state[1] + 0.5 * dt * k2[1]])
-        k4 = derivatives([state[0] + dt * k3[0], state[1] + dt * k3[1]])
-        
-        new_x = state[0] + (dt / 6.0) * (k1[0] + 2*k2[0] + 2*k3[0] + k4[0])
-        new_v = state[1] + (dt / 6.0) * (k1[1] + 2*k2[1] + 2*k3[1] + k4[1])
-        rms = math.sqrt(new_v ** 2) + random.gauss(0, noise_sig)
-        return [new_x, new_v], max(0.01, rms)
+        # Superimpose harmonics onto baseline velocity
+        velocity_rms = baseline * (1.0 + harmonic_1x + harmonic_2x + harmonic_3x) + random.gauss(0, noise_sig)
+        return state, max(0.05, velocity_rms)
 
+
+    
     @staticmethod
     def thermal_lag_ode(curr_temp, target_temp, dt, tau, noise_sig):
         # 1st-Order Thermal Lag: dT/dt = (Target - T) / tau
