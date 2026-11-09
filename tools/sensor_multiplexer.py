@@ -85,9 +85,21 @@ class VirtualSensor:
             self.current_pv = self.base_val + self.fault_val_modifier
         elif self.engine == "rk4_mechanical_vibe":
             freq = self.profile["physics"].get("natural_frequency_hz", 120.0)
-            self.state, self.current_pv = PhysicsEngines.rk4_mechanical_vibe(t, self.state, dt, freq, self.noise_sig)
+            self.state, self.current_pv = PhysicsEngines.rk4_mechanical_vibe(
+                t, self.state, dt, freq, self.noise_sig, baseline=self.base_val
+            )
             if self.fault_active == "harmonic_multiplier":
-                self.current_pv *= self.fault_val_modifier
+                self.current_pv *= self.fault_val_modifier        
+
+
+             # Bound PV to physical limits specified in profile (or safe Float32 bounds)
+            min_p = float(self.profile.get("physics", {}).get("min_value", 0.0))
+            max_p = float(self.profile.get("physics", {}).get("max_value", 100000.0))
+            self.current_pv = max(min_p, min(max_p, self.current_pv))
+
+            # Pack into Modbus Float32 Registers (Big-Endian IEEE 754)
+            raw_bytes = struct.pack(">f", float(self.current_pv))
+            reg_hi, reg_lo = struct.unpack(">HH", raw_bytes)
         elif self.engine == "thermal_lag_ode":
             self.current_pv = PhysicsEngines.thermal_lag_ode(self.current_pv, self.base_val + self.fault_val_modifier, dt, 10.0, self.noise_sig)
         elif self.engine == "fluid_pressure_ode" or self.engine == "fluid_flow_ode":
