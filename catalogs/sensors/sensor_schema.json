@@ -1,0 +1,99 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "IndustrialSensorProfile",
+    "type": "object",
+    "required": [
+        "sensor_id",
+        "vendor",
+        "category",
+        "target_protocol",
+        "physics",
+        "registers"
+    ],
+    "properties": {
+        "sensor_id": {
+            "type": "string"
+        },
+        "vendor": {
+            "type": "string"
+        },
+        "model": {
+            "type": "string"
+        },
+        "category": {
+            "type": "string",
+            "enum": [
+                "PRESSURE",
+                "VIBRATION",
+                "FLOW",
+                "TEMPERATURE",
+                "ELECTRICAL",
+                "CHEMICAL",
+                "OPTICAL"
+            ]
+        },
+        "target_protocol": {
+            "type": "string",
+            "enum": [
+                "MODBUS_TCP",
+                "S7COMM",
+                "IEC104",
+                "OPC_UA",
+                "UDP_STREAM"
+            ]
+        },
+        "default_port": {
+            "type": "integer"
+        },
+        "physics": {
+            "type": "object",
+            "required": [
+                "engine",
+                "baseline_value"
+            ],
+            "properties": {
+                "engine": {
+                    "type": "string",
+                    "enum": [
+                        "fluid_pressure_ode",
+                        "rk4_mechanical_vibe",
+                        "fluid_flow_ode",
+                        "thermal_lag_ode",
+                        "grid_harmonics",
+                        "chemical_nernst",
+                        "polar_array"
+                    ]
+                },
+                "baseline_value": {
+                    "type": "number"
+                },
+                "min_value": {
+                    "type": "number"
+                },
+                "max_value": {
+                    "type": "number"
+                },
+                "noise_sigma": {
+                    "type": "number"
+                },
+                "natural_frequency_hz": {
+                    "type": "number"
+                }
+            }
+        },
+        "registers": {
+            "type": "object",
+            "properties": {
+                "holding_registers": {
+                    "type": "object"
+                }
+            }
+        },
+        "fault_hooks": {
+            "type": "array",
+            "items": {
+                "type": "object"
+            }
+        }
+    }
+}
