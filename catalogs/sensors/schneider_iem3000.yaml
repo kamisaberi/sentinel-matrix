@@ -1,0 +1,18 @@
+sensor_id: "schneider_iem3000"
+vendor: "Schneider Electric"
+model: "Acti9 iEM3000"
+category: "ELECTRICAL"
+target_protocol: "MODBUS_TCP"
+default_port: 15505
+physics:
+  engine: "grid_harmonics"
+  baseline_value: 230.0
+  noise_sigma: 0.35
+registers:
+  holding_registers:
+    40040: { name: "voltage_l_n", type: "float32", scale: 1.0, unit: "V" }
+    40042: { name: "frequency_hz", type: "float32", scale: 1.0, unit: "Hz" }
+fault_hooks:
+  - id: "voltage_sag"
+    action: "step_decrease"
+    delta: 45.0
