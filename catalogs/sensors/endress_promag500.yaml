@@ -1,0 +1,19 @@
+sensor_id: "endress_promag500"
+vendor: "Endress+Hauser"
+model: "Proline Promag W 500"
+category: "FLOW"
+target_protocol: "MODBUS_TCP"
+default_port: 15503
+physics:
+  engine: "fluid_flow_ode"
+  baseline_value: 245.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 1.2
+registers:
+  holding_registers:
+    40020: { name: "volume_flow_m3h", type: "float32", scale: 1.0, unit: "m3/h" }
+    40022: { name: "flow_velocity", type: "float32", scale: 1.0, unit: "m/s" }
+fault_hooks:
+  - id: "pipe_blockage"
+    action: "drop_to_zero"
