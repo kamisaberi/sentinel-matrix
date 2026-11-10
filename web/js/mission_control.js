@@ -340,14 +340,8 @@ document.addEventListener("DOMContentLoaded", () => {
                                 ${s.baseline || 0.0} ${s.unit || ''}
                             </span>
                         </div>
-
-                        // --- IN renderDynamicSensorCards() in mission_control.js ---
-                        // Replace the <canvas id="canvas-${sid}" ...></canvas> line with:
-
                         <!-- ECharts High-Precision Telemetry Container -->
                         <div id="echart-${sid}" style="width:100%; height:86px; margin:4px 0; background:transparent;"></div>
-                        // <!-- Specialized Canvas Display (Height: 54px) -->
-                        // <canvas id="canvas-${sid}" width="220" height="54" style="width:100%; height:54px; display:block; background:#04060A; border-radius:4px; border:1px solid #111827;"></canvas>
                     </div>
 
                     <!-- Dynamic Chaos / Fault Action Footer -->
