@@ -1,0 +1,20 @@
+{
+  "name": "water_dosing_facility",
+  "slug": "water_dosing_facility",
+  "title": "water_dosing_facility",
+  "version": "1.0.0",
+  "asset_type": "scenario",
+  "target_sector": "WATER_TREATMENT",
+  "sector": "WATER_TREATMENT",
+  "complexity": "INTERMEDIATE",
+  "category": "SCADA_ICS",
+  "author": "Aryorithm Certified Engineer",
+  "description": "Turnkey Digital Twin Scenario for water_dosing_facility",
+  "author_public_key": "d9af7532a37ea3c9c6726adc47720910c44c5f827b408127ec3206c8fc99506c",
+  "dependencies": {
+    "packages": [],
+    "models": [],
+    "pcaps": []
+  },
+  "compliance": ["IEC-62443-4-2", "NIS2"]
+}
