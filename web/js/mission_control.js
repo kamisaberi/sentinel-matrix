@@ -1,6 +1,6 @@
 /**
  * ARYORITHM SENTINEL NEXUS: MISSION CONTROL MULTI-FRAME CONTROLLER
- * Reactive Global Master Bar + Frame-Specific Action Buttons
+ * Reactive Global Master Bar + Dynamic Sensor Widget Factory + Chaos Injection
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -55,8 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeNodeKey = "matrix-edge-substation-01";
     let isThermalAnomaly = false;
     let isSensorSurge = false;
+    let activeSensors = [];
+    const sensorHistories = {};
 
-    // Elements
+    // DOM Elements
     const nodeSelect = document.getElementById("mc-node-select");
     const backendBadge = document.getElementById("mc-node-backend-badge");
     const targetIpBadge = document.getElementById("mc-target-ip-badge");
@@ -64,10 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const sensorGrid = document.getElementById("mc-sensor-grid");
     const dropFeed = document.getElementById("mc-drop-feed");
 
-    const sensorHistories = { s1: [], s2: [], s3: [], s4: [] };
-
     // ========================================================================
-    // MASTER NODE SELECTOR (Globally Placed)
+    // MASTER NODE SELECTOR
     // ========================================================================
     if (nodeSelect) {
         nodeSelect.innerHTML = Object.values(NODES).map(n => 
@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logEvent(`[CONTEXT] Active Sentry switched to ${node.name} &bull; ${node.site} (${node.ip})`, "text-cyan");
 
         updateVisionWallForNode(node);
-        renderSensorCards(node);
+        loadActiveSensors();
     }
 
     // ========================================================================
@@ -162,6 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function startDynamicCanvasSimulation(canvas, node) {
+        if (!canvas) return;
         const ctx = canvas.getContext("2d");
         let tick = 0;
 
@@ -245,28 +246,128 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ========================================================================
-    // FRAME 2: DYNAMIC SENSORY GRID & SENSOR ACTION BUTTONS
+    // FRAME 2: DYNAMIC SENSOR WIDGET FACTORY & CHAOS CONTROLS
     // ========================================================================
-    function renderSensorCards(node) {
-        if (!sensorGrid) return;
-        sensorHistories.s1 = []; sensorHistories.s2 = [];
-        sensorHistories.s3 = []; sensorHistories.s4 = [];
+    async function loadActiveSensors() {
+        try {
+            const resp = await fetch("/api/v1/matrix/active-sensors");
+            if (resp.ok) {
+                const data = await resp.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    activeSensors = data;
+                    renderDynamicSensorCards();
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to fetch active sensors, falling back to node sensors", e);
+        }
 
-        sensorGrid.innerHTML = Object.entries(node.sensors).map(([key, s]) => `
-            <div class="sensor-card" style="background:#0A0E14; border:1px solid #243144; border-radius:6px; padding:8px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:10px; font-weight:700; color:#F8FAFC;">${s.label}</span>
-                    <span class="badge badge-cyan" style="font-size:8px;">${s.port}</span>
+        // Fallback to active node profile
+        const node = NODES[activeNodeKey];
+        if (node && node.sensors) {
+            activeSensors = Object.entries(node.sensors).map(([k, s]) => ({
+                sensor_id: k,
+                name: s.label,
+                category: s.label.includes("TEMP") ? "TEMPERATURE" : (s.label.includes("VIB") ? "VIBRATION" : (s.label.includes("PRESSURE") ? "PRESSURE" : "ELECTRICAL")),
+                port: s.port.replace(/[^0-9]/g, '') || "15501",
+                unit: s.unit,
+                baseline: s.base
+            }));
+        }
+        renderDynamicSensorCards();
+    }
+
+    function renderDynamicSensorCards() {
+        if (!sensorGrid) return;
+
+        const countBadge = document.getElementById("mc-sensor-count-badge");
+        if (countBadge) countBadge.textContent = `${activeSensors.length} CHANNELS ACTIVE`;
+
+        sensorGrid.innerHTML = activeSensors.map((s) => {
+            const sid = s.sensor_id;
+            sensorHistories[sid] = sensorHistories[sid] || [];
+
+            let badgeClass = "badge-cyan";
+            let color = "#00F0FF";
+            if (s.category === "VIBRATION") { badgeClass = "badge-green"; color = "#10B981"; }
+            else if (s.category === "TEMPERATURE") { badgeClass = "badge-purple"; color = "#F59E0B"; }
+            else if (s.category === "CHEMICAL") { badgeClass = "badge-cyan"; color = "#38BDF8"; }
+            else if (s.category === "PRESSURE") { badgeClass = "badge-cyan"; color = "#00E5FF"; }
+            else if (s.category === "ELECTRICAL") { badgeClass = "badge-green"; color = "#10B981"; }
+
+            const cleanName = (s.name || sid).replace(/^s\d+_/i, '').replace(/_/g, ' ');
+            const portDisplay = s.port ? `:${s.port}` : (s.category || 'LIVE');
+
+            return `
+                <div class="sensor-card" id="card-${sid}" style="background:#0A0E14; border:1px solid #243144; border-radius:6px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:10px; font-weight:800; color:#F8FAFC; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;" title="${cleanName}">
+                                ${cleanName}
+                            </span>
+                            <span class="badge ${badgeClass}" style="font-size:8px; padding:2px 5px;">${portDisplay}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:6px 0;">
+                            <span style="font-size:9px; color:#94A3B8;">Measured PV:</span>
+                            <span id="val-${sid}" style="font-family:monospace; font-size:13px; font-weight:800; color:${color};">
+                                ${s.baseline || 0.0} ${s.unit || ''}
+                            </span>
+                        </div>
+                        <canvas id="canvas-${sid}" width="200" height="36" style="width:100%; height:36px; display:block; background:#05080C; border-radius:3px;"></canvas>
+                    </div>
+
+                    <!-- Dynamic Chaos/Fault Hook Buttons -->
+                    <div style="margin-top:8px; display:flex; gap:4px;">
+                        <button class="btn-ctrl btn-fault-inject" data-sensor="${sid}" data-action="step_increase" data-val="8.5"
+                            style="flex:1; font-size:9px; padding:4px 6px; background:rgba(239,68,68,0.15); border:1px solid #EF4444; color:#EF4444; border-radius:3px; cursor:pointer; font-weight:700;">
+                            [!] INJECT FAULT
+                        </button>
+                        <button class="btn-ctrl btn-fault-reset" data-sensor="${sid}" data-action="drop_to_zero" data-val="0.0"
+                            style="font-size:9px; padding:4px 6px; background:#111827; border:1px solid #334155; color:#94A3B8; border-radius:3px; cursor:pointer;">
+                            RST
+                        </button>
+                    </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; margin:3px 0;">
-                    <span style="font-size:9px; color:#94A3B8;">Metric:</span>
-                    <span id="val-${key}" style="font-family:monospace; font-size:11px; font-weight:700; color:${s.color};">
-                        ${s.base} ${s.unit}
-                    </span>
-                </div>
-                <canvas id="canvas-${key}" width="160" height="32" style="width:100%; height:32px; display:block;"></canvas>
-            </div>
-        `).join("");
+            `;
+        }).join("");
+
+        // Attach dynamic fault injection event listeners
+        document.querySelectorAll(".btn-fault-inject").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const sid = btn.getAttribute("data-sensor");
+                const action = btn.getAttribute("data-action") || "step_increase";
+                const val = parseFloat(btn.getAttribute("data-val") || "8.5");
+                logEvent(`[CHAOS HOOK] Dispatching ${action} (+${val}) to ${sid}`, "text-yellow");
+
+                try {
+                    await fetch("/api/v1/sensors/fault", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sensor_id: sid, action: action, value: val })
+                    });
+                } catch (err) {
+                    console.error("Fault dispatch failed", err);
+                }
+            });
+        });
+
+        document.querySelectorAll(".btn-fault-reset").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const sid = btn.getAttribute("data-sensor");
+                logEvent(`[CHAOS RESET] Resetting physical baseline on ${sid}`, "text-green");
+
+                try {
+                    await fetch("/api/v1/sensors/fault", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sensor_id: sid, action: "reset", value: 0.0 })
+                    });
+                } catch (err) {
+                    console.error("Fault reset failed", err);
+                }
+            });
+        });
     }
 
     function drawSparkline(canvasId, values, color, minVal, maxVal) {
@@ -295,33 +396,36 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.stroke();
     }
 
+    // Dynamic Multi-Sensor Stepper Loop (1000ms tick)
     setInterval(() => {
-        const node = NODES[activeNodeKey];
-        if (!node) return;
+        if (!activeSensors || activeSensors.length === 0) return;
 
-        Object.entries(node.sensors).forEach(([key, s]) => {
+        activeSensors.forEach(s => {
+            const sid = s.sensor_id;
+            const base = parseFloat(s.baseline) || 10.0;
             let val;
+
             if (isSensorSurge) {
-                val = s.base * (1.35 + Math.random() * 0.35);
+                val = base * (1.35 + Math.random() * 0.35);
             } else {
-                val = s.base + (Math.sin(Date.now() / 2500) * (s.base * 0.02)) + ((Math.random() - 0.5) * (s.base * 0.01));
+                val = base + (Math.sin(Date.now() / 2500) * (base * 0.02)) + ((Math.random() - 0.5) * (base * 0.015));
             }
 
-            const hist = sensorHistories[key];
+            const hist = sensorHistories[sid] || [];
             hist.push(val);
-            if (hist.length > 25) hist.shift();
+            if (hist.length > 30) hist.shift();
 
-            const valEl = document.getElementById(`val-${key}`);
+            const valEl = document.getElementById(`val-${sid}`);
             if (valEl) {
-                valEl.textContent = `${val.toFixed(val < 10 ? 2 : 1)} ${s.unit}`;
-                valEl.style.color = isSensorSurge ? "#EF4444" : s.color;
+                valEl.textContent = `${val.toFixed(val < 10 ? 3 : 1)} ${s.unit || ''}`;
+                valEl.style.color = isSensorSurge ? "#EF4444" : (val > base * 1.2 ? "#EF4444" : "#00F0FF");
             }
 
-            drawSparkline(`canvas-${key}`, hist, isSensorSurge ? "#EF4444" : s.color, s.range[0], s.range[1]);
+            drawSparkline(`canvas-${sid}`, hist, isSensorSurge ? "#EF4444" : "#00F0FF", base * 0.7, base * 1.5);
         });
     }, 1000);
 
-    // Frame 2 Action Buttons
+    // Frame 2 Global Action Buttons
     document.getElementById("btn-sensor-surge")?.addEventListener("click", () => {
         isSensorSurge = true;
         const node = NODES[activeNodeKey];
@@ -399,6 +503,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 280);
     }
 
-    // Initialize Default State
+    // Initialize Default Context & Active Sensors
     applyNodeContext(activeNodeKey);
 });
