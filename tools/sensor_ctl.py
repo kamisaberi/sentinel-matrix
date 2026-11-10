@@ -8,6 +8,7 @@ import yaml
 import json
 import urllib.request
 from pathlib import Path
+import re
 
 CATALOG_DIR = Path("/home/kami/sentinel-matrix/catalogs/sensors")
 REST_FAULT_URL = "http://localhost:8088/fault"
