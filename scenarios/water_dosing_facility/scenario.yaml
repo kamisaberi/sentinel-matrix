@@ -1,21 +1,84 @@
-version: "1.0"
+version: "2.0"
 scenario:
   name: "water_dosing_facility"
-  description: "Digital Twin Scenario for water_dosing_facility"
+  description: "Chemical Dosing & Water Treatment Plant with 570-Catalog Multi-Physics Telemetry"
+  author: "Aryorithm Certified Engineer"
 
+# 1. Purdue Segregation (Multi-Network Mesh)
 networks:
-  ot_scada_net:
+  dmz_net:
     driver: bridge
-    subnet: "10.220.0.0/24"
-    gateway: "10.220.0.1"
-    internal: true
+    subnet: "192.168.10.0/24"
+    gateway: "192.168.10.1"
+    internal: false
+  scada_control_net:
+    driver: bridge
+    subnet: "10.240.1.0/24"
+    gateway: "10.240.1.1"
+    internal: true   # Air-gapped: no internet access
+  fieldbus_net:
+    driver: bridge
+    subnet: "172.16.50.0/24"
+    gateway: "172.16.50.1"
+    internal: true   # Strict Level 0/1 process bus
 
+# 2. Node Instances & Topology
 nodes:
-  - name: "primary-scada-plc"
+  # L3: In-Line Edge Security Appliance running Blackbox-Sentinel
+  edge_sentinel_01:
+    hostname: "sentinel01.dmz.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      dmz_net:
+        ip: "192.168.10.100"
+      scada_control_net:
+        ip: "10.240.1.100"
+    capabilities: ["NET_ADMIN", "BPF"]
+    environment:
+      ROLE: "sentinel_appliance"
+      INGEST_MODE: "generic_skb"
+
+  # L2: Supervisory PLC
+  primary_dosing_plc:
     hostname: "plc01.scada.internal"
     image: "sentinel-matrix/device-runtime:latest"
     networks:
-      ot_scada_net:
-        ip: "10.220.0.10"
-    ports: ["15501:502"]
-    command: ["--archetype", "plc", "--protocol", "modbus", "--port", "502", "--name", "Primary-PLC"]
+      scada_control_net:
+        ip: "10.240.1.10"
+      fieldbus_net:
+        ip: "172.16.50.10"
+    ports:
+      - "15500:502"
+    environment:
+      ARCHETYPE: "modular_plc"
+      PROTOCOL: "modbus_tcp"
+      POLL_INTERVAL_MS: 100
+
+  # L0/L1: Physical Sensor Array (Sourced from 570 Catalog)
+  sensor_telemetry_bus:
+    hostname: "sensors.fieldbus.internal"
+    image: "sentinel-matrix/device-runtime:latest"
+    networks:
+      fieldbus_net:
+        ip: "172.16.50.50"
+    ports:
+      # Expose catalog sensor ports to host for operator inspection:
+      - "15052:15052"  # #052: Pressure Sensor (bar)
+      - "15061:15061"  # #061: Water pH/ORP Probe (pH)
+      - "15031:15031"  # #031: 3-Axis Bearing Vibration (mm/s)
+      - "8088:8088"    # Real-Time Chaos/Fault Injection Hook
+    command: [
+      "python3", "/home/kami/sentinel-matrix/tools/sensor_multiplexer.py"
+    ]
+
+# 3. Catalog Sensors Activated in this Twin
+catalog_sensors:
+  - sensor_id: "s052_high_frequency_piezoresistive_pressure_sensor"
+    port: 15052
+    role: "dosing_pump_discharge_pressure"
+  - sensor_id: "s061_inline_water_ph_oxidation_reduction_orp_probe"
+    port: 15061
+    role: "finished_water_ph_monitoring"
+  - sensor_id: "s031_3_axis_machine_bearing_vibration_accelerometer"
+    port: 15031
+    role: "dosing_pump_mechanical_health"
