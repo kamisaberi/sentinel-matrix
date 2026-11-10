@@ -4,16 +4,17 @@ ARYORITHM SENTINEL-MATRIX: UNIVERSAL SENSOR PHYSICS MULTIPLEXER
 Simulates 1 to 550+ industrial sensors simultaneously across 6 generalized ODE engines.
 Exposes Modbus TCP endpoints and HTTP REST Fault Injection (:8088).
 """
+# --- IN tools/sensor_multiplexer.py IMPORTS ---
 import asyncio
 import struct
 import math
 import random
 import yaml
 import sys
+import resource
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
-
 CATALOG_DIR = Path("/home/kami/sentinel-matrix/catalogs/sensors")
 
 # ==============================================================================
