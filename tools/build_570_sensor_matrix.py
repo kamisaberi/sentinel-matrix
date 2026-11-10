@@ -52,7 +52,7 @@ def clean_text(text):
 def parse_markdown_files():
     # Search for all markdown encyclopedia files across the workspace
     search_dirs = [
-        "/home/kami/sentinel-stack/temp/future_working/sensors_list",
+        Path("/home/kami/sentinel-stack/temp/future_working/sensors_list"),
         # BASE_DIR,
         # Path("/home/kami"),
         # Path.cwd()
