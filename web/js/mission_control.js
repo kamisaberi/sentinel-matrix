@@ -278,9 +278,21 @@ document.addEventListener("DOMContentLoaded", () => {
         renderDynamicSensorCards();
     }
 
-    // --- REPLACE renderDynamicSensorCards() IN mission_control.js ---
+// ========================================================================
+    // 1. DYNAMIC SENSOR WIDGET FACTORY & CHAOS CONTROLLER
+    // ========================================================================
     function renderDynamicSensorCards() {
         if (!sensorGrid) return;
+
+        // Cleanly dispose existing instances before re-rendering HTML to prevent memory leaks
+        Object.keys(echartsInstances).forEach(k => {
+            try {
+                if (echartsInstances[k] && !echartsInstances[k].isDisposed()) {
+                    echartsInstances[k].dispose();
+                }
+            } catch (e) {}
+            delete echartsInstances[k];
+        });
 
         const countBadge = document.getElementById("mc-sensor-count-badge");
         if (countBadge) countBadge.textContent = `${activeSensors.length} CHANNELS ACTIVE`;
@@ -289,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const sid = s.sensor_id;
             sensorHistories[sid] = sensorHistories[sid] || [];
 
-            // Category color coding & tags
+            // Category color coding & safe boundaries
             let badgeClass = "badge-cyan";
             let color = "#00F0FF";
             let catTag = s.category || "PROCESS";
@@ -327,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             </div>
                         </div>
 
-                        <!-- Technical Role & Safety Boundary -->
+                        <!-- Technical Role & Invariant Boundary -->
                         <div style="display:flex; justify-content:space-between; font-size:9px; color:#64748B; margin:4px 0 2px 0;">
                             <span>${s.interface || 'Analog Telemetry Bus'}</span>
                             <span style="color:#94A3B8; font-family:monospace;">${safeRange}</span>
@@ -340,6 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 ${s.baseline || 0.0} ${s.unit || ''}
                             </span>
                         </div>
+
                         <!-- ECharts High-Precision Telemetry Container -->
                         <div id="echart-${sid}" style="width:100%; height:86px; margin:4px 0; background:transparent;"></div>
                     </div>
@@ -359,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         }).join("");
 
-        // Wire fault buttons
+        // Attach event listeners for dynamic chaos/fault injection buttons
         document.querySelectorAll(".btn-fault-inject").forEach(btn => {
             btn.addEventListener("click", async () => {
                 const sid = btn.getAttribute("data-sensor");
@@ -393,6 +406,115 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // ========================================================================
+    // 2. INDUSTRIAL ECHARTS DISPATCHER & CANVAS LIFECYCLE CONTROLLER
+    // ========================================================================
+    function updateSensorEChart(sid, s, val, history) {
+        const chartDom = document.getElementById(`echart-${sid}`);
+        if (!chartDom) return;
+
+        // GUARD 1: If tab is hidden (display: none), skip drawing to prevent 0x0 collapse!
+        if (chartDom.clientWidth === 0 || chartDom.clientHeight === 0) {
+            return;
+        }
+
+        // GUARD 2: If instance exists but belongs to an old/detached DOM element, dispose it cleanly
+        if (echartsInstances[sid]) {
+            if (echartsInstances[sid].isDisposed() || echartsInstances[sid].getDom() !== chartDom) {
+                try { echartsInstances[sid].dispose(); } catch (e) {}
+                delete echartsInstances[sid];
+            }
+        }
+
+        // Initialize ECharts instance on current DOM element
+        if (!echartsInstances[sid]) {
+            echartsInstances[sid] = echarts.init(chartDom, 'dark', { renderer: 'canvas' });
+        }
+        const chart = echartsInstances[sid];
+
+        const cat = (s.category || "").toUpperCase();
+        const base = parseFloat(s.baseline) || 10.0;
+        const minV = parseFloat(s.min_val) || 0.0;
+        const maxV = parseFloat(s.max_val) || (base * 2.2);
+
+        // A. RADIAL INDUSTRIAL GAUGE (Pressure, Temperature, Flow, Level)
+        if (cat === "PRESSURE" || cat === "TEMPERATURE" || cat === "FLOW" || cat === "LEVEL") {
+            const gaugeColor = isSensorSurge ? '#EF4444' : (cat === 'TEMPERATURE' ? '#F59E0B' : '#00E5FF');
+            
+            const option = {
+                backgroundColor: 'transparent',
+                series: [{
+                    type: 'gauge',
+                    startAngle: 200,
+                    endAngle: -20,
+                    min: minV,
+                    max: maxV,
+                    splitNumber: 4,
+                    radius: '100%',
+                    center: ['50%', '70%'],
+                    axisLine: {
+                        lineStyle: {
+                            width: 6,
+                            color: [
+                                [0.75, '#10B981'],   // Safe green band
+                                [0.90, '#F59E0B'],   // Warning amber band
+                                [1.0, '#EF4444']     // Trip red band
+                            ]
+                        }
+                    },
+                    pointer: {
+                        width: 3,
+                        itemStyle: { color: gaugeColor }
+                    },
+                    axisTick: { show: false },
+                    splitLine: { length: 4, lineStyle: { width: 1, color: '#334155' } },
+                    axisLabel: { distance: 10, color: '#64748B', fontSize: 8 },
+                    detail: { show: false },
+                    data: [{ value: val.toFixed(1) }]
+                }]
+            };
+            chart.setOption(option, true);
+        }
+        // B. STREAMING WAVEFORM WITH GLOW (Vibration, Acoustic, Seismic, Electrical, Streams)
+        else {
+            const lineColor = isSensorSurge ? '#EF4444' : (cat === 'VIBRATION' ? '#10B981' : (cat === 'CHEMICAL' ? '#38BDF8' : '#00F0FF'));
+            
+            const option = {
+                backgroundColor: 'transparent',
+                grid: { left: 4, right: 4, top: 8, bottom: 4, containLabel: false },
+                tooltip: { 
+                    trigger: 'axis', 
+                    backgroundColor: '#0F172A', 
+                    borderColor: '#334155', 
+                    textStyle: { color: '#F8FAFC', fontSize: 10 } 
+                },
+                xAxis: { type: 'category', show: false, boundaryGap: false },
+                yAxis: { type: 'value', min: minV, max: maxV, show: false },
+                series: [{
+                    data: history,
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: { width: 2, color: lineColor, shadowColor: lineColor, shadowBlur: 8 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: lineColor + '44' },
+                            { offset: 1, color: lineColor + '00' }
+                        ])
+                    },
+                    // ISO 10816 alarm threshold line for mechanical vibration
+                    markLine: (cat === 'VIBRATION') ? {
+                        silent: true,
+                        symbol: 'none',
+                        data: [{ yAxis: 4.5 }],
+                        lineStyle: { color: 'rgba(239,68,68,0.6)', type: 'dashed' },
+                        label: { show: true, position: 'insideEndTop', formatter: 'ISO 4.5', fontSize: 8, color: '#EF4444' }
+                    } : undefined
+                }]
+            };
+            chart.setOption(option, true);
+        }
+    }
     // --- 5 SPECIALIZED INDUSTRIAL CANVAS RENDERERS ---
 
     // 1. Radial Arc Dial (Pressure, Temperature, Flow)
@@ -620,94 +742,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const echartsInstances = {};
 
-    function updateSensorEChart(sid, s, val, history) {
-        const chartDom = document.getElementById(`echart-${sid}`);
-        if (!chartDom) return;
-
-        // Initialize ECharts instance if not already cached
-        if (!echartsInstances[sid]) {
-            echartsInstances[sid] = echarts.init(chartDom, 'dark', { renderer: 'canvas' });
-        }
-        const chart = echartsInstances[sid];
-
-        const cat = (s.category || "").toUpperCase();
-        const base = parseFloat(s.baseline) || 10.0;
-        const minV = parseFloat(s.min_val) || 0.0;
-        const maxV = parseFloat(s.max_val) || (base * 2.2);
-
-        // A. RADIAL INDUSTRIAL GAUGE (Pressure, Temperature, Flow, Level)
-        if (cat === "PRESSURE" || cat === "TEMPERATURE" || cat === "FLOW" || cat === "LEVEL") {
-            const gaugeColor = isSensorSurge ? '#EF4444' : (cat === 'TEMPERATURE' ? '#F59E0B' : '#00E5FF');
-
-            const option = {
-                backgroundColor: 'transparent',
-                series: [{
-                    type: 'gauge',
-                    startAngle: 200,
-                    endAngle: -20,
-                    min: minV,
-                    max: maxV,
-                    splitNumber: 4,
-                    radius: '100%',
-                    center: ['50%', '70%'],
-                    axisLine: {
-                        lineStyle: {
-                            width: 6,
-                            color: [
-                                [0.75, '#10B981'],   // Safe green band
-                                [0.90, '#F59E0B'],   // Warning amber band
-                                [1.0, '#EF4444']     // Trip red band
-                            ]
-                        }
-                    },
-                    pointer: {
-                        width: 3,
-                        itemStyle: { color: gaugeColor }
-                    },
-                    axisTick: { show: false },
-                    splitLine: { length: 4, lineStyle: { width: 1, color: '#334155' } },
-                    axisLabel: { distance: 10, color: '#64748B', fontSize: 8 },
-                    detail: { show: false },
-                    data: [{ value: val.toFixed(1) }]
-                }]
-            };
-            chart.setOption(option, true);
-        }
-        // B. STREAMING WAVEFORM WITH GLOW (Vibration, Acoustic, Seismic, Electrical, Streams)
-        else {
-            const lineColor = isSensorSurge ? '#EF4444' : (cat === 'VIBRATION' ? '#10B981' : '#00F0FF');
-
-            const option = {
-                backgroundColor: 'transparent',
-                grid: { left: 4, right: 4, top: 8, bottom: 4, containLabel: false },
-                tooltip: { trigger: 'axis', backgroundColor: '#0F172A', borderColor: '#334155', textStyle: { color: '#F8FAFC', fontSize: 10 } },
-                xAxis: { type: 'category', show: false, boundaryGap: false },
-                yAxis: { type: 'value', min: minV, max: maxV, show: false },
-                series: [{
-                    data: history,
-                    type: 'line',
-                    smooth: true,
-                    showSymbol: false,
-                    lineStyle: { width: 2, color: lineColor, shadowColor: lineColor, shadowBlur: 8 },
-                    areaStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: lineColor + '44' },
-                            { offset: 1, color: lineColor + '00' }
-                        ])
-                    },
-                    // ISO Alarm line for vibration
-                    markLine: (cat === 'VIBRATION') ? {
-                        silent: true,
-                        symbol: 'none',
-                        data: [{ yAxis: 4.5 }],
-                        lineStyle: { color: 'rgba(239,68,68,0.6)', type: 'dashed' },
-                        label: { show: true, position: 'insideEndTop', formatter: 'ISO 4.5', fontSize: 8, color: '#EF4444' }
-                    } : undefined
-                }]
-            };
-            chart.setOption(option, true);
-        }
-    }
 
     // Responsive auto-resizing
     window.addEventListener('resize', () => {
@@ -828,4 +862,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize Default Context & Active Sensors
     applyNodeContext(activeNodeKey);
+});
+
+
+// --- INSERT AT BOTTOM OF mission_control.js ---
+
+// Automatically resize and restore charts whenever switching back to Mission Control
+document.querySelectorAll('.admin-nav-item, .nav-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-tab');
+        if (targetId === 'tab-mission-control') {
+            // Give the browser 60ms to apply display: block and calculate flexbox geometry
+            setTimeout(() => {
+                Object.values(echartsInstances).forEach(chart => {
+                    if (chart && !chart.isDisposed()) {
+                        chart.resize();
+                    }
+                });
+            }, 60);
+        }
+    });
+});
+
+// Also handle window resize
+window.addEventListener('resize', () => {
+    Object.values(echartsInstances).forEach(c => {
+        if (c && !c.isDisposed()) c.resize();
+    });
 });
