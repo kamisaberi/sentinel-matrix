@@ -122,16 +122,20 @@ class VirtualSensor:
         # 3. Physically Bound PV to Prevent Float32 Overflow
         self.current_pv = max(self.min_val, min(self.max_val, self.current_pv))
 
+        # --- IN VirtualSensor.step() in tools/sensor_multiplexer.py ---
         # 4. Pack into Modbus Float32 Registers (Big-Endian IEEE 754)
         raw_bytes = struct.pack(">f", float(self.current_pv))
         reg_hi, reg_lo = struct.unpack(">HH", raw_bytes)
 
-        # 5. Populate Modbus Holding Registers
+        # 5. Populate Standard Primary Variable (PV) at 40001 (Offset 1 & 2)
+        self.registers[1] = reg_hi
+        self.registers[2] = reg_lo
+
+        # Also populate profile-specific configured register addresses
         for reg_addr in self.profile.get("registers", {}).get("holding_registers", {}):
             reg_int = int(reg_addr) % 10000
             self.registers[reg_int] = reg_hi
             self.registers[reg_int + 1] = reg_lo
-
 
 # ==============================================================================
 # LIGHTWEIGHT MULTIPLEXED MODBUS TCP SERVER
