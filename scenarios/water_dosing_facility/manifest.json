@@ -12,8 +12,8 @@
   "description": "Turnkey Digital Twin Scenario for water_dosing_facility",
   "author_public_key": "d9af7532a37ea3c9c6726adc47720910c44c5f827b408127ec3206c8fc99506c",
   "dependencies": {
-    "packages": [],
-    "models": [],
+    "packages": ["s7_safety_guard", "modbus_safety_guard"],
+    "models": ["network_threat_detector"],
     "pcaps": []
   },
   "compliance": ["IEC-62443-4-2", "NIS2"]
