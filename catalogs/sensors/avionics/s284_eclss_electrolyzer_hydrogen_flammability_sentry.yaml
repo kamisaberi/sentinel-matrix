@@ -1,0 +1,45 @@
+sensor_id: s284_eclss_electrolyzer_hydrogen_flammability_sentry
+name: ECLSS Electrolyzer Hydrogen Flammability Sentry
+domain_id: 40
+domain_title: Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15284
+interface: Catalytic Combustion Pellistor Pair
+description: 'ECLSS Electrolyzer Hydrogen Flammability Sentry is a specialized Domain
+  40 (Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Catalytic Combustion Pellistor Pair, it is specifically
+  engineered to mitigate and detect Oxygen generation assembly membrane crossover,
+  explosive H_2/O_2 mix. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Hydrogen in oxygen stream: [H_2] <= 1.0\% (well below
+  the 4.0\% Lower Explosive Limit); shuts down electrolysis current in < 100\,ms..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Oxygen generation assembly membrane crossover, explosive H_2/O_2 mix
+core_invariant: 'Hydrogen in oxygen stream: [H_2] <= 1.0\% (well below the 4.0\% Lower
+  Explosive Limit); shuts down electrolysis current in < 100\,ms.'
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40221:
+      name: s284_eclss_electrolyzer_hydrogen_flammability_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40223:
+      name: s284_eclss_electrolyzer_hydrogen_flammability_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s284_eclss_electrolyzer_hydrogen_flammability_sentry_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Oxygen generation assembly membrane crossover, explosive
+    H_2/O_2 mix'

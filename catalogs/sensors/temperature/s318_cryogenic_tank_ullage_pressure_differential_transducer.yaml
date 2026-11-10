@@ -1,0 +1,44 @@
+sensor_id: s318_cryogenic_tank_ullage_pressure_differential_transducer
+name: Cryogenic Tank Ullage Pressure Differential Transducer
+domain_id: 45
+domain_title: Launch Vehicle Cryogenic Propulsion & TVC Gimbal Mechanics Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15318
+interface: High-Accuracy Piezoresistive Sensor
+description: 'Cryogenic Tank Ullage Pressure Differential Transducer is a specialized
+  Domain 45 (Launch Vehicle Cryogenic Propulsion & TVC Gimbal Mechanics Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Accuracy Piezoresistive Sensor,
+  it is specifically engineered to mitigate and detect Propellant tank structural
+  collapse under boost acceleration. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Tank internal pressure: P_{ullage} >= P_{min\_buckling}(n_z
+  \cdot m_{propellant}); prevents rocket structural implosion.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Propellant tank structural collapse under boost acceleration
+core_invariant: 'Tank internal pressure: P_{ullage} >= P_{min\_buckling}(n_z \cdot
+  m_{propellant}); prevents rocket structural implosion.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40021:
+      name: s318_cryogenic_tank_ullage_pressure_differential_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40023:
+      name: s318_cryogenic_tank_ullage_pressure_differential_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s318_cryogenic_tank_ullage_pressure_differential_transducer_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Propellant tank structural collapse under boost acceleration'

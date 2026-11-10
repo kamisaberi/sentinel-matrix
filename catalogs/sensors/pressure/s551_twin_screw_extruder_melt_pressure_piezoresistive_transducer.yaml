@@ -1,0 +1,46 @@
+sensor_id: s551_twin_screw_extruder_melt_pressure_piezoresistive_transducer
+name: Twin-Screw Extruder Melt Pressure Piezoresistive Transducer
+domain_id: 78
+domain_title: Pharmaceutical Continuous Twin-Screw Wet Granulation & Fluid Bed Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15551
+interface: High-Temperature Flush Diaphragm (300^\circC)
+description: "Twin-Screw Extruder Melt Pressure Piezoresistive Transducer is a specialized\
+  \ Domain 78 (Pharmaceutical Continuous Twin-Screw Wet Granulation & Fluid Bed Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via High-Temperature Flush\
+  \ Diaphragm (300^\\circC), it is specifically engineered to mitigate and detect\
+  \ Liquid binder starvation, screw barrel jamming, motor burnout. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Barrel head\
+  \ pressure: P_{die} \u2208 [5, 25\\,bar]; pressure rise > 40\\,bar stops screw rotation\
+  \ in < 100\\,ms to protect gear shafts.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Liquid binder starvation, screw barrel jamming, motor burnout
+core_invariant: "Barrel head pressure: P_{die} \u2208 [5, 25\\,bar]; pressure rise\
+  \ > 40\\,bar stops screw rotation in < 100\\,ms to protect gear shafts."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40191:
+      name: s551_twin_screw_extruder_melt_pressure_piezoresistive_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40193:
+      name: s551_twin_screw_extruder_melt_pressure_piezoresistive_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s551_twin_screw_extruder_melt_pressure_piezoresistive_transducer_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Liquid binder starvation, screw barrel jamming, motor
+    burnout'

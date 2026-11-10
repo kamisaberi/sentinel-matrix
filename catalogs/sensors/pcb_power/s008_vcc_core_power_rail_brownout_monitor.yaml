@@ -1,0 +1,43 @@
+sensor_id: s008_vcc_core_power_rail_brownout_monitor
+name: VCC Core Power-Rail Brownout Monitor
+domain_id: 2
+domain_title: PCB, Power-Rail & Hardware Fault-Injection Sensors
+category: PCB_POWER
+target_protocol: MODBUS_TCP
+default_port: 15008
+interface: Ultra-Fast ADC (100 MSPS)
+description: "VCC Core Power-Rail Brownout Monitor is a specialized Domain 02 (PCB,\
+  \ Power-Rail & Hardware Fault-Injection Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via Ultra-Fast ADC (100 MSPS), it is specifically engineered\
+  \ to mitigate and detect Voltage glitching (EMFI), skipping password checks. In\
+  \ the Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Voltage drop transient \u0394 V > 10\\% in < 50\\,ns without AC outage triggers\
+  \ immediate key wipe.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Voltage glitching (EMFI), skipping password checks
+core_invariant: "Voltage drop transient \u0394 V > 10\\% in < 50\\,ns without AC outage\
+  \ triggers immediate key wipe."
+physics:
+  engine: pcb_power_glitch
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mV
+registers:
+  holding_registers:
+    40071:
+      name: s008_vcc_core_power_rail_brownout_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: mV
+    40073:
+      name: s008_vcc_core_power_rail_brownout_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s008_vcc_core_power_rail_brownout_monitor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Voltage glitching (EMFI), skipping password checks'

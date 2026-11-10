@@ -1,0 +1,45 @@
+sensor_id: s116_tuning_fork_industrial_fluid_viscometer
+name: Tuning-Fork Industrial Fluid Viscometer
+domain_id: 17
+domain_title: Bioprocess, Industrial Chemical & Physical Bio Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15116
+interface: Resonant Piezoelectric Transducer
+description: "Tuning-Fork Industrial Fluid Viscometer is a specialized Domain 17 (Bioprocess,\
+  \ Industrial Chemical & Physical Bio Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via Resonant Piezoelectric Transducer, it is specifically\
+  \ engineered to mitigate and detect Lubrication oil thermal degradation, chemical\
+  \ polymerization runaway. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Damping of oscillating mechanical tine reveals dynamic\
+  \ viscosity \xB5; sudden viscosity spike stops mixing to prevent motor burnout..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Lubrication oil thermal degradation, chemical polymerization runaway
+core_invariant: "Damping of oscillating mechanical tine reveals dynamic viscosity\
+  \ \xB5; sudden viscosity spike stops mixing to prevent motor burnout."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40141:
+      name: s116_tuning_fork_industrial_fluid_viscometer_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40143:
+      name: s116_tuning_fork_industrial_fluid_viscometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s116_tuning_fork_industrial_fluid_viscometer_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Lubrication oil thermal degradation, chemical polymerization
+    runaway'

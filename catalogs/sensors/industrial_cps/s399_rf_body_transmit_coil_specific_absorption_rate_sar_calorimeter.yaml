@@ -1,0 +1,47 @@
+sensor_id: s399_rf_body_transmit_coil_specific_absorption_rate_sar_calorimeter
+name: RF Body Transmit Coil Specific Absorption Rate (SAR) Calorimeter
+domain_id: 57
+domain_title: Ultra-High Field (7T/11.7T) MRI Safety & Patient Protection Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15399
+interface: Fiber-Optic Thermal Probe on Coil Shield
+description: "RF Body Transmit Coil Specific Absorption Rate (SAR) Calorimeter is\
+  \ a specialized Domain 57 (Ultra-High Field (7T/11.7T) MRI Safety & Patient Protection\
+  \ Sensors) cyber-physical monitoring sensor. Interfacing directly via Fiber-Optic\
+  \ Thermal Probe on Coil Shield, it is specifically engineered to mitigate and detect\
+  \ Human tissue thermal burns from excessive RF power deposition. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Whole-body\
+  \ SAR: SAR = \\frac{C_p \u0394 T}{\u0394 t} <= 4.0\\,W/kg (IEC 60601-2-33 limit);\
+  \ power limit breach cuts RF power amplifier in < 1.0\\,ms.. Any divergence between\
+  \ commanded network state and this physical reading triggers sub-microsecond in-kernel\
+  \ eBPF packet mitigation."
+target_threat: Human tissue thermal burns from excessive RF power deposition
+core_invariant: "Whole-body SAR: SAR = \\frac{C_p \u0394 T}{\u0394 t} <= 4.0\\,W/kg\
+  \ (IEC 60601-2-33 limit); power limit breach cuts RF power amplifier in < 1.0\\\
+  ,ms."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40261:
+      name: s399_rf_body_transmit_coil_specific_absorption_rate_sar_calorimeter_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40263:
+      name: s399_rf_body_transmit_coil_specific_absorption_rate_sar_calorimeter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s399_rf_body_transmit_coil_specific_absorption_rate_sar_calorimeter_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Human tissue thermal burns from excessive RF power
+    deposition'

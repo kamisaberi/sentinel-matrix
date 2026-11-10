@@ -1,0 +1,41 @@
+sensor_id: s033_subsea_acoustic_hydrophone
+name: Subsea Acoustic Hydrophone
+domain_id: 5
+domain_title: Acoustic, Ultrasonic & Vibration Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15033
+interface: Piezo-Ceramic Ocean Sensor
+description: 'Subsea Acoustic Hydrophone is a specialized Domain 05 (Acoustic, Ultrasonic
+  & Vibration Sensors) cyber-physical monitoring sensor. Interfacing directly via
+  Piezo-Ceramic Ocean Sensor, it is specifically engineered to mitigate and detect
+  Underwater pipeline tapping, rogue UUV commands (JANUS). In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Identifies acoustic command frame
+  preambles and multi-path anomalies.. Any divergence between commanded network state
+  and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Underwater pipeline tapping, rogue UUV commands (JANUS)
+core_invariant: Identifies acoustic command frame preambles and multi-path anomalies.
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40321:
+      name: s033_subsea_acoustic_hydrophone_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40323:
+      name: s033_subsea_acoustic_hydrophone_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s033_subsea_acoustic_hydrophone_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Underwater pipeline tapping, rogue UUV commands (JANUS)'

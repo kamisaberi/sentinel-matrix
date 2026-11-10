@@ -1,0 +1,46 @@
+sensor_id: s536_swarm_optical_relative_line_of_sight_bearing_camera
+name: Swarm Optical Relative Line-of-Sight Bearing Camera
+domain_id: 76
+domain_title: Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15536
+interface: Near-Infrared High-Speed Camera (120 fps)
+description: 'Swarm Optical Relative Line-of-Sight Bearing Camera is a specialized
+  Domain 76 (Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Near-Infrared High-Speed
+  Camera (120 fps), it is specifically engineered to mitigate and detect Swarm rogue
+  drone divergence, optical spoofing with decoy strobes. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Inter-UAV bearing vector: \mathbf{b}_{ij}
+  = [\cos\theta\cos\phi, \sin\theta\cos\phi, \sin\phi]^T; matches cryptographically
+  modulated optical LED pulse sequence.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Swarm rogue drone divergence, optical spoofing with decoy strobes
+core_invariant: 'Inter-UAV bearing vector: \mathbf{b}_{ij} = [\cos\theta\cos\phi,
+  \sin\theta\cos\phi, \sin\phi]^T; matches cryptographically modulated optical LED
+  pulse sequence.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40061:
+      name: s536_swarm_optical_relative_line_of_sight_bearing_camera_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40063:
+      name: s536_swarm_optical_relative_line_of_sight_bearing_camera_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s536_swarm_optical_relative_line_of_sight_bearing_camera_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Swarm rogue drone divergence, optical spoofing with
+    decoy strobes'

@@ -1,0 +1,44 @@
+sensor_id: s324_atom_chip_micro_magnetic_wire_current_transducer
+name: Atom Chip Micro-Magnetic Wire Current Transducer
+domain_id: 46
+domain_title: Quantum Gravimetry & Cold Atom Inertial Sensors
+category: QUANTUM
+target_protocol: MODBUS_TCP
+default_port: 15324
+interface: Four-Terminal Kelvin Shunt
+description: "Atom Chip Micro-Magnetic Wire Current Transducer is a specialized Domain\
+  \ 46 (Quantum Gravimetry & Cold Atom Inertial Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Four-Terminal Kelvin Shunt, it is specifically\
+  \ engineered to mitigate and detect Micro-magnetic trap geometry warping, cold atom\
+  \ decoherence. In the Aryorithm edge architecture, it continuously asserts the operational\
+  \ invariant: Micro-wire magnetic field: B = \\frac{\xB5_0 I}{2\\pi d}; current ripple\
+  \ \u0394 I <= 10\\,\xB5A to preserve atomic cloud coherence (< 500\\,nK).. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Micro-magnetic trap geometry warping, cold atom decoherence
+core_invariant: "Micro-wire magnetic field: B = \\frac{\xB5_0 I}{2\\pi d}; current\
+  \ ripple \u0394 I <= 10\\,\xB5A to preserve atomic cloud coherence (< 500\\,nK)."
+physics:
+  engine: quantum_squid
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mK
+registers:
+  holding_registers:
+    40081:
+      name: s324_atom_chip_micro_magnetic_wire_current_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: mK
+    40083:
+      name: s324_atom_chip_micro_magnetic_wire_current_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s324_atom_chip_micro_magnetic_wire_current_transducer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Micro-magnetic trap geometry warping, cold atom decoherence'

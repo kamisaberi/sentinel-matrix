@@ -1,0 +1,45 @@
+sensor_id: s197_terahertz_micro_bolometer_focal_plane_array
+name: Terahertz Micro-Bolometer Focal Plane Array
+domain_id: 28
+domain_title: Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15197
+interface: Vanadium Oxide (VOx) Uncooled Matrix
+description: 'Terahertz Micro-Bolometer Focal Plane Array is a specialized Domain
+  28 (Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Vanadium Oxide (VOx) Uncooled Matrix, it is specifically
+  engineered to mitigate and detect Passive standoff thermal/THz concealed contraband
+  imaging. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Broadband sensitivity from 0.1 to 3.0\,THz; differential radiometric
+  temperature contrast reveals concealed suicide vests.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Passive standoff thermal/THz concealed contraband imaging
+core_invariant: Broadband sensitivity from 0.1 to 3.0\,THz; differential radiometric
+  temperature contrast reveals concealed suicide vests.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40401:
+      name: s197_terahertz_micro_bolometer_focal_plane_array_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40403:
+      name: s197_terahertz_micro_bolometer_focal_plane_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s197_terahertz_micro_bolometer_focal_plane_array_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Passive standoff thermal/THz concealed contraband
+    imaging'

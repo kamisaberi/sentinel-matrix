@@ -1,0 +1,44 @@
+sensor_id: s007_context_switch_cpu_migration_sensor
+name: Context Switch & CPU Migration Sensor
+domain_id: 1
+domain_title: Microarchitectural, CPU & Memory Sensors (Host Hardware Security)
+category: MICROARCH
+target_protocol: PMU_PERF
+default_port: 15007
+interface: Kernel Scheduler (`sched_switch`)
+description: 'Context Switch & CPU Migration Sensor is a specialized Domain 01 (Microarchitectural,
+  CPU & Memory Sensors (Host Hardware Security)) cyber-physical monitoring sensor.
+  Interfacing directly via Kernel Scheduler (`sched_switch`), it is specifically engineered
+  to mitigate and detect Thread starvation, CPU affinity hijacking, priority inversion.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Enforces deterministic thread pinning on real-time AF_XDP polling cores.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Thread starvation, CPU affinity hijacking, priority inversion
+core_invariant: Enforces deterministic thread pinning on real-time AF_XDP polling
+  cores.
+physics:
+  engine: pmu_microarch
+  baseline_value: 1.2
+  min_value: 0.1
+  max_value: 4.0
+  noise_sigma: 0.05
+  unit: IPC
+registers:
+  holding_registers:
+    40061:
+      name: s007_context_switch_cpu_migration_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: IPC
+    40063:
+      name: s007_context_switch_cpu_migration_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s007_context_switch_cpu_migration_sensor_fault
+  action: step_decrease
+  value: -0.8
+  description: 'Injects anomaly: Thread starvation, CPU affinity hijacking, priority
+    inversion'

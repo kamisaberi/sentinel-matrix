@@ -1,0 +1,45 @@
+sensor_id: s125_superconducting_nanowire_single_photon_detector_snspd
+name: Superconducting Nanowire Single-Photon Detector (SNSPD)
+domain_id: 18
+domain_title: Quantum Metrology, Superconducting & Qubit Sensors
+category: QUANTUM
+target_protocol: MODBUS_TCP
+default_port: 15125
+interface: Cryogenic Nanowire Bias Bridge
+description: 'Superconducting Nanowire Single-Photon Detector (SNSPD) is a specialized
+  Domain 18 (Quantum Metrology, Superconducting & Qubit Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Cryogenic Nanowire Bias Bridge, it is specifically
+  engineered to mitigate and detect QKD detector latching attacks, high-rate continuous-wave
+  laser blinding. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Superconducting-to-normal resistive hotspot formation (<
+  50\,ps jitter); latching into continuous normal state trips safety shutter.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: QKD detector latching attacks, high-rate continuous-wave laser blinding
+core_invariant: Superconducting-to-normal resistive hotspot formation (< 50\,ps jitter);
+  latching into continuous normal state trips safety shutter.
+physics:
+  engine: quantum_squid
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mK
+registers:
+  holding_registers:
+    40211:
+      name: s125_superconducting_nanowire_single_photon_detector_snspd_pv
+      type: float32
+      scale: 1.0
+      unit: mK
+    40213:
+      name: s125_superconducting_nanowire_single_photon_detector_snspd_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s125_superconducting_nanowire_single_photon_detector_snspd_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: QKD detector latching attacks, high-rate continuous-wave
+    laser blinding'

@@ -1,0 +1,44 @@
+sensor_id: s342_downhole_piezo_acoustic_fracture_emission_sensor
+name: Downhole Piezo-Acoustic Fracture Emission Sensor
+domain_id: 49
+domain_title: Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15342
+interface: High-Temperature Ceramic Accelerometer
+description: 'Downhole Piezo-Acoustic Fracture Emission Sensor is a specialized Domain
+  49 (Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Temperature Ceramic Accelerometer,
+  it is specifically engineered to mitigate and detect Induced seismic fault slip,
+  runaway hydraulic fracturing. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Event magnitude M_L <= 0.5; continuous acoustic
+  emission frequency (10--100\,kHz) maps crack growth direction in real time.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Induced seismic fault slip, runaway hydraulic fracturing
+core_invariant: Event magnitude M_L <= 0.5; continuous acoustic emission frequency
+  (10--100\,kHz) maps crack growth direction in real time.
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40261:
+      name: s342_downhole_piezo_acoustic_fracture_emission_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40263:
+      name: s342_downhole_piezo_acoustic_fracture_emission_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s342_downhole_piezo_acoustic_fracture_emission_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Induced seismic fault slip, runaway hydraulic fracturing'

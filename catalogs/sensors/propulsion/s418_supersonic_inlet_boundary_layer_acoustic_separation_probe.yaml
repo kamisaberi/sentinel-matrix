@@ -1,0 +1,45 @@
+sensor_id: s418_supersonic_inlet_boundary_layer_acoustic_separation_probe
+name: Supersonic Inlet Boundary Layer Acoustic Separation Probe
+domain_id: 59
+domain_title: Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15418
+interface: Flush Dynamic Piezoelectric Sensor (200 kHz)
+description: 'Supersonic Inlet Boundary Layer Acoustic Separation Probe is a specialized
+  Domain 59 (Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Flush Dynamic Piezoelectric Sensor (200
+  kHz), it is specifically engineered to mitigate and detect Shockwave-boundary layer
+  interaction (SWBLI), inlet boundary separation. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Surface acoustic pressure fluctuations:
+  \frac{p''_{RMS}}{P_{mean}} <= 0.15; boundary separation detection triggers boundary
+  layer bleed vents.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Shockwave-boundary layer interaction (SWBLI), inlet boundary separation
+core_invariant: 'Surface acoustic pressure fluctuations: \frac{p''_{RMS}}{P_{mean}}
+  <= 0.15; boundary separation detection triggers boundary layer bleed vents.'
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40441:
+      name: s418_supersonic_inlet_boundary_layer_acoustic_separation_probe_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40443:
+      name: s418_supersonic_inlet_boundary_layer_acoustic_separation_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s418_supersonic_inlet_boundary_layer_acoustic_separation_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Shockwave-boundary layer interaction (SWBLI), inlet
+    boundary separation'

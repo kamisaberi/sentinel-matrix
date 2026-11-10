@@ -1,0 +1,46 @@
+sensor_id: s481_liquid_koh_carbonation_conductivity_interface_probe
+name: Liquid KOH Carbonation Conductivity Interface Probe
+domain_id: 68
+domain_title: Carbon Dioxide Direct Air Capture (DAC) & Zeolite Adsorption Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15481
+interface: Toroidal Electrodeless Conductivity Cell
+description: "Liquid KOH Carbonation Conductivity Interface Probe is a specialized\
+  \ Domain 68 (Carbon Dioxide Direct Air Capture (DAC) & Zeolite Adsorption Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Toroidal Electrodeless\
+  \ Conductivity Cell, it is specifically engineered to mitigate and detect Caustic\
+  \ contactor carbonate saturation, loss of capture efficiency. In the Aryorithm edge\
+  \ architecture, it continuously asserts the operational invariant: Liquid chemical\
+  \ equilibrium: \\kappa_{solution} \u221D [OH^-] / [CO_3^{2-}]; conductivity drop\
+  \ triggers automated fluid transfer to pellet reactor.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Caustic contactor carbonate saturation, loss of capture efficiency
+core_invariant: "Liquid chemical equilibrium: \\kappa_{solution} \u221D [OH^-] / [CO_3^{2-}];\
+  \ conductivity drop triggers automated fluid transfer to pellet reactor."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40051:
+      name: s481_liquid_koh_carbonation_conductivity_interface_probe_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40053:
+      name: s481_liquid_koh_carbonation_conductivity_interface_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s481_liquid_koh_carbonation_conductivity_interface_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Caustic contactor carbonate saturation, loss of capture
+    efficiency'

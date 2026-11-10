@@ -1,0 +1,45 @@
+sensor_id: s113_bio_impedance_spectroscopy_probe
+name: Bio-Impedance Spectroscopy Probe
+domain_id: 17
+domain_title: Bioprocess, Industrial Chemical & Physical Bio Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15113
+interface: Multi-Frequency AC Bridge (100 Hz--10 MHz)
+description: "Bio-Impedance Spectroscopy Probe is a specialized Domain 17 (Bioprocess,\
+  \ Industrial Chemical & Physical Bio Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via Multi-Frequency AC Bridge (100 Hz--10 MHz), it is specifically\
+  \ engineered to mitigate and detect Bioreactor cell culture collapse, toxic chemical\
+  \ agent injection. In the Aryorithm edge architecture, it continuously asserts the\
+  \ operational invariant: Capacitance of mammalian cell membranes (C_{mem} \u221D\
+  \ Viable Cell Density); sudden drop indicates intentional pathogen injection.. Any\
+  \ divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Bioreactor cell culture collapse, toxic chemical agent injection
+core_invariant: "Capacitance of mammalian cell membranes (C_{mem} \u221D Viable Cell\
+  \ Density); sudden drop indicates intentional pathogen injection."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40111:
+      name: s113_bio_impedance_spectroscopy_probe_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40113:
+      name: s113_bio_impedance_spectroscopy_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s113_bio_impedance_spectroscopy_probe_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Bioreactor cell culture collapse, toxic chemical
+    agent injection'

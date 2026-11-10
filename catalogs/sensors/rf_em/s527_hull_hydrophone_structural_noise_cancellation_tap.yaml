@@ -1,0 +1,46 @@
+sensor_id: s527_hull_hydrophone_structural_noise_cancellation_tap
+name: Hull Hydrophone Structural Noise Cancellation Tap
+domain_id: 74
+domain_title: Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15527
+interface: Accelerometer Matrix on Hull Interior
+description: 'Hull Hydrophone Structural Noise Cancellation Tap is a specialized Domain
+  74 (Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Accelerometer Matrix on Hull Interior,
+  it is specifically engineered to mitigate and detect Own-ship mechanical machinery
+  noise masking incoming torpedo transients. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Adaptive noise cancellation: s(t)
+  = y_{sonar}(t) - \hat{H} \cdot x_{hull}(t); decorrelation filter isolates quiet
+  threats from internal propulsion noise.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Own-ship mechanical machinery noise masking incoming torpedo transients
+core_invariant: 'Adaptive noise cancellation: s(t) = y_{sonar}(t) - \hat{H} \cdot
+  x_{hull}(t); decorrelation filter isolates quiet threats from internal propulsion
+  noise.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40471:
+      name: s527_hull_hydrophone_structural_noise_cancellation_tap_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40473:
+      name: s527_hull_hydrophone_structural_noise_cancellation_tap_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s527_hull_hydrophone_structural_noise_cancellation_tap_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Own-ship mechanical machinery noise masking incoming
+    torpedo transients'

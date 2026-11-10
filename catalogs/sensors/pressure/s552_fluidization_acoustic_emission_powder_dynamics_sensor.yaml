@@ -1,0 +1,45 @@
+sensor_id: s552_fluidization_acoustic_emission_powder_dynamics_sensor
+name: Fluidization Acoustic Emission Powder Dynamics Sensor
+domain_id: 78
+domain_title: Pharmaceutical Continuous Twin-Screw Wet Granulation & Fluid Bed Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15552
+interface: Non-Invasive Clamp-On Piezo Sensor
+description: 'Fluidization Acoustic Emission Powder Dynamics Sensor is a specialized
+  Domain 78 (Pharmaceutical Continuous Twin-Screw Wet Granulation & Fluid Bed Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Non-Invasive Clamp-On
+  Piezo Sensor, it is specifically engineered to mitigate and detect Fluid bed defluidization
+  (channeling / collapse), uneven drying. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Acoustic power spectral density (20--80\,kHz);
+  acoustic energy drop indicates bed defluidization; increases inlet air velocity..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Fluid bed defluidization (channeling / collapse), uneven drying
+core_invariant: Acoustic power spectral density (20--80\,kHz); acoustic energy drop
+  indicates bed defluidization; increases inlet air velocity.
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40201:
+      name: s552_fluidization_acoustic_emission_powder_dynamics_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40203:
+      name: s552_fluidization_acoustic_emission_powder_dynamics_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s552_fluidization_acoustic_emission_powder_dynamics_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Fluid bed defluidization (channeling / collapse),
+    uneven drying'

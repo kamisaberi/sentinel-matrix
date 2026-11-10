@@ -1,0 +1,47 @@
+sensor_id: s384_wing_leading_edge_de_icing_pneumatic_boot_pressure_switch
+name: Wing Leading-Edge De-Icing Pneumatic Boot Pressure Switch
+domain_id: 54
+domain_title: Commercial Aviation Cockpit Ingress & Flight Surface Fly-by-Wire Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15384
+interface: Differential Pressure Snap-Action Switch
+description: 'Wing Leading-Edge De-Icing Pneumatic Boot Pressure Switch is a specialized
+  Domain 54 (Commercial Aviation Cockpit Ingress & Flight Surface Fly-by-Wire Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Differential Pressure
+  Snap-Action Switch, it is specifically engineered to mitigate and detect De-icing
+  boot inflation failure, aerodynamic stall from leading-edge ice. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Boot inflation
+  cycle: P_{boot} >= 1.2\,bar for 6.0\,seconds; pressure failure triggers thermal
+  anti-ice backup and stall warning threshold bias.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: De-icing boot inflation failure, aerodynamic stall from leading-edge
+  ice
+core_invariant: 'Boot inflation cycle: P_{boot} >= 1.2\,bar for 6.0\,seconds; pressure
+  failure triggers thermal anti-ice backup and stall warning threshold bias.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40111:
+      name: s384_wing_leading_edge_de_icing_pneumatic_boot_pressure_switch_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40113:
+      name: s384_wing_leading_edge_de_icing_pneumatic_boot_pressure_switch_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s384_wing_leading_edge_de_icing_pneumatic_boot_pressure_switch_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: De-icing boot inflation failure, aerodynamic stall
+    from leading-edge ice'

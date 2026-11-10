@@ -1,0 +1,45 @@
+sensor_id: s398_grain_tank_unloading_auger_swing_lock_proximity_sensor
+name: Grain Tank Unloading Auger Swing Lock Proximity Sensor
+domain_id: 56
+domain_title: Autonomous Agricultural Combine Harvester & Grain Loss Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15398
+interface: Inductive Safety Interlock Switch
+description: 'Grain Tank Unloading Auger Swing Lock Proximity Sensor is a specialized
+  Domain 56 (Autonomous Agricultural Combine Harvester & Grain Loss Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Inductive Safety Interlock Switch, it
+  is specifically engineered to mitigate and detect Unloading auger deployed during
+  transport, collision with power poles. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Auger position status: S_{auger} == LOCKED\_CRADLE
+  required when combine ground speed v > 15\,km/h.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Unloading auger deployed during transport, collision with power poles
+core_invariant: 'Auger position status: S_{auger} == LOCKED\_CRADLE required when
+  combine ground speed v > 15\,km/h.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40251:
+      name: s398_grain_tank_unloading_auger_swing_lock_proximity_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40253:
+      name: s398_grain_tank_unloading_auger_swing_lock_proximity_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s398_grain_tank_unloading_auger_swing_lock_proximity_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Unloading auger deployed during transport, collision
+    with power poles'

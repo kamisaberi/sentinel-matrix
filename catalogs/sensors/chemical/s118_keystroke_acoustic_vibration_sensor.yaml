@@ -1,0 +1,45 @@
+sensor_id: s118_keystroke_acoustic_vibration_sensor
+name: Keystroke Acoustic Vibration Sensor
+domain_id: 17
+domain_title: Bioprocess, Industrial Chemical & Physical Bio Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15118
+interface: High-Sensitivity Surface Accelerometer
+description: 'Keystroke Acoustic Vibration Sensor is a specialized Domain 17 (Bioprocess,
+  Industrial Chemical & Physical Bio Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via High-Sensitivity Surface Accelerometer, it is specifically engineered
+  to mitigate and detect Mechanical acoustic eavesdropping on air-gapped terminal
+  keyboards. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Intercepts keyboard mechanical deck vibrations, dynamically injecting
+  acoustic noise to scramble keyboard side-channel keyloggers.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Mechanical acoustic eavesdropping on air-gapped terminal keyboards
+core_invariant: Intercepts keyboard mechanical deck vibrations, dynamically injecting
+  acoustic noise to scramble keyboard side-channel keyloggers.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40161:
+      name: s118_keystroke_acoustic_vibration_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40163:
+      name: s118_keystroke_acoustic_vibration_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s118_keystroke_acoustic_vibration_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Mechanical acoustic eavesdropping on air-gapped terminal
+    keyboards'

@@ -1,0 +1,46 @@
+sensor_id: s308_effluent_decontamination_system_eds_thermal_probe
+name: Effluent Decontamination System (EDS) Thermal Probe
+domain_id: 44
+domain_title: High-Containment BSL-4 / Biosecurity Facility Environmental Sensors
+category: BIOPROCESS
+target_protocol: MODBUS_TCP
+default_port: 15308
+interface: Triplicate 4-Wire RTD Class A (134^\circC)
+description: "Effluent Decontamination System (EDS) Thermal Probe is a specialized\
+  \ Domain 44 (High-Containment BSL-4 / Biosecurity Facility Environmental Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Triplicate 4-Wire RTD\
+  \ Class A (134^\\circC), it is specifically engineered to mitigate and detect Liquid\
+  \ biological waste sterilization failure, living pathogen drainage. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Lethality\
+  \ factor: F_0 = \u0394 t \\sum 10^{(T - 121.1)/10} >= 30; effluent release valve\
+  \ locked closed until thermal kill proof is logged.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Liquid biological waste sterilization failure, living pathogen drainage
+core_invariant: "Lethality factor: F_0 = \u0394 t \\sum 10^{(T - 121.1)/10} >= 30;\
+  \ effluent release valve locked closed until thermal kill proof is logged."
+physics:
+  engine: bioprocess_cell
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: pH
+registers:
+  holding_registers:
+    40441:
+      name: s308_effluent_decontamination_system_eds_thermal_probe_pv
+      type: float32
+      scale: 1.0
+      unit: pH
+    40443:
+      name: s308_effluent_decontamination_system_eds_thermal_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s308_effluent_decontamination_system_eds_thermal_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Liquid biological waste sterilization failure, living
+    pathogen drainage'

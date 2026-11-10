@@ -1,0 +1,44 @@
+sensor_id: s109_langmuir_plasma_electric_probe
+name: Langmuir Plasma Electric Probe
+domain_id: 16
+domain_title: Semiconductor Fab, Vacuum & Plasma Process Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15109
+interface: High-Speed Voltage Sweep Circuit
+description: 'Langmuir Plasma Electric Probe is a specialized Domain 16 (Semiconductor
+  Fab, Vacuum & Plasma Process Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via High-Speed Voltage Sweep Circuit, it is specifically engineered to
+  mitigate and detect Plasma density non-uniformity causing uneven microchip etching.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  I-V curve analysis extracts electron temperature T_e and plasma density n_e; flags
+  RF generator phase imbalances.. Any divergence between commanded network state and
+  this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Plasma density non-uniformity causing uneven microchip etching
+core_invariant: I-V curve analysis extracts electron temperature T_e and plasma density
+  n_e; flags RF generator phase imbalances.
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40071:
+      name: s109_langmuir_plasma_electric_probe_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40073:
+      name: s109_langmuir_plasma_electric_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s109_langmuir_plasma_electric_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Plasma density non-uniformity causing uneven microchip
+    etching'

@@ -1,0 +1,45 @@
+sensor_id: s107_capacitance_diaphragm_vacuum_gauge_cdg
+name: Capacitance Diaphragm Vacuum Gauge (CDG)
+domain_id: 16
+domain_title: Semiconductor Fab, Vacuum & Plasma Process Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15107
+interface: Ultra-Linear Dual-Electrode Sensor
+description: 'Capacitance Diaphragm Vacuum Gauge (CDG) is a specialized Domain 16
+  (Semiconductor Fab, Vacuum & Plasma Process Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Ultra-Linear Dual-Electrode Sensor, it is specifically
+  engineered to mitigate and detect Toxic precursor gas overpressure in atomic layer
+  deposition (ALD). In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Ceramic diaphragm deflection independent of gas species;
+  verifies absolute chamber vacuum with 0.05\% accuracy.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Toxic precursor gas overpressure in atomic layer deposition (ALD)
+core_invariant: Ceramic diaphragm deflection independent of gas species; verifies
+  absolute chamber vacuum with 0.05\% accuracy.
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40051:
+      name: s107_capacitance_diaphragm_vacuum_gauge_cdg_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40053:
+      name: s107_capacitance_diaphragm_vacuum_gauge_cdg_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s107_capacitance_diaphragm_vacuum_gauge_cdg_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Toxic precursor gas overpressure in atomic layer
+    deposition (ALD)'

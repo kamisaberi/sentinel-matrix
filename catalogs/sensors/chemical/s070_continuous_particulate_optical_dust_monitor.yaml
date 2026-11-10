@@ -1,0 +1,44 @@
+sensor_id: s070_continuous_particulate_optical_dust_monitor
+name: Continuous Particulate Optical Dust Monitor
+domain_id: 10
+domain_title: Chemical, Gas & Dielectric Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15070
+interface: Forward-Light Scattering Sensor
+description: "Continuous Particulate Optical Dust Monitor is a specialized Domain\
+  \ 10 (Chemical, Gas & Dielectric Sensors) cyber-physical monitoring sensor. Interfacing\
+  \ directly via Forward-Light Scattering Sensor, it is specifically engineered to\
+  \ mitigate and detect Cleanroom air filtration bypass, semiconductor wafer contamination.\
+  \ In the Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Particulate counts (> 0.3\\,\xB5m) must adhere to ISO 14644 Class 1 thresholds..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Cleanroom air filtration bypass, semiconductor wafer contamination
+core_invariant: "Particulate counts (> 0.3\\,\xB5m) must adhere to ISO 14644 Class\
+  \ 1 thresholds."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40191:
+      name: s070_continuous_particulate_optical_dust_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40193:
+      name: s070_continuous_particulate_optical_dust_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s070_continuous_particulate_optical_dust_monitor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Cleanroom air filtration bypass, semiconductor wafer
+    contamination'

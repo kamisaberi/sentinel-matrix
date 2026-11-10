@@ -1,0 +1,46 @@
+sensor_id: s521_thin_line_towed_array_fiber_optic_tension_sensor
+name: Thin-Line Towed Array Fiber-Optic Tension Sensor
+domain_id: 74
+domain_title: Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15521
+interface: Embedded FBG Optical Strain Gauge
+description: 'Thin-Line Towed Array Fiber-Optic Tension Sensor is a specialized Domain
+  74 (Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Embedded FBG Optical Strain Gauge, it
+  is specifically engineered to mitigate and detect Sonar array entanglement, cable
+  parting during high-speed submarine maneuvers. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Cable tension limit: T_{cable}
+  <= T_{yield\_margin}; tension surge (> 45\,kN) commands automated winch brake slippage
+  in < 20\,ms.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Sonar array entanglement, cable parting during high-speed submarine
+  maneuvers
+core_invariant: 'Cable tension limit: T_{cable} <= T_{yield\_margin}; tension surge
+  (> 45\,kN) commands automated winch brake slippage in < 20\,ms.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40421:
+      name: s521_thin_line_towed_array_fiber_optic_tension_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40423:
+      name: s521_thin_line_towed_array_fiber_optic_tension_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s521_thin_line_towed_array_fiber_optic_tension_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Sonar array entanglement, cable parting during high-speed
+    submarine maneuvers'

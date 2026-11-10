@@ -1,0 +1,45 @@
+sensor_id: s427_electron_cyclotron_emission_ece_radiometer
+name: Electron Cyclotron Emission (ECE) Radiometer
+domain_id: 60
+domain_title: Superconducting Tokamak Fusion Plasma Diagnostics Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15427
+interface: Heterodyne Microwave Receiver (100--200 GHz)
+description: "Electron Cyclotron Emission (ECE) Radiometer is a specialized Domain\
+  \ 60 (Superconducting Tokamak Fusion Plasma Diagnostics Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Heterodyne Microwave Receiver (100--200\
+  \ GHz), it is specifically engineered to mitigate and detect Neoclassical Tearing\
+  \ Modes (NTM), magnetic island growth. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Radiated intensity I(\\omega) \u221D T_e(R);\
+  \ detects magnetic island width w >= 2.0\\,cm, commanding gyrotron targeted ECCD\
+  \ current drive.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Neoclassical Tearing Modes (NTM), magnetic island growth
+core_invariant: "Radiated intensity I(\\omega) \u221D T_e(R); detects magnetic island\
+  \ width w >= 2.0\\,cm, commanding gyrotron targeted ECCD current drive."
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40021:
+      name: s427_electron_cyclotron_emission_ece_radiometer_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40023:
+      name: s427_electron_cyclotron_emission_ece_radiometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s427_electron_cyclotron_emission_ece_radiometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Neoclassical Tearing Modes (NTM), magnetic island
+    growth'

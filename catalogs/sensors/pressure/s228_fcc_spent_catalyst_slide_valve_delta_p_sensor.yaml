@@ -1,0 +1,45 @@
+sensor_id: s228_fcc_spent_catalyst_slide_valve_delta_p_sensor
+name: FCC Spent Catalyst Slide Valve Delta-P Sensor
+domain_id: 33
+domain_title: Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15228
+interface: 4-20mA HART Differential Transmitter
+description: "FCC Spent Catalyst Slide Valve Delta-P Sensor is a specialized Domain\
+  \ 33 (Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via 4-20mA HART Differential Transmitter,\
+  \ it is specifically engineered to mitigate and detect Hydrocarbon backflow into\
+  \ catalyst regenerator, explosive deflagration. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Slide valve pressure differential:\
+  \ \u0394 P = P_{regenerator} - P_{reactor} >= 0.35\\,bar; pressure reversal locks\
+  \ slide valve closed in < 200\\,ms.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Hydrocarbon backflow into catalyst regenerator, explosive deflagration
+core_invariant: "Slide valve pressure differential: \u0394 P = P_{regenerator} - P_{reactor}\
+  \ >= 0.35\\,bar; pressure reversal locks slide valve closed in < 200\\,ms."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40181:
+      name: s228_fcc_spent_catalyst_slide_valve_delta_p_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40183:
+      name: s228_fcc_spent_catalyst_slide_valve_delta_p_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s228_fcc_spent_catalyst_slide_valve_delta_p_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Hydrocarbon backflow into catalyst regenerator, explosive
+    deflagration'

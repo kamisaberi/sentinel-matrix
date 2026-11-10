@@ -1,0 +1,45 @@
+sensor_id: s420_scramjet_pyrophoric_triethylaluminum_tea_teb_ignition_sensor
+name: Scramjet Pyrophoric Triethylaluminum (TEA-TEB) Ignition Sensor
+domain_id: 59
+domain_title: Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15420
+interface: Dual Hydraulic Pressure & Valve State Sensor
+description: 'Scramjet Pyrophoric Triethylaluminum (TEA-TEB) Ignition Sensor is a
+  specialized Domain 59 (Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Dual Hydraulic Pressure
+  & Valve State Sensor, it is specifically engineered to mitigate and detect Hypergolic
+  ignition failure, fuel accumulation before explosive ignition. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Pyrophoric
+  ignition slug pressure: P_{ignition} >= 35\,bar; confirmed slug injection required
+  before opening main ethylene/JP-7 valves.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hypergolic ignition failure, fuel accumulation before explosive ignition
+core_invariant: 'Pyrophoric ignition slug pressure: P_{ignition} >= 35\,bar; confirmed
+  slug injection required before opening main ethylene/JP-7 valves.'
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40461:
+      name: s420_scramjet_pyrophoric_triethylaluminum_tea_teb_ignition_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40463:
+      name: s420_scramjet_pyrophoric_triethylaluminum_tea_teb_ignition_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s420_scramjet_pyrophoric_triethylaluminum_tea_teb_ignition_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Hypergolic ignition failure, fuel accumulation before
+    explosive ignition'

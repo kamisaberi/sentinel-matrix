@@ -1,0 +1,44 @@
+sensor_id: s045_shack_hartmann_wavefront_laser_dazzle_sensor
+name: Shack-Hartmann Wavefront Laser Dazzle Sensor
+domain_id: 7
+domain_title: Photonic & Fiber-Optic Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15045
+interface: Micro-Lens Array + High-Speed CMOS
+description: 'Shack-Hartmann Wavefront Laser Dazzle Sensor is a specialized Domain
+  07 (Photonic & Fiber-Optic Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Micro-Lens Array + High-Speed CMOS, it is specifically engineered to
+  mitigate and detect Satellite optical laser blinding, free-space QKD spoofing. In
+  the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Flags non-planar wavefront distortion and triggers piezo fast-steering mirror deflection..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Satellite optical laser blinding, free-space QKD spoofing
+core_invariant: Flags non-planar wavefront distortion and triggers piezo fast-steering
+  mirror deflection.
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40441:
+      name: s045_shack_hartmann_wavefront_laser_dazzle_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40443:
+      name: s045_shack_hartmann_wavefront_laser_dazzle_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s045_shack_hartmann_wavefront_laser_dazzle_sensor_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Satellite optical laser blinding, free-space QKD
+    spoofing'

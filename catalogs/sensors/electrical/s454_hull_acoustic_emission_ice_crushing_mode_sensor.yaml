@@ -1,0 +1,45 @@
+sensor_id: s454_hull_acoustic_emission_ice_crushing_mode_sensor
+name: Hull Acoustic Emission Ice-Crushing Mode Sensor
+domain_id: 64
+domain_title: Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15454
+interface: Resonant Piezoelectric Hull Sensor
+description: 'Hull Acoustic Emission Ice-Crushing Mode Sensor is a specialized Domain
+  64 (Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Resonant Piezoelectric Hull Sensor,
+  it is specifically engineered to mitigate and detect Transition from crushing to
+  non-clearing ice extrusion buckling. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: High-frequency acoustic spectrum identifies ice
+  failure mode (crushing vs flexural); shifts hull heading to minimize resistance..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Transition from crushing to non-clearing ice extrusion buckling
+core_invariant: High-frequency acoustic spectrum identifies ice failure mode (crushing
+  vs flexural); shifts hull heading to minimize resistance.
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40281:
+      name: s454_hull_acoustic_emission_ice_crushing_mode_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40283:
+      name: s454_hull_acoustic_emission_ice_crushing_mode_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s454_hull_acoustic_emission_ice_crushing_mode_sensor_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Transition from crushing to non-clearing ice extrusion
+    buckling'

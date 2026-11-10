@@ -1,0 +1,46 @@
+sensor_id: s177_optical_time_lens_picosecond_pulse_jitter_analyzer
+name: Optical Time-Lens Picosecond Pulse Jitter Analyzer
+domain_id: 25
+domain_title: Photonic Integrated Circuit (PIC) & Optical Computing Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15177
+interface: Four-Wave Mixing (FWM) Silicon Waveguide
+description: 'Optical Time-Lens Picosecond Pulse Jitter Analyzer is a specialized
+  Domain 25 (Photonic Integrated Circuit (PIC) & Optical Computing Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Four-Wave Mixing (FWM) Silicon Waveguide,
+  it is specifically engineered to mitigate and detect Optical computing clock skew
+  injection, temporal pulse train overlap attacks. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Temporal magnification ratio:
+  M = -d_2 / d_1; pulse arrival jitter \tau_{jitter} <= 150\,fs; timing violation
+  halts optical matrix execution.. Any divergence between commanded network state
+  and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Optical computing clock skew injection, temporal pulse train overlap
+  attacks
+core_invariant: 'Temporal magnification ratio: M = -d_2 / d_1; pulse arrival jitter
+  \tau_{jitter} <= 150\,fs; timing violation halts optical matrix execution.'
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40221:
+      name: s177_optical_time_lens_picosecond_pulse_jitter_analyzer_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40223:
+      name: s177_optical_time_lens_picosecond_pulse_jitter_analyzer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s177_optical_time_lens_picosecond_pulse_jitter_analyzer_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Optical computing clock skew injection, temporal
+    pulse train overlap attacks'

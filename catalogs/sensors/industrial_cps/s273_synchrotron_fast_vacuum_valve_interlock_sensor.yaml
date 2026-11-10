@@ -1,0 +1,44 @@
+sensor_id: s273_synchrotron_fast_vacuum_valve_interlock_sensor
+name: Synchrotron Fast Vacuum Valve Interlock Sensor
+domain_id: 39
+domain_title: Particle Accelerator & Synchrotron Light Source Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15273
+interface: Ultra-Fast Cold-Cathode Ion Gauge
+description: 'Synchrotron Fast Vacuum Valve Interlock Sensor is a specialized Domain
+  39 (Particle Accelerator & Synchrotron Light Source Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Ultra-Fast Cold-Cathode Ion Gauge, it is specifically
+  engineered to mitigate and detect Beryllium window rupture, beamline vacuum contamination.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Pressure rise rate: \frac{dP}{dt} >= 10^{-4}\,mbar/s; trips electromagnetic fast-closing
+  shutter in < 15\,ms to isolate the ring vacuum.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Beryllium window rupture, beamline vacuum contamination
+core_invariant: 'Pressure rise rate: \frac{dP}{dt} >= 10^{-4}\,mbar/s; trips electromagnetic
+  fast-closing shutter in < 15\,ms to isolate the ring vacuum.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40121:
+      name: s273_synchrotron_fast_vacuum_valve_interlock_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40123:
+      name: s273_synchrotron_fast_vacuum_valve_interlock_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s273_synchrotron_fast_vacuum_valve_interlock_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Beryllium window rupture, beamline vacuum contamination'

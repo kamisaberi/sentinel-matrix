@@ -1,0 +1,46 @@
+sensor_id: s364_seawater_acoustic_impedance_transducer
+name: Seawater Acoustic Impedance Transducer
+domain_id: 52
+domain_title: Naval Submarine Acoustic Stealth & Hull Integrity Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15364
+interface: High-Frequency Acoustic Reflection Probe
+description: 'Seawater Acoustic Impedance Transducer is a specialized Domain 52 (Naval
+  Submarine Acoustic Stealth & Hull Integrity Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via High-Frequency Acoustic Reflection Probe, it is specifically
+  engineered to mitigate and detect Hull sonar target strength calculation error,
+  acoustic stealth mismatch. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Seawater specific acoustic impedance: Z_{water} = \rho
+  c; anechoic coating reflection coefficient: R = \frac{Z_{coating} - Z_{water}}{Z_{coating}
+  + Z_{water}} \to 0.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hull sonar target strength calculation error, acoustic stealth mismatch
+core_invariant: 'Seawater specific acoustic impedance: Z_{water} = \rho c; anechoic
+  coating reflection coefficient: R = \frac{Z_{coating} - Z_{water}}{Z_{coating} +
+  Z_{water}} \to 0.'
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40471:
+      name: s364_seawater_acoustic_impedance_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40473:
+      name: s364_seawater_acoustic_impedance_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s364_seawater_acoustic_impedance_transducer_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Hull sonar target strength calculation error, acoustic
+    stealth mismatch'

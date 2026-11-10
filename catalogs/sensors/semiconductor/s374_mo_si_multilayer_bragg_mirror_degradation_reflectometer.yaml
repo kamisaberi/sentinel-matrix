@@ -1,0 +1,45 @@
+sensor_id: s374_mo_si_multilayer_bragg_mirror_degradation_reflectometer
+name: Mo/Si Multilayer Bragg Mirror Degradation Reflectometer
+domain_id: 53
+domain_title: Extreme Ultraviolet (EUV) Lithography Optics & Sn-Plasma Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15374
+interface: In-Situ Calibrated EUV Photodiode (13.5 nm)
+description: 'Mo/Si Multilayer Bragg Mirror Degradation Reflectometer is a specialized
+  Domain 53 (Extreme Ultraviolet (EUV) Lithography Optics & Sn-Plasma Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via In-Situ Calibrated EUV Photodiode (13.5
+  nm), it is specifically engineered to mitigate and detect Mirror oxidation, carbon
+  capping-layer cracking, throughput collapse. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Peak EUV reflectivity: \mathcal{R}_{EUV}
+  = \frac{I_{reflected}}{I_{incident}} >= 68.5\%; reflectivity loss indicates mirror
+  contamination.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Mirror oxidation, carbon capping-layer cracking, throughput collapse
+core_invariant: 'Peak EUV reflectivity: \mathcal{R}_{EUV} = \frac{I_{reflected}}{I_{incident}}
+  >= 68.5\%; reflectivity loss indicates mirror contamination.'
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40051:
+      name: s374_mo_si_multilayer_bragg_mirror_degradation_reflectometer_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40053:
+      name: s374_mo_si_multilayer_bragg_mirror_degradation_reflectometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s374_mo_si_multilayer_bragg_mirror_degradation_reflectometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Mirror oxidation, carbon capping-layer cracking,
+    throughput collapse'

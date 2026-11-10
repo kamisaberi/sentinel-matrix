@@ -1,0 +1,47 @@
+sensor_id: s337_stratospheric_boundary_thin_film_hot_wire_anemometer
+name: Stratospheric Boundary Thin-Film Hot-Wire Anemometer
+domain_id: 48
+domain_title: High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15337
+interface: Constant-Temperature Hot-Wire (CTA)
+description: "Stratospheric Boundary Thin-Film Hot-Wire Anemometer is a specialized\
+  \ Domain 48 (High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Constant-Temperature\
+  \ Hot-Wire (CTA), it is specifically engineered to mitigate and detect Laminar separation\
+  \ bubble on ultra-low Reynolds number wing (Re \u2248 10^5). In the Aryorithm edge\
+  \ architecture, it continuously asserts the operational invariant: Boundary layer\
+  \ wall shear stress \\tau_w \u221D i_{wire}^2; turbulent transition point tracking\
+  \ prevents sudden high-altitude stall.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: "Laminar separation bubble on ultra-low Reynolds number wing (Re \u2248\
+  \ 10^5)"
+core_invariant: "Boundary layer wall shear stress \\tau_w \u221D i_{wire}^2; turbulent\
+  \ transition point tracking prevents sudden high-altitude stall."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40211:
+      name: s337_stratospheric_boundary_thin_film_hot_wire_anemometer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40213:
+      name: s337_stratospheric_boundary_thin_film_hot_wire_anemometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s337_stratospheric_boundary_thin_film_hot_wire_anemometer_fault
+  action: step_increase
+  value: 10.0
+  description: "Injects anomaly: Laminar separation bubble on ultra-low Reynolds number\
+    \ wing (Re \u2248 10^5)"

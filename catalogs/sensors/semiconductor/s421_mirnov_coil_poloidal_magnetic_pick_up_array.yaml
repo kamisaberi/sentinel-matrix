@@ -1,0 +1,46 @@
+sensor_id: s421_mirnov_coil_poloidal_magnetic_pick_up_array
+name: Mirnov Coil Poloidal Magnetic Pick-Up Array
+domain_id: 60
+domain_title: Superconducting Tokamak Fusion Plasma Diagnostics Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15421
+interface: Ultra-Fast Integrator Circuit (2 MHz)
+description: 'Mirnov Coil Poloidal Magnetic Pick-Up Array is a specialized Domain
+  60 (Superconducting Tokamak Fusion Plasma Diagnostics Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Ultra-Fast Integrator Circuit (2 MHz), it is specifically
+  engineered to mitigate and detect Magnetohydrodynamic (MHD) tearing modes, impending
+  major plasma disruption. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Magnetic perturbation amplitude: \frac{\tilde{B}_\theta}{B_\theta}
+  <= 1.5\%; mode growth rate \gamma > 0 triggers massive gas injection (MGI) in <
+  1.0\,ms.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Magnetohydrodynamic (MHD) tearing modes, impending major plasma disruption
+core_invariant: 'Magnetic perturbation amplitude: \frac{\tilde{B}_\theta}{B_\theta}
+  <= 1.5\%; mode growth rate \gamma > 0 triggers massive gas injection (MGI) in <
+  1.0\,ms.'
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40471:
+      name: s421_mirnov_coil_poloidal_magnetic_pick_up_array_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40473:
+      name: s421_mirnov_coil_poloidal_magnetic_pick_up_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s421_mirnov_coil_poloidal_magnetic_pick_up_array_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Magnetohydrodynamic (MHD) tearing modes, impending
+    major plasma disruption'

@@ -1,0 +1,45 @@
+sensor_id: s221_ablative_thermal_protection_tps_recession_sensor
+name: Ablative Thermal Protection (TPS) Recession Sensor
+domain_id: 32
+domain_title: Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15221
+interface: Embedded Platinum Wire Ladder
+description: "Ablative Thermal Protection (TPS) Recession Sensor is a specialized\
+  \ Domain 32 (Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS))\
+  \ cyber-physical monitoring sensor. Interfacing directly via Embedded Platinum Wire\
+  \ Ladder, it is specifically engineered to mitigate and detect Heat-shield burnout,\
+  \ carbon-phenolic resin ablation runaway. In the Aryorithm edge architecture, it\
+  \ continuously asserts the operational invariant: Resistor break circuit: \u0394\
+  \ R_{ladder} = k \\cdot x_{recession}(t); remaining heat-shield thickness must satisfy:\
+  \ d_{residual}(t) >= d_{margin}.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Heat-shield burnout, carbon-phenolic resin ablation runaway
+core_invariant: "Resistor break circuit: \u0394 R_{ladder} = k \\cdot x_{recession}(t);\
+  \ remaining heat-shield thickness must satisfy: d_{residual}(t) >= d_{margin}."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40111:
+      name: s221_ablative_thermal_protection_tps_recession_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40113:
+      name: s221_ablative_thermal_protection_tps_recession_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s221_ablative_thermal_protection_tps_recession_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Heat-shield burnout, carbon-phenolic resin ablation
+    runaway'

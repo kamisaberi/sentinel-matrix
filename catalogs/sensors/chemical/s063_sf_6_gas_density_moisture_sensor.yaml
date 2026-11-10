@@ -1,0 +1,43 @@
+sensor_id: s063_sf_6_gas_density_moisture_sensor
+name: SF_6 Gas Density / Moisture Sensor
+domain_id: 10
+domain_title: Chemical, Gas & Dielectric Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15063
+interface: Modbus / RS-485 Sensor
+description: 'SF_6 Gas Density / Moisture Sensor is a specialized Domain 10 (Chemical,
+  Gas & Dielectric Sensors) cyber-physical monitoring sensor. Interfacing directly
+  via Modbus / RS-485 Sensor, it is specifically engineered to mitigate and detect
+  High-voltage circuit breaker arc quenching failure. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Gas density must remain > 5.0\,kg/m^3;
+  low density locks trip coils to prevent explosions.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: High-voltage circuit breaker arc quenching failure
+core_invariant: Gas density must remain > 5.0\,kg/m^3; low density locks trip coils
+  to prevent explosions.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40121:
+      name: s063_sf_6_gas_density_moisture_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40123:
+      name: s063_sf_6_gas_density_moisture_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s063_sf_6_gas_density_moisture_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: High-voltage circuit breaker arc quenching failure'

@@ -1,0 +1,43 @@
+sensor_id: s014_sram_startup_state_entropy_harvester
+name: SRAM Startup State Entropy Harvester
+domain_id: 2
+domain_title: PCB, Power-Rail & Hardware Fault-Injection Sensors
+category: PCB_POWER
+target_protocol: MODBUS_TCP
+default_port: 15014
+interface: Raw Memory Controller Read
+description: 'SRAM Startup State Entropy Harvester is a specialized Domain 02 (PCB,
+  Power-Rail & Hardware Fault-Injection Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Raw Memory Controller Read, it is specifically engineered
+  to mitigate and detect Cloned ASIC boards, hardware Trojan IC replacements. In the
+  Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Verifies physical unclonable function (PUF) startup bitmask match against factory
+  baseline.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Cloned ASIC boards, hardware Trojan IC replacements
+core_invariant: Verifies physical unclonable function (PUF) startup bitmask match
+  against factory baseline.
+physics:
+  engine: pcb_power_glitch
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mV
+registers:
+  holding_registers:
+    40131:
+      name: s014_sram_startup_state_entropy_harvester_pv
+      type: float32
+      scale: 1.0
+      unit: mV
+    40133:
+      name: s014_sram_startup_state_entropy_harvester_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s014_sram_startup_state_entropy_harvester_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Cloned ASIC boards, hardware Trojan IC replacements'

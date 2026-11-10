@@ -1,0 +1,45 @@
+sensor_id: s200_solid_state_energetic_electron_spectrometer
+name: Solid-State Energetic Electron Spectrometer
+domain_id: 29
+domain_title: Spacecraft Ionizing Radiation, Solar Wind & Magnetospheric Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15200
+interface: Silicon PIN Multi-Channel Detector
+description: 'Solid-State Energetic Electron Spectrometer is a specialized Domain
+  29 (Spacecraft Ionizing Radiation, Solar Wind & Magnetospheric Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Silicon PIN Multi-Channel Detector,
+  it is specifically engineered to mitigate and detect Outer Van Allen radiation belt
+  electron flux, deep dielectric charging. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Differential flux j(E) at > 2\,MeV;
+  high electron flux causes internal satellite circuit board arc discharges; initiates
+  charge bleed-off.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Outer Van Allen radiation belt electron flux, deep dielectric charging
+core_invariant: Differential flux j(E) at > 2\,MeV; high electron flux causes internal
+  satellite circuit board arc discharges; initiates charge bleed-off.
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40431:
+      name: s200_solid_state_energetic_electron_spectrometer_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40433:
+      name: s200_solid_state_energetic_electron_spectrometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s200_solid_state_energetic_electron_spectrometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Outer Van Allen radiation belt electron flux, deep
+    dielectric charging'

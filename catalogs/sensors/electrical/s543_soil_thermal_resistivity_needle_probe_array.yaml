@@ -1,0 +1,45 @@
+sensor_id: s543_soil_thermal_resistivity_needle_probe_array
+name: Soil Thermal Resistivity Needle Probe Array
+domain_id: 77
+domain_title: High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15543
+interface: In-Situ Heated Thermal Needle
+description: 'Soil Thermal Resistivity Needle Probe Array is a specialized Domain
+  77 (High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via In-Situ Heated Thermal Needle, it is
+  specifically engineered to mitigate and detect Cable trench soil moisture migration
+  (soil dry-out), thermal runaway. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Soil thermal resistivity: \rho_{thermal} <= 1.2\,K\cdotm/W;
+  soil dry-out reduces cable heat dissipation, requiring DC power de-rating.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Cable trench soil moisture migration (soil dry-out), thermal runaway
+core_invariant: 'Soil thermal resistivity: \rho_{thermal} <= 1.2\,K\cdotm/W; soil
+  dry-out reduces cable heat dissipation, requiring DC power de-rating.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40111:
+      name: s543_soil_thermal_resistivity_needle_probe_array_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40113:
+      name: s543_soil_thermal_resistivity_needle_probe_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s543_soil_thermal_resistivity_needle_probe_array_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Cable trench soil moisture migration (soil dry-out),
+    thermal runaway'

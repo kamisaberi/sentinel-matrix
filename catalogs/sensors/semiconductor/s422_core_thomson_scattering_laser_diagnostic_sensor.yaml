@@ -1,0 +1,45 @@
+sensor_id: s422_core_thomson_scattering_laser_diagnostic_sensor
+name: Core Thomson Scattering Laser Diagnostic Sensor
+domain_id: 60
+domain_title: Superconducting Tokamak Fusion Plasma Diagnostics Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15422
+interface: Multi-Anode Photomultiplier (50 Hz Laser)
+description: 'Core Thomson Scattering Laser Diagnostic Sensor is a specialized Domain
+  60 (Superconducting Tokamak Fusion Plasma Diagnostics Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Multi-Anode Photomultiplier (50 Hz Laser), it is
+  specifically engineered to mitigate and detect Plasma thermal collapse, localized
+  thermal barrier transport puncture. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Doppler-broadened laser scattering: extracts
+  spatial T_e(r) and n_e(r); density drop across safety profile triggers fuel pellet
+  injection.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Plasma thermal collapse, localized thermal barrier transport puncture
+core_invariant: 'Doppler-broadened laser scattering: extracts spatial T_e(r) and n_e(r);
+  density drop across safety profile triggers fuel pellet injection.'
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40481:
+      name: s422_core_thomson_scattering_laser_diagnostic_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40483:
+      name: s422_core_thomson_scattering_laser_diagnostic_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s422_core_thomson_scattering_laser_diagnostic_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Plasma thermal collapse, localized thermal barrier
+    transport puncture'

@@ -1,0 +1,45 @@
+sensor_id: s244_ortho_to_para_hydrogen_conversion_reaction_sensor
+name: Ortho-to-Para Hydrogen Conversion Reaction Sensor
+domain_id: 35
+domain_title: Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15244
+interface: Thermal Conductivity Gas Analyzer
+description: 'Ortho-to-Para Hydrogen Conversion Reaction Sensor is a specialized Domain
+  35 (Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Thermal Conductivity Gas Analyzer, it is specifically
+  engineered to mitigate and detect Exothermic ortho-para conversion in storage, tank
+  boil-off burst. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Equilibrium para-hydrogen concentration: C_{para} >= 95\%
+  at 20 K; un-converted ortho-hydrogen releases 527\,kJ/kg of heat, boiling liquid..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Exothermic ortho-para conversion in storage, tank boil-off burst
+core_invariant: 'Equilibrium para-hydrogen concentration: C_{para} >= 95\% at 20 K;
+  un-converted ortho-hydrogen releases 527\,kJ/kg of heat, boiling liquid.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40341:
+      name: s244_ortho_to_para_hydrogen_conversion_reaction_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40343:
+      name: s244_ortho_to_para_hydrogen_conversion_reaction_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s244_ortho_to_para_hydrogen_conversion_reaction_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Exothermic ortho-para conversion in storage, tank
+    boil-off burst'

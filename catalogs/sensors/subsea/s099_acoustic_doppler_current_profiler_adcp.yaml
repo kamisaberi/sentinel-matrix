@@ -1,0 +1,44 @@
+sensor_id: s099_acoustic_doppler_current_profiler_adcp
+name: Acoustic Doppler Current Profiler (ADCP)
+domain_id: 15
+domain_title: Deep Marine, Subsea & Oceanographic Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15099
+interface: 4-Beam Janus Acoustic Array
+description: 'Acoustic Doppler Current Profiler (ADCP) is a specialized Domain 15
+  (Deep Marine, Subsea & Oceanographic Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via 4-Beam Janus Acoustic Array, it is specifically engineered
+  to mitigate and detect UUV dead-reckoning drift, underwater current spoofing. In
+  the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Doppler frequency shift f_d = \frac{2 f_0 v \cos\theta}{c}; calculates 3D water
+  velocity column and bottom-tracking velocity.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: UUV dead-reckoning drift, underwater current spoofing
+core_invariant: Doppler frequency shift f_d = \frac{2 f_0 v \cos\theta}{c}; calculates
+  3D water velocity column and bottom-tracking velocity.
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40471:
+      name: s099_acoustic_doppler_current_profiler_adcp_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40473:
+      name: s099_acoustic_doppler_current_profiler_adcp_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s099_acoustic_doppler_current_profiler_adcp_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: UUV dead-reckoning drift, underwater current spoofing'

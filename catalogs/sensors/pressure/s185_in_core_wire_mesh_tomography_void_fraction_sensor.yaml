@@ -1,0 +1,47 @@
+sensor_id: s185_in_core_wire_mesh_tomography_void_fraction_sensor
+name: In-Core Wire-Mesh Tomography Void Fraction Sensor
+domain_id: 27
+domain_title: Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15185
+interface: "32 \xD7 32 Crossed Electrode Wire Grid (10 kHz)"
+description: "In-Core Wire-Mesh Tomography Void Fraction Sensor is a specialized Domain\
+  \ 27 (Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via 32 \xD7 32 Crossed Electrode Wire\
+  \ Grid (10 kHz), it is specifically engineered to mitigate and detect Uncontrolled\
+  \ boiling voiding, localized coolant flow blockage. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Local fluid electrical conductivity:\
+  \ \\alpha = \\frac{\\sigma_{liquid} - \\sigma_{measured}}{\\sigma_{liquid} - \\\
+  sigma_{gas}}; spatial void fraction \\alpha(x,y) <= 0.35 to avoid DNB thermal crises..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Uncontrolled boiling voiding, localized coolant flow blockage
+core_invariant: 'Local fluid electrical conductivity: \alpha = \frac{\sigma_{liquid}
+  - \sigma_{measured}}{\sigma_{liquid} - \sigma_{gas}}; spatial void fraction \alpha(x,y)
+  <= 0.35 to avoid DNB thermal crises.'
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40291:
+      name: s185_in_core_wire_mesh_tomography_void_fraction_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40293:
+      name: s185_in_core_wire_mesh_tomography_void_fraction_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s185_in_core_wire_mesh_tomography_void_fraction_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Uncontrolled boiling voiding, localized coolant flow
+    blockage'

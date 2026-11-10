@@ -1,0 +1,44 @@
+sensor_id: s077_giant_magnetoresistive_gmr_angle_sensor
+name: Giant Magnetoresistive (GMR) Angle Sensor
+domain_id: 11
+domain_title: Magnetic, Fluxgate & Magnetohydrodynamic (MHD) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15077
+interface: Differential Analog Bridge
+description: 'Giant Magnetoresistive (GMR) Angle Sensor is a specialized Domain 11
+  (Magnetic, Fluxgate & Magnetohydrodynamic (MHD) Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Differential Analog Bridge, it is specifically
+  engineered to mitigate and detect Actuator gear tooth slippage, motor back-turn
+  tampering. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Mechanical shaft angle \theta cross-checked against optical encoder pulses;
+  mismatch indicates mechanical gear strip or drive slip.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Actuator gear tooth slippage, motor back-turn tampering
+core_invariant: Mechanical shaft angle \theta cross-checked against optical encoder
+  pulses; mismatch indicates mechanical gear strip or drive slip.
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40261:
+      name: s077_giant_magnetoresistive_gmr_angle_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40263:
+      name: s077_giant_magnetoresistive_gmr_angle_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s077_giant_magnetoresistive_gmr_angle_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Actuator gear tooth slippage, motor back-turn tampering'

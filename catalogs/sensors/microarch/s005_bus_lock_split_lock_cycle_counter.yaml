@@ -1,0 +1,42 @@
+sensor_id: s005_bus_lock_split_lock_cycle_counter
+name: Bus Lock / Split-Lock Cycle Counter
+domain_id: 1
+domain_title: Microarchitectural, CPU & Memory Sensors (Host Hardware Security)
+category: MICROARCH
+target_protocol: PMU_PERF
+default_port: 15005
+interface: MSR (`IA32_BUS_LOCK_DETECT`)
+description: 'Bus Lock / Split-Lock Cycle Counter is a specialized Domain 01 (Microarchitectural,
+  CPU & Memory Sensors (Host Hardware Security)) cyber-physical monitoring sensor.
+  Interfacing directly via MSR (`IA32_BUS_LOCK_DETECT`), it is specifically engineered
+  to mitigate and detect Unaligned atomic memory access DoS attacks. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Flags unaligned
+  bus locks that freeze multi-core memory arbiters.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Unaligned atomic memory access DoS attacks
+core_invariant: Flags unaligned bus locks that freeze multi-core memory arbiters.
+physics:
+  engine: pmu_microarch
+  baseline_value: 1.2
+  min_value: 0.1
+  max_value: 4.0
+  noise_sigma: 0.05
+  unit: IPC
+registers:
+  holding_registers:
+    40041:
+      name: s005_bus_lock_split_lock_cycle_counter_pv
+      type: float32
+      scale: 1.0
+      unit: IPC
+    40043:
+      name: s005_bus_lock_split_lock_cycle_counter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s005_bus_lock_split_lock_cycle_counter_fault
+  action: step_decrease
+  value: -0.8
+  description: 'Injects anomaly: Unaligned atomic memory access DoS attacks'

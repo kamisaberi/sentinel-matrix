@@ -1,0 +1,42 @@
+sensor_id: s017_tcp_sequence_gap_retransmission_sensor
+name: TCP Sequence Gap / Retransmission Sensor
+domain_id: 3
+domain_title: Wire-Speed Network & Protocol Telemetry Sensors
+category: NETWORK
+target_protocol: UDP_STREAM
+default_port: 15017
+interface: eBPF TCP State Tracker
+description: 'TCP Sequence Gap / Retransmission Sensor is a specialized Domain 03
+  (Wire-Speed Network & Protocol Telemetry Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via eBPF TCP State Tracker, it is specifically engineered to
+  mitigate and detect TCP reset injection, session hijacking, man-in-the-middle. In
+  the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  In-order sequence numbers; flags out-of-window packet injection.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: TCP reset injection, session hijacking, man-in-the-middle
+core_invariant: In-order sequence numbers; flags out-of-window packet injection.
+physics:
+  engine: network_ebpf
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: packets
+registers:
+  holding_registers:
+    40161:
+      name: s017_tcp_sequence_gap_retransmission_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: packets
+    40163:
+      name: s017_tcp_sequence_gap_retransmission_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s017_tcp_sequence_gap_retransmission_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: TCP reset injection, session hijacking, man-in-the-middle'

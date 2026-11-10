@@ -1,0 +1,45 @@
+sensor_id: s523_decoy_pneumatic_bubble_screen_acoustic_attenuation_sensor
+name: Decoy Pneumatic Bubble-Screen Acoustic Attenuation Sensor
+domain_id: 74
+domain_title: Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15523
+interface: High-Frequency Hydrophone Array
+description: 'Decoy Pneumatic Bubble-Screen Acoustic Attenuation Sensor is a specialized
+  Domain 74 (Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via High-Frequency Hydrophone
+  Array, it is specifically engineered to mitigate and detect Acoustic countermeasure
+  failure, torpedo homing lock-on through decoy. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Sound transmission loss: TL_{bubble}
+  >= 35\,dB across 10--60\,kHz; attenuation drop triggers secondary chemical effervescent
+  canister release.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Acoustic countermeasure failure, torpedo homing lock-on through decoy
+core_invariant: 'Sound transmission loss: TL_{bubble} >= 35\,dB across 10--60\,kHz;
+  attenuation drop triggers secondary chemical effervescent canister release.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40441:
+      name: s523_decoy_pneumatic_bubble_screen_acoustic_attenuation_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40443:
+      name: s523_decoy_pneumatic_bubble_screen_acoustic_attenuation_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s523_decoy_pneumatic_bubble_screen_acoustic_attenuation_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Acoustic countermeasure failure, torpedo homing lock-on
+    through decoy'

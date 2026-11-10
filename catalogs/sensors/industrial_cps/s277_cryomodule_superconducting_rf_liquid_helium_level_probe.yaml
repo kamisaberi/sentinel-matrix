@@ -1,0 +1,45 @@
+sensor_id: s277_cryomodule_superconducting_rf_liquid_helium_level_probe
+name: Cryomodule Superconducting RF Liquid Helium Level Probe
+domain_id: 39
+domain_title: Particle Accelerator & Synchrotron Light Source Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15277
+interface: Superconducting NbTi Wire Resistance Sensor
+description: 'Cryomodule Superconducting RF Liquid Helium Level Probe is a specialized
+  Domain 39 (Particle Accelerator & Synchrotron Light Source Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Superconducting NbTi Wire Resistance
+  Sensor, it is specifically engineered to mitigate and detect Cryomodule dry-out,
+  thermal runaway of 1.8 K superconducting cavities. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Superconducting transition boundary
+  maps liquid helium height; level drop < 90\% throttles klystron RF power in < 2\,ms..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Cryomodule dry-out, thermal runaway of 1.8 K superconducting cavities
+core_invariant: Superconducting transition boundary maps liquid helium height; level
+  drop < 90\% throttles klystron RF power in < 2\,ms.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40151:
+      name: s277_cryomodule_superconducting_rf_liquid_helium_level_probe_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40153:
+      name: s277_cryomodule_superconducting_rf_liquid_helium_level_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s277_cryomodule_superconducting_rf_liquid_helium_level_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Cryomodule dry-out, thermal runaway of 1.8 K superconducting
+    cavities'

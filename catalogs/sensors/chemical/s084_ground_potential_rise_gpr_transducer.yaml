@@ -1,0 +1,45 @@
+sensor_id: s084_ground_potential_rise_gpr_transducer
+name: Ground Potential Rise (GPR) Transducer
+domain_id: 12
+domain_title: High-Voltage Electrical, Arc & Dielectric Breakdown Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15084
+interface: Isolated Fiber-Optic Voltage Link
+description: "Ground Potential Rise (GPR) Transducer is a specialized Domain 12 (High-Voltage\
+  \ Electrical, Arc & Dielectric Breakdown Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via Isolated Fiber-Optic Voltage Link, it is specifically\
+  \ engineered to mitigate and detect Substation copper grounding grid theft/severance,\
+  \ touch-voltage hazard. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Ground grid potential rise \u0394 V_{ground} <= 430\\\
+  ,V (IEEE 80 limit); severed ground grid flags immediate electrocution hazard.. Any\
+  \ divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Substation copper grounding grid theft/severance, touch-voltage hazard
+core_invariant: "Ground grid potential rise \u0394 V_{ground} <= 430\\,V (IEEE 80\
+  \ limit); severed ground grid flags immediate electrocution hazard."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40331:
+      name: s084_ground_potential_rise_gpr_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40333:
+      name: s084_ground_potential_rise_gpr_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s084_ground_potential_rise_gpr_transducer_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Substation copper grounding grid theft/severance,
+    touch-voltage hazard'

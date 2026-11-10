@@ -1,0 +1,46 @@
+sensor_id: s217_chamber_oxygen_argon_partial_pressure_sensor
+name: Chamber Oxygen / Argon Partial Pressure Sensor
+domain_id: 31
+domain_title: Metal Additive Manufacturing (3D Printing) Melt-Pool Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15217
+interface: Zirconia / Luminescence Quenching Cell
+description: 'Chamber Oxygen / Argon Partial Pressure Sensor is a specialized Domain
+  31 (Metal Additive Manufacturing (3D Printing) Melt-Pool Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Zirconia / Luminescence Quenching Cell,
+  it is specifically engineered to mitigate and detect Titanium powder oxidation,
+  embrittlement sabotage in rocket nozzle printing. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Inert atmosphere oxygen level:
+  P_{O_2} <= 100\,ppm; oxygen ingress halts laser scanning to prevent fatal interstitial
+  embrittlement.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Titanium powder oxidation, embrittlement sabotage in rocket nozzle
+  printing
+core_invariant: 'Inert atmosphere oxygen level: P_{O_2} <= 100\,ppm; oxygen ingress
+  halts laser scanning to prevent fatal interstitial embrittlement.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40081:
+      name: s217_chamber_oxygen_argon_partial_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40083:
+      name: s217_chamber_oxygen_argon_partial_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s217_chamber_oxygen_argon_partial_pressure_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Titanium powder oxidation, embrittlement sabotage
+    in rocket nozzle printing'

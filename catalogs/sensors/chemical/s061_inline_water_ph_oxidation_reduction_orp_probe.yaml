@@ -1,0 +1,44 @@
+sensor_id: s061_inline_water_ph_oxidation_reduction_orp_probe
+name: Inline Water pH / Oxidation-Reduction (ORP) Probe
+domain_id: 10
+domain_title: Chemical, Gas & Dielectric Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15061
+interface: 4-20mA / Modbus Sensor
+description: 'Inline Water pH / Oxidation-Reduction (ORP) Probe is a specialized Domain
+  10 (Chemical, Gas & Dielectric Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via 4-20mA / Modbus Sensor, it is specifically engineered to mitigate and
+  detect Water supply poisoning attacks (Oldsmar caustic soda hack). In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: pH must stay
+  within 6.5 <= pH <= 8.5; deviation clamps dosing pumps in < 840\,ns.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Water supply poisoning attacks (Oldsmar caustic soda hack)
+core_invariant: pH must stay within 6.5 <= pH <= 8.5; deviation clamps dosing pumps
+  in < 840\,ns.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40101:
+      name: s061_inline_water_ph_oxidation_reduction_orp_probe_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40103:
+      name: s061_inline_water_ph_oxidation_reduction_orp_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s061_inline_water_ph_oxidation_reduction_orp_probe_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Water supply poisoning attacks (Oldsmar caustic soda
+    hack)'

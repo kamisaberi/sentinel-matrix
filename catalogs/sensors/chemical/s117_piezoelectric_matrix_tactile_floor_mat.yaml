@@ -1,0 +1,44 @@
+sensor_id: s117_piezoelectric_matrix_tactile_floor_mat
+name: Piezoelectric Matrix Tactile Floor Mat
+domain_id: 17
+domain_title: Bioprocess, Industrial Chemical & Physical Bio Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15117
+interface: High-Density Pressure Grid (100 Hz)
+description: 'Piezoelectric Matrix Tactile Floor Mat is a specialized Domain 17 (Bioprocess,
+  Industrial Chemical & Physical Bio Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via High-Density Pressure Grid (100 Hz), it is specifically engineered
+  to mitigate and detect Tailgating in physical security mantraps, unauthorized access.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Weight, stride cadence, and foot pressure distribution must match authorized badge
+  credentials; dual-weight flags tailgaters.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Tailgating in physical security mantraps, unauthorized access
+core_invariant: Weight, stride cadence, and foot pressure distribution must match
+  authorized badge credentials; dual-weight flags tailgaters.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40151:
+      name: s117_piezoelectric_matrix_tactile_floor_mat_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40153:
+      name: s117_piezoelectric_matrix_tactile_floor_mat_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s117_piezoelectric_matrix_tactile_floor_mat_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Tailgating in physical security mantraps, unauthorized
+    access'

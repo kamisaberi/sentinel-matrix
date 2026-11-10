@@ -1,0 +1,43 @@
+sensor_id: s057_dam_spillway_aeration_void_fraction_probe
+name: Dam Spillway Aeration Void-Fraction Probe
+domain_id: 9
+domain_title: Fluid, Pressure & Hydrodynamic Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15057
+interface: Conductivity / Optical Bubble Sensor
+description: 'Dam Spillway Aeration Void-Fraction Probe is a specialized Domain 09
+  (Fluid, Pressure & Hydrodynamic Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Conductivity / Optical Bubble Sensor, it is specifically engineered
+  to mitigate and detect Spillway cavitation, concrete gouging disasters. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Cavitation
+  index \sigma = \frac{P - P_v}{\frac{1}{2}\rho v^2} >= 0.20 maintained by gate hoists..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Spillway cavitation, concrete gouging disasters
+core_invariant: Cavitation index \sigma = \frac{P - P_v}{\frac{1}{2}\rho v^2} >= 0.20
+  maintained by gate hoists.
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40061:
+      name: s057_dam_spillway_aeration_void_fraction_probe_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40063:
+      name: s057_dam_spillway_aeration_void_fraction_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s057_dam_spillway_aeration_void_fraction_probe_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Spillway cavitation, concrete gouging disasters'

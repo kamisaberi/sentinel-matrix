@@ -1,0 +1,46 @@
+sensor_id: s530_gravity_driven_cooling_system_gdccs_squib_pressure_sensor
+name: Gravity-Driven Cooling System (GDCCS) Squib Pressure Sensor
+domain_id: 75
+domain_title: Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety
+  Sensors
+category: NUCLEAR
+target_protocol: MODBUS_TCP
+default_port: 15530
+interface: Fast Piezoresistive Transducer (100 kHz)
+description: 'Gravity-Driven Cooling System (GDCCS) Squib Pressure Sensor is a specialized
+  Domain 75 (Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Fast Piezoresistive Transducer
+  (100 kHz), it is specifically engineered to mitigate and detect Pyrotechnic squib
+  valve failure, gravity pool injection failure. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Squib firing shockwave: P_{pyro}
+  >= 500\,bar with rise time < 1\,ms; misfire triggers redundant squib bridge on parallel
+  injection line.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Pyrotechnic squib valve failure, gravity pool injection failure
+core_invariant: 'Squib firing shockwave: P_{pyro} >= 500\,bar with rise time < 1\,ms;
+  misfire triggers redundant squib bridge on parallel injection line.'
+physics:
+  engine: nuclear_decay
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: uSv/h
+registers:
+  holding_registers:
+    40001:
+      name: s530_gravity_driven_cooling_system_gdccs_squib_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: uSv/h
+    40003:
+      name: s530_gravity_driven_cooling_system_gdccs_squib_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s530_gravity_driven_cooling_system_gdccs_squib_pressure_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Pyrotechnic squib valve failure, gravity pool injection
+    failure'

@@ -1,0 +1,42 @@
+sensor_id: s028_i_q_constellation_error_vector_magnitude_evm_sensor
+name: I/Q Constellation Error Vector Magnitude (EVM) Sensor
+domain_id: 4
+domain_title: Radio Frequency, GNSS & Electromagnetic Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15028
+interface: SDR Baseband Receiver
+description: 'I/Q Constellation Error Vector Magnitude (EVM) Sensor is a specialized
+  Domain 04 (Radio Frequency, GNSS & Electromagnetic Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via SDR Baseband Receiver, it is specifically engineered
+  to mitigate and detect Cellular IMSI-catcher, rogue base station injection. In the
+  Aryorithm edge architecture, it continuously asserts the operational invariant:
+  EVM > 8.5\% indicates man-in-the-middle signal re-transmission.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Cellular IMSI-catcher, rogue base station injection
+core_invariant: EVM > 8.5\% indicates man-in-the-middle signal re-transmission.
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40271:
+      name: s028_i_q_constellation_error_vector_magnitude_evm_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40273:
+      name: s028_i_q_constellation_error_vector_magnitude_evm_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s028_i_q_constellation_error_vector_magnitude_evm_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Cellular IMSI-catcher, rogue base station injection'

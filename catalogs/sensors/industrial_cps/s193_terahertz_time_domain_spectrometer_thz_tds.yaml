@@ -1,0 +1,46 @@
+sensor_id: s193_terahertz_time_domain_spectrometer_thz_tds
+name: Terahertz Time-Domain Spectrometer (THz-TDS)
+domain_id: 28
+domain_title: Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15193
+interface: Femtosecond Photoconductive Switch
+description: 'Terahertz Time-Domain Spectrometer (THz-TDS) is a specialized Domain
+  28 (Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Femtosecond Photoconductive Switch, it is specifically
+  engineered to mitigate and detect Concealed plastic explosives (RDX, PETN, Semtex,
+  C-4). In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Measures time-resolved electric field E(t); Fourier transform extracts
+  complex refractive index \tilde{n}(\omega) = n(\omega) + i \kappa(\omega) matching
+  explosive absorption peaks.. Any divergence between commanded network state and
+  this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Concealed plastic explosives (RDX, PETN, Semtex, C-4)
+core_invariant: Measures time-resolved electric field E(t); Fourier transform extracts
+  complex refractive index \tilde{n}(\omega) = n(\omega) + i \kappa(\omega) matching
+  explosive absorption peaks.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40371:
+      name: s193_terahertz_time_domain_spectrometer_thz_tds_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40373:
+      name: s193_terahertz_time_domain_spectrometer_thz_tds_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s193_terahertz_time_domain_spectrometer_thz_tds_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Concealed plastic explosives (RDX, PETN, Semtex,
+    C-4)'

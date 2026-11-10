@@ -1,0 +1,45 @@
+sensor_id: s264_active_anti_heeling_ballast_tank_level_sensor
+name: Active Anti-Heeling Ballast Tank Level Sensor
+domain_id: 38
+domain_title: Autonomous Marine Vessel Propulsion & Ballast Biosecurity Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15264
+interface: Hydrostatic Pressure Diaphragm
+description: "Active Anti-Heeling Ballast Tank Level Sensor is a specialized Domain\
+  \ 38 (Autonomous Marine Vessel Propulsion & Ballast Biosecurity Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Hydrostatic Pressure Diaphragm, it\
+  \ is specifically engineered to mitigate and detect Cargo shift, container stack\
+  \ toppling, ship roll instability. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Tank differential level: \u0394 h_{tanks} must\
+  \ counteract ship heel angle: \\tan\\theta_{heel} = \\frac{w \\cdot d}{\u0394 \\\
+  cdot GM} <= 1.5^\\circ.. Any divergence between commanded network state and this\
+  \ physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Cargo shift, container stack toppling, ship roll instability
+core_invariant: "Tank differential level: \u0394 h_{tanks} must counteract ship heel\
+  \ angle: \\tan\\theta_{heel} = \\frac{w \\cdot d}{\u0394 \\cdot GM} <= 1.5^\\circ."
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40041:
+      name: s264_active_anti_heeling_ballast_tank_level_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40043:
+      name: s264_active_anti_heeling_ballast_tank_level_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s264_active_anti_heeling_ballast_tank_level_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Cargo shift, container stack toppling, ship roll
+    instability'

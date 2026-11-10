@@ -1,0 +1,46 @@
+sensor_id: s390_nuclear_graphite_moderator_core_block_dimensional_wigner_strain_sensor
+name: Nuclear Graphite Moderator Core Block Dimensional Wigner Strain Sensor
+domain_id: 55
+domain_title: Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15390
+interface: High-Temperature Optical Telemetry Gauge
+description: "Nuclear Graphite Moderator Core Block Dimensional Wigner Strain Sensor\
+  \ is a specialized Domain 55 (Molten Salt Reactor (MSR) Chemical Reprocessing &\
+  \ Actinide Sensors) cyber-physical monitoring sensor. Interfacing directly via High-Temperature\
+  \ Optical Telemetry Gauge, it is specifically engineered to mitigate and detect\
+  \ Graphite moderator cracking, core geometry warping from neutron fluence. In the\
+  \ Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Wigner energy accumulation strain: \\frac{\u0394 L}{L} <= \\epsilon_{allowable};\
+  \ dimensional distortion flags fuel channel misalignment.. Any divergence between\
+  \ commanded network state and this physical reading triggers sub-microsecond in-kernel\
+  \ eBPF packet mitigation."
+target_threat: Graphite moderator cracking, core geometry warping from neutron fluence
+core_invariant: "Wigner energy accumulation strain: \\frac{\u0394 L}{L} <= \\epsilon_{allowable};\
+  \ dimensional distortion flags fuel channel misalignment."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40171:
+      name: s390_nuclear_graphite_moderator_core_block_dimensional_wigner_strain_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40173:
+      name: s390_nuclear_graphite_moderator_core_block_dimensional_wigner_strain_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s390_nuclear_graphite_moderator_core_block_dimensional_wigner_strain_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Graphite moderator cracking, core geometry warping
+    from neutron fluence'

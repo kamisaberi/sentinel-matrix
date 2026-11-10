@@ -1,0 +1,45 @@
+sensor_id: s133_fabry_p_rot_etalon_cavity_fringe_sensor
+name: "Fabry-P\xE9rot Etalon Cavity Fringe Sensor"
+domain_id: 19
+domain_title: High-Energy Laser, Directed Energy & Optoelectronic Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15133
+interface: InGaAs Photodiode Array
+description: "Fabry-P\xE9rot Etalon Cavity Fringe Sensor is a specialized Domain 19\
+  \ (High-Energy Laser, Directed Energy & Optoelectronic Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via InGaAs Photodiode Array, it is specifically engineered\
+  \ to mitigate and detect Seed laser longitudinal mode-hopping, optical carrier frequency\
+  \ drift. In the Aryorithm edge architecture, it continuously asserts the operational\
+  \ invariant: Inter-cavity optical resonance fringe spacing \u0394 \\nu_{FSR} = \\\
+  frac{c}{2nL}; mode hopping triggers instantaneous PZT cavity realignment.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Seed laser longitudinal mode-hopping, optical carrier frequency drift
+core_invariant: "Inter-cavity optical resonance fringe spacing \u0394 \\nu_{FSR} =\
+  \ \\frac{c}{2nL}; mode hopping triggers instantaneous PZT cavity realignment."
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40291:
+      name: s133_fabry_p_rot_etalon_cavity_fringe_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40293:
+      name: s133_fabry_p_rot_etalon_cavity_fringe_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s133_fabry_p_rot_etalon_cavity_fringe_sensor_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Seed laser longitudinal mode-hopping, optical carrier
+    frequency drift'

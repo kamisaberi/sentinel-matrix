@@ -1,0 +1,44 @@
+sensor_id: s037_thermocouple_tree_array
+name: Thermocouple Tree Array
+domain_id: 6
+domain_title: Thermal, Infrared & Cryogenic Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15037
+interface: Multi-Channel Cold-Junction ADC
+description: 'Thermocouple Tree Array is a specialized Domain 06 (Thermal, Infrared
+  & Cryogenic Sensors) cyber-physical monitoring sensor. Interfacing directly via
+  Multi-Channel Cold-Junction ADC, it is specifically engineered to mitigate and detect
+  Nuclear spent fuel pool boil-off, furnace refractory failure. In the Aryorithm edge
+  architecture, it continuously asserts the operational invariant: Enforces continuous
+  heat dissipation ODE: \frac{dT}{dt} = \frac{\dot{Q}}{m C_p}.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Nuclear spent fuel pool boil-off, furnace refractory failure
+core_invariant: 'Enforces continuous heat dissipation ODE: \frac{dT}{dt} = \frac{\dot{Q}}{m
+  C_p}.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40361:
+      name: s037_thermocouple_tree_array_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40363:
+      name: s037_thermocouple_tree_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s037_thermocouple_tree_array_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Nuclear spent fuel pool boil-off, furnace refractory
+    failure'

@@ -1,0 +1,45 @@
+sensor_id: s234_refinery_flare_tip_optical_combustion_steam_smut_sensor
+name: Refinery Flare Tip Optical Combustion & Steam Smut Sensor
+domain_id: 33
+domain_title: Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15234
+interface: Dual-Band Infrared Flame Sensor
+description: 'Refinery Flare Tip Optical Combustion & Steam Smut Sensor is a specialized
+  Domain 33 (Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Dual-Band Infrared Flame Sensor, it
+  is specifically engineered to mitigate and detect Smokeless flare steam quench sabotage,
+  unburned VOC emissions. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Flare combustion efficiency: \eta = \frac{[CO_2]}{[CO_2]
+  + [CO] + [HC]} >= 98\%; trims steam injection valve to eliminate toxic black smoke..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Smokeless flare steam quench sabotage, unburned VOC emissions
+core_invariant: 'Flare combustion efficiency: \eta = \frac{[CO_2]}{[CO_2] + [CO] +
+  [HC]} >= 98\%; trims steam injection valve to eliminate toxic black smoke.'
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40241:
+      name: s234_refinery_flare_tip_optical_combustion_steam_smut_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40243:
+      name: s234_refinery_flare_tip_optical_combustion_steam_smut_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s234_refinery_flare_tip_optical_combustion_steam_smut_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Smokeless flare steam quench sabotage, unburned VOC
+    emissions'

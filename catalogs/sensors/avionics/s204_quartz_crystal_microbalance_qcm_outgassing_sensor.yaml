@@ -1,0 +1,47 @@
+sensor_id: s204_quartz_crystal_microbalance_qcm_outgassing_sensor
+name: Quartz Crystal Microbalance (QCM) Outgassing Sensor
+domain_id: 29
+domain_title: Spacecraft Ionizing Radiation, Solar Wind & Magnetospheric Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15204
+interface: Dual Cryogenic Quartz Resonator
+description: "Quartz Crystal Microbalance (QCM) Outgassing Sensor is a specialized\
+  \ Domain 29 (Spacecraft Ionizing Radiation, Solar Wind & Magnetospheric Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Dual Cryogenic Quartz\
+  \ Resonator, it is specifically engineered to mitigate and detect Thruster propellant\
+  \ plume condensation on optical lenses / star trackers. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Mass accumulation rate: \u0394\
+  \ m = -\\frac{A \\sqrt{\\rho_q \xB5_q}}{2 f_0^2} \u0394 f; triggers thermal decontamination\
+  \ heaters when mass exceeds 10\\,ng/cm^2.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Thruster propellant plume condensation on optical lenses / star trackers
+core_invariant: "Mass accumulation rate: \u0394 m = -\\frac{A \\sqrt{\\rho_q \xB5\
+  _q}}{2 f_0^2} \u0394 f; triggers thermal decontamination heaters when mass exceeds\
+  \ 10\\,ng/cm^2."
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40461:
+      name: s204_quartz_crystal_microbalance_qcm_outgassing_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40463:
+      name: s204_quartz_crystal_microbalance_qcm_outgassing_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s204_quartz_crystal_microbalance_qcm_outgassing_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Thruster propellant plume condensation on optical
+    lenses / star trackers'

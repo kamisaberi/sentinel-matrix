@@ -1,0 +1,45 @@
+sensor_id: s297_pylon_guy_wire_anchor_tension_load_sensor
+name: Pylon Guy-Wire Anchor Tension Load Sensor
+domain_id: 42
+domain_title: High-Tension Transmission Pylon & Dynamic Line Rating (DLR) Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15297
+interface: Inline Strain Transducer on Anchor Cables
+description: "Pylon Guy-Wire Anchor Tension Load Sensor is a specialized Domain 42\
+  \ (High-Tension Transmission Pylon & Dynamic Line Rating (DLR) Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Inline Strain Transducer on Anchor\
+  \ Cables, it is specifically engineered to mitigate and detect Guy-wire cutting\
+  \ sabotage, high-wind pylon structural collapse. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Cable tension balance: T_{cable}\
+  \ = T_{spec} \xB1 10\\%; tension loss (T \\to 0) indicates severed guy-wire, triggering\
+  \ immediate grid re-routing.. Any divergence between commanded network state and\
+  \ this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Guy-wire cutting sabotage, high-wind pylon structural collapse
+core_invariant: "Cable tension balance: T_{cable} = T_{spec} \xB1 10\\%; tension loss\
+  \ (T \\to 0) indicates severed guy-wire, triggering immediate grid re-routing."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40331:
+      name: s297_pylon_guy_wire_anchor_tension_load_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40333:
+      name: s297_pylon_guy_wire_anchor_tension_load_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s297_pylon_guy_wire_anchor_tension_load_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Guy-wire cutting sabotage, high-wind pylon structural
+    collapse'

@@ -1,0 +1,47 @@
+sensor_id: s389_liquid_salt_bismuth_reductive_extraction_interface_sensor
+name: Liquid Salt-Bismuth Reductive Extraction Interface Sensor
+domain_id: 55
+domain_title: Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15389
+interface: Eddy-Current Conductive Boundary Probe
+description: "Liquid Salt-Bismuth Reductive Extraction Interface Sensor is a specialized\
+  \ Domain 55 (Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Eddy-Current Conductive\
+  \ Boundary Probe, it is specifically engineered to mitigate and detect Liquid metal-salt\
+  \ carryover, cross-contamination of fuel processing. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Resolves boundary between liquid\
+  \ bismuth (\\sigma \u2248 7.8 \xD7 10^5\\,S/m) and molten fluoride salt (\\sigma\
+  \ \u2248 2 \xD7 10^2\\,S/m) to within \xB1 2\\,mm.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Liquid metal-salt carryover, cross-contamination of fuel processing
+core_invariant: "Resolves boundary between liquid bismuth (\\sigma \u2248 7.8 \xD7\
+  \ 10^5\\,S/m) and molten fluoride salt (\\sigma \u2248 2 \xD7 10^2\\,S/m) to within\
+  \ \xB1 2\\,mm."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40161:
+      name: s389_liquid_salt_bismuth_reductive_extraction_interface_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40163:
+      name: s389_liquid_salt_bismuth_reductive_extraction_interface_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s389_liquid_salt_bismuth_reductive_extraction_interface_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Liquid metal-salt carryover, cross-contamination
+    of fuel processing'

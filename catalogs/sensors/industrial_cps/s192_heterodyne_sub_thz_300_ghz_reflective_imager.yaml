@@ -1,0 +1,45 @@
+sensor_id: s192_heterodyne_sub_thz_300_ghz_reflective_imager
+name: Heterodyne Sub-THz (300 GHz) Reflective Imager
+domain_id: 28
+domain_title: Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15192
+interface: High-Speed Schottky Diode Array
+description: 'Heterodyne Sub-THz (300 GHz) Reflective Imager is a specialized Domain
+  28 (Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via High-Speed Schottky Diode Array, it is specifically
+  engineered to mitigate and detect Concealed non-metallic weapons (ceramic knives,
+  3D-printed firearms). In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Atmospheric transmission window at 300\,GHz penetrates
+  clothing; dielectric reflection coefficient \Gamma = \frac{n_1 - n_2}{n_1 + n_2}
+  isolates weapon silhouettes.. Any divergence between commanded network state and
+  this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Concealed non-metallic weapons (ceramic knives, 3D-printed firearms)
+core_invariant: Atmospheric transmission window at 300\,GHz penetrates clothing; dielectric
+  reflection coefficient \Gamma = \frac{n_1 - n_2}{n_1 + n_2} isolates weapon silhouettes.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40361:
+      name: s192_heterodyne_sub_thz_300_ghz_reflective_imager_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40363:
+      name: s192_heterodyne_sub_thz_300_ghz_reflective_imager_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s192_heterodyne_sub_thz_300_ghz_reflective_imager_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Concealed non-metallic weapons (ceramic knives, 3D-printed
+    firearms)'

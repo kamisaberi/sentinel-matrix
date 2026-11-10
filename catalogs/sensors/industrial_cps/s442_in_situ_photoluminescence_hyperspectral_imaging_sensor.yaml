@@ -1,0 +1,46 @@
+sensor_id: s442_in_situ_photoluminescence_hyperspectral_imaging_sensor
+name: In-Situ Photoluminescence Hyperspectral Imaging Sensor
+domain_id: 63
+domain_title: Advanced Photovoltaic Perovskite-Silicon Tandem Fab & Degradation Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15442
+interface: Deep-Cooled InGaAs Area Camera
+description: "In-Situ Photoluminescence Hyperspectral Imaging Sensor is a specialized\
+  \ Domain 63 (Advanced Photovoltaic Perovskite-Silicon Tandem Fab & Degradation Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Deep-Cooled InGaAs\
+  \ Area Camera, it is specifically engineered to mitigate and detect Non-radiative\
+  \ recombination defect clusters, perovskite phase segregation. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Bandgap\
+  \ emission peak: \\lambda_{PL} = 750\\,nm \xB1 5\\,nm; localized spectral red-shift\
+  \ indicates phase segregation into low-bandgap iodide clusters.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Non-radiative recombination defect clusters, perovskite phase segregation
+core_invariant: "Bandgap emission peak: \\lambda_{PL} = 750\\,nm \xB1 5\\,nm; localized\
+  \ spectral red-shift indicates phase segregation into low-bandgap iodide clusters."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40161:
+      name: s442_in_situ_photoluminescence_hyperspectral_imaging_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40163:
+      name: s442_in_situ_photoluminescence_hyperspectral_imaging_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s442_in_situ_photoluminescence_hyperspectral_imaging_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Non-radiative recombination defect clusters, perovskite
+    phase segregation'

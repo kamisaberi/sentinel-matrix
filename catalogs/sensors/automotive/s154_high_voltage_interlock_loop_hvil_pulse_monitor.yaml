@@ -1,0 +1,44 @@
+sensor_id: s154_high_voltage_interlock_loop_hvil_pulse_monitor
+name: High-Voltage Interlock Loop (HVIL) Pulse Monitor
+domain_id: 22
+domain_title: Advanced Automotive & Autonomous Drive-by-Wire Sensors
+category: AUTOMOTIVE
+target_protocol: MODBUS_TCP
+default_port: 15154
+interface: High-Frequency Diagnostic Current Loop
+description: 'High-Voltage Interlock Loop (HVIL) Pulse Monitor is a specialized Domain
+  22 (Advanced Automotive & Autonomous Drive-by-Wire Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via High-Frequency Diagnostic Current Loop, it is specifically
+  engineered to mitigate and detect EV traction battery disconnect tampering, electric
+  shock hazard. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Continuous 10 kHz diagnostic pulse train; open circuit (0\,mA) discharges
+  800V traction capacitors in < 100\,ms.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: EV traction battery disconnect tampering, electric shock hazard
+core_invariant: Continuous 10 kHz diagnostic pulse train; open circuit (0\,mA) discharges
+  800V traction capacitors in < 100\,ms.
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -180.0
+  max_value: 180.0
+  noise_sigma: 0.02
+  unit: deg
+registers:
+  holding_registers:
+    40491:
+      name: s154_high_voltage_interlock_loop_hvil_pulse_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: deg
+    40493:
+      name: s154_high_voltage_interlock_loop_hvil_pulse_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s154_high_voltage_interlock_loop_hvil_pulse_monitor_fault
+  action: step_increase
+  value: 45.0
+  description: 'Injects anomaly: EV traction battery disconnect tampering, electric
+    shock hazard'

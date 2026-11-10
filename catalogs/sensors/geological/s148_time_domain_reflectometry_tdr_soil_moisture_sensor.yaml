@@ -1,0 +1,45 @@
+sensor_id: s148_time_domain_reflectometry_tdr_soil_moisture_sensor
+name: Time-Domain Reflectometry (TDR) Soil Moisture Sensor
+domain_id: 21
+domain_title: Extreme Geological, Seismic & Borehole Telemetry Sensors
+category: GEOLOGICAL
+target_protocol: MODBUS_TCP
+default_port: 15148
+interface: Coaxial Waveguide Radar Probe
+description: 'Time-Domain Reflectometry (TDR) Soil Moisture Sensor is a specialized
+  Domain 21 (Extreme Geological, Seismic & Borehole Telemetry Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Coaxial Waveguide Radar Probe, it is
+  specifically engineered to mitigate and detect Highway/railway embankment saturation,
+  landslide mudflow triggering. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Dielectric permittivity \kappa_r reflects volumetric
+  water content \theta_v; saturation reaching 85\% limits train speeds along the corridor..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Highway/railway embankment saturation, landslide mudflow triggering
+core_invariant: Dielectric permittivity \kappa_r reflects volumetric water content
+  \theta_v; saturation reaching 85\% limits train speeds along the corridor.
+physics:
+  engine: seismic_geophone
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mm/s
+registers:
+  holding_registers:
+    40441:
+      name: s148_time_domain_reflectometry_tdr_soil_moisture_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40443:
+      name: s148_time_domain_reflectometry_tdr_soil_moisture_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s148_time_domain_reflectometry_tdr_soil_moisture_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Highway/railway embankment saturation, landslide
+    mudflow triggering'

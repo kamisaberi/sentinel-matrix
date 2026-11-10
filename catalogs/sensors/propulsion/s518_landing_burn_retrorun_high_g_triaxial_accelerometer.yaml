@@ -1,0 +1,46 @@
+sensor_id: s518_landing_burn_retrorun_high_g_triaxial_accelerometer
+name: Landing Burn Retrorun High-G Triaxial Accelerometer
+domain_id: 73
+domain_title: Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15518
+interface: "High-G Piezoresistive Accelerometer (\xB1 50g)"
+description: "Landing Burn Retrorun High-G Triaxial Accelerometer is a specialized\
+  \ Domain 73 (Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via High-G Piezoresistive\
+  \ Accelerometer (\xB1 50g), it is specifically engineered to mitigate and detect\
+  \ Terminal landing burn engine thrust failure, droneship impact. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Longitudinal\
+  \ deceleration: a_z(t) = \\frac{T_{engine} - D - mg}{m(t)}; thrust deviation from\
+  \ planned suicide burn profile flags abort.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Terminal landing burn engine thrust failure, droneship impact
+core_invariant: 'Longitudinal deceleration: a_z(t) = \frac{T_{engine} - D - mg}{m(t)};
+  thrust deviation from planned suicide burn profile flags abort.'
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40411:
+      name: s518_landing_burn_retrorun_high_g_triaxial_accelerometer_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40413:
+      name: s518_landing_burn_retrorun_high_g_triaxial_accelerometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s518_landing_burn_retrorun_high_g_triaxial_accelerometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Terminal landing burn engine thrust failure, droneship
+    impact'

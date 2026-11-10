@@ -1,0 +1,45 @@
+sensor_id: s469_isolator_rapid_transfer_port_rtp_alpha_beta_door_interlock
+name: Isolator Rapid Transfer Port (RTP) Alpha/Beta Door Interlock
+domain_id: 66
+domain_title: Pharmaceutical Sterile Aseptic Isolator & CIP Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15469
+interface: Coded Magneto-Inductive Safety Switch
+description: 'Isolator Rapid Transfer Port (RTP) Alpha/Beta Door Interlock is a specialized
+  Domain 66 (Pharmaceutical Sterile Aseptic Isolator & CIP Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Coded Magneto-Inductive Safety Switch,
+  it is specifically engineered to mitigate and detect Interlock defeat, opening sterile
+  transfer port while un-docked. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Safety logic: Door unlocks only when alpha and
+  beta flanges are hermetically mated: S_{docked} == TRUE; prevents air contamination..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Interlock defeat, opening sterile transfer port while un-docked
+core_invariant: 'Safety logic: Door unlocks only when alpha and beta flanges are hermetically
+  mated: S_{docked} == TRUE; prevents air contamination.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40431:
+      name: s469_isolator_rapid_transfer_port_rtp_alpha_beta_door_interlock_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40433:
+      name: s469_isolator_rapid_transfer_port_rtp_alpha_beta_door_interlock_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s469_isolator_rapid_transfer_port_rtp_alpha_beta_door_interlock_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Interlock defeat, opening sterile transfer port while
+    un-docked'

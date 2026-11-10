@@ -1,0 +1,46 @@
+sensor_id: s263_ballast_water_uv_transmittance_uvt_analyzer
+name: Ballast Water UV Transmittance (UVT) Analyzer
+domain_id: 38
+domain_title: Autonomous Marine Vessel Propulsion & Ballast Biosecurity Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15263
+interface: Dual-Path Optical Photometer (254 nm)
+description: "Ballast Water UV Transmittance (UVT) Analyzer is a specialized Domain\
+  \ 38 (Autonomous Marine Vessel Propulsion & Ballast Biosecurity Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Dual-Path Optical Photometer (254\
+  \ nm), it is specifically engineered to mitigate and detect Illegal discharge of\
+  \ untreated invasive species (IMO D-2 standard). In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: UV Transmittance: UVT = \\\
+  frac{I}{I_0} \xD7 100\\% >= 70\\%; optical transmittance drop triggers automated\
+  \ flow throttling to ensure lethal UV dose.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Illegal discharge of untreated invasive species (IMO D-2 standard)
+core_invariant: "UV Transmittance: UVT = \\frac{I}{I_0} \xD7 100\\% >= 70\\%; optical\
+  \ transmittance drop triggers automated flow throttling to ensure lethal UV dose."
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40031:
+      name: s263_ballast_water_uv_transmittance_uvt_analyzer_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40033:
+      name: s263_ballast_water_uv_transmittance_uvt_analyzer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s263_ballast_water_uv_transmittance_uvt_analyzer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Illegal discharge of untreated invasive species (IMO
+    D-2 standard)'

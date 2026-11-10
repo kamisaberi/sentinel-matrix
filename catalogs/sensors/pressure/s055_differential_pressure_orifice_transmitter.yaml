@@ -1,0 +1,43 @@
+sensor_id: s055_differential_pressure_orifice_transmitter
+name: Differential Pressure Orifice Transmitter
+domain_id: 9
+domain_title: Fluid, Pressure & Hydrodynamic Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15055
+interface: 4-20mA HART Transmitter
+description: "Differential Pressure Orifice Transmitter is a specialized Domain 09\
+  \ (Fluid, Pressure & Hydrodynamic Sensors) cyber-physical monitoring sensor. Interfacing\
+  \ directly via 4-20mA HART Transmitter, it is specifically engineered to mitigate\
+  \ and detect Filter clogging, compressor surge, pipeline rupture. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Pressure\
+  \ delta \u0394 P \u221D Q^2; deviations indicate sensor line freezing or spoofing..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Filter clogging, compressor surge, pipeline rupture
+core_invariant: "Pressure delta \u0394 P \u221D Q^2; deviations indicate sensor line\
+  \ freezing or spoofing."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40041:
+      name: s055_differential_pressure_orifice_transmitter_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40043:
+      name: s055_differential_pressure_orifice_transmitter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s055_differential_pressure_orifice_transmitter_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Filter clogging, compressor surge, pipeline rupture'

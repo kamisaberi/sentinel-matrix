@@ -1,0 +1,43 @@
+sensor_id: s022_tls_sni_fingerprint_ja4_sensor
+name: TLS SNI & Fingerprint (JA4) Sensor
+domain_id: 3
+domain_title: Wire-Speed Network & Protocol Telemetry Sensors
+category: NETWORK
+target_protocol: UDP_STREAM
+default_port: 15022
+interface: eBPF Payload Dissector
+description: 'TLS SNI & Fingerprint (JA4) Sensor is a specialized Domain 03 (Wire-Speed
+  Network & Protocol Telemetry Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via eBPF Payload Dissector, it is specifically engineered to mitigate and
+  detect Malware C2 callback over port 443. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Identifies rogue TLS clients based
+  on cipher suite permutation and extension ordering.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Malware C2 callback over port 443
+core_invariant: Identifies rogue TLS clients based on cipher suite permutation and
+  extension ordering.
+physics:
+  engine: network_ebpf
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: packets
+registers:
+  holding_registers:
+    40211:
+      name: s022_tls_sni_fingerprint_ja4_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: packets
+    40213:
+      name: s022_tls_sni_fingerprint_ja4_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s022_tls_sni_fingerprint_ja4_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Malware C2 callback over port 443'

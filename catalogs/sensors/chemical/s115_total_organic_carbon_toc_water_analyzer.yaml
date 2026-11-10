@@ -1,0 +1,45 @@
+sensor_id: s115_total_organic_carbon_toc_water_analyzer
+name: Total Organic Carbon (TOC) Water Analyzer
+domain_id: 17
+domain_title: Bioprocess, Industrial Chemical & Physical Bio Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15115
+interface: UV Persulfate Oxidation / NDIR
+description: 'Total Organic Carbon (TOC) Water Analyzer is a specialized Domain 17
+  (Bioprocess, Industrial Chemical & Physical Bio Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via UV Persulfate Oxidation / NDIR, it is specifically
+  engineered to mitigate and detect Water-for-Injection (WFI) microbial contamination,
+  biofilm breach. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Conductometric measurement of oxidized carbon; TOC <= 500\,ppb
+  (USP <643> pharmaceutical compliance standard).. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Water-for-Injection (WFI) microbial contamination, biofilm breach
+core_invariant: Conductometric measurement of oxidized carbon; TOC <= 500\,ppb (USP
+  <643> pharmaceutical compliance standard).
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40131:
+      name: s115_total_organic_carbon_toc_water_analyzer_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40133:
+      name: s115_total_organic_carbon_toc_water_analyzer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s115_total_organic_carbon_toc_water_analyzer_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Water-for-Injection (WFI) microbial contamination,
+    biofilm breach'

@@ -1,0 +1,45 @@
+sensor_id: s079_corona_discharge_ultraviolet_uv_imager
+name: Corona Discharge Ultraviolet (UV) Imager
+domain_id: 12
+domain_title: High-Voltage Electrical, Arc & Dielectric Breakdown Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15079
+interface: Solar-Blind UV Sensor (240--280 nm)
+description: 'Corona Discharge Ultraviolet (UV) Imager is a specialized Domain 12
+  (High-Voltage Electrical, Arc & Dielectric Breakdown Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Solar-Blind UV Sensor (240--280 nm), it is specifically
+  engineered to mitigate and detect High-voltage transmission line insulator degradation,
+  nitric acid buildup. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Photon counting rate N_{photons}/sec <= \tau_{corona};
+  flags localized electrical air ionization before line flashover occurs.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: High-voltage transmission line insulator degradation, nitric acid buildup
+core_invariant: Photon counting rate N_{photons}/sec <= \tau_{corona}; flags localized
+  electrical air ionization before line flashover occurs.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40281:
+      name: s079_corona_discharge_ultraviolet_uv_imager_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40283:
+      name: s079_corona_discharge_ultraviolet_uv_imager_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s079_corona_discharge_ultraviolet_uv_imager_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: High-voltage transmission line insulator degradation,
+    nitric acid buildup'

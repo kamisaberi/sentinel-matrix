@@ -1,0 +1,45 @@
+sensor_id: s388_high_temperature_ultrasonic_molten_salt_transit_time_level_meter
+name: High-Temperature Ultrasonic Molten Salt Transit-Time Level Meter
+domain_id: 55
+domain_title: Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15388
+interface: Waveguide-Coupled Acoustic Sensor (700^\circC)
+description: 'High-Temperature Ultrasonic Molten Salt Transit-Time Level Meter is
+  a specialized Domain 55 (Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide
+  Sensors) cyber-physical monitoring sensor. Interfacing directly via Waveguide-Coupled
+  Acoustic Sensor (700^\circC), it is specifically engineered to mitigate and detect
+  Reactor vessel overflow, primary salt drain pipe blockage. In the Aryorithm edge
+  architecture, it continuously asserts the operational invariant: Fluid level height:
+  h(t) <= h_{max\_safe}; resolves salt interface level through acoustic reflection
+  despite dense vapor fumes.. Any divergence between commanded network state and this
+  physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Reactor vessel overflow, primary salt drain pipe blockage
+core_invariant: 'Fluid level height: h(t) <= h_{max\_safe}; resolves salt interface
+  level through acoustic reflection despite dense vapor fumes.'
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40151:
+      name: s388_high_temperature_ultrasonic_molten_salt_transit_time_level_meter_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40153:
+      name: s388_high_temperature_ultrasonic_molten_salt_transit_time_level_meter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s388_high_temperature_ultrasonic_molten_salt_transit_time_level_meter_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Reactor vessel overflow, primary salt drain pipe
+    blockage'

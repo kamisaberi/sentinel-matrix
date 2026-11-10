@@ -1,0 +1,43 @@
+sensor_id: s031_3_axis_machine_bearing_vibration_accelerometer
+name: 3-Axis Machine Bearing Vibration Accelerometer
+domain_id: 5
+domain_title: Acoustic, Ultrasonic & Vibration Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15031
+interface: 4-20mA / IO-Link Accelerometer
+description: '3-Axis Machine Bearing Vibration Accelerometer is a specialized Domain
+  05 (Acoustic, Ultrasonic & Vibration Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via 4-20mA / IO-Link Accelerometer, it is specifically engineered
+  to mitigate and detect Stuxnet-style motor speed resonance destruction. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Vibration
+  velocity RMS > 4.5\,mm/s (ISO 10816-3 limit) forces speed clamp.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Stuxnet-style motor speed resonance destruction
+core_invariant: Vibration velocity RMS > 4.5\,mm/s (ISO 10816-3 limit) forces speed
+  clamp.
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40301:
+      name: s031_3_axis_machine_bearing_vibration_accelerometer_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40303:
+      name: s031_3_axis_machine_bearing_vibration_accelerometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s031_3_axis_machine_bearing_vibration_accelerometer_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Stuxnet-style motor speed resonance destruction'

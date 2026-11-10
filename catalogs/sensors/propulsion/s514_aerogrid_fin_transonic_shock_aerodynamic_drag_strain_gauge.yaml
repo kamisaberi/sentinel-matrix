@@ -1,0 +1,45 @@
+sensor_id: s514_aerogrid_fin_transonic_shock_aerodynamic_drag_strain_gauge
+name: Aerogrid Fin Transonic Shock Aerodynamic Drag Strain Gauge
+domain_id: 73
+domain_title: Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15514
+interface: High-Temperature Piezoresistive Bridge
+description: 'Aerogrid Fin Transonic Shock Aerodynamic Drag Strain Gauge is a specialized
+  Domain 73 (Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Temperature Piezoresistive Bridge,
+  it is specifically engineered to mitigate and detect Aerodynamic shock buffet, structural
+  titanium fin shaft yield. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Hinge moment torque: \tau_{hinge} <= \tau_{maximum\_actuator};
+  excessive aerodynamic hinge torque trims angle-of-attack in < 5\,ms.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Aerodynamic shock buffet, structural titanium fin shaft yield
+core_invariant: 'Hinge moment torque: \tau_{hinge} <= \tau_{maximum\_actuator}; excessive
+  aerodynamic hinge torque trims angle-of-attack in < 5\,ms.'
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40371:
+      name: s514_aerogrid_fin_transonic_shock_aerodynamic_drag_strain_gauge_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40373:
+      name: s514_aerogrid_fin_transonic_shock_aerodynamic_drag_strain_gauge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s514_aerogrid_fin_transonic_shock_aerodynamic_drag_strain_gauge_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Aerodynamic shock buffet, structural titanium fin
+    shaft yield'

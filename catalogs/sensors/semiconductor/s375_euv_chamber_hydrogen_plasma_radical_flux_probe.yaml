@@ -1,0 +1,45 @@
+sensor_id: s375_euv_chamber_hydrogen_plasma_radical_flux_probe
+name: EUV Chamber Hydrogen Plasma Radical Flux Probe
+domain_id: 53
+domain_title: Extreme Ultraviolet (EUV) Lithography Optics & Sn-Plasma Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15375
+interface: Catalytic Recombination Heat Probe
+description: 'EUV Chamber Hydrogen Plasma Radical Flux Probe is a specialized Domain
+  53 (Extreme Ultraviolet (EUV) Lithography Optics & Sn-Plasma Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Catalytic Recombination Heat Probe,
+  it is specifically engineered to mitigate and detect Hydrogen flush starvation,
+  pyrophoric silane/tin hydride explosion. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Radical flux density: J_{H} >= 10^{19}\,atoms/(cm^2\cdots);
+  radical starvation trips scanner wafer unload to protect optics.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Hydrogen flush starvation, pyrophoric silane/tin hydride explosion
+core_invariant: 'Radical flux density: J_{H} >= 10^{19}\,atoms/(cm^2\cdots); radical
+  starvation trips scanner wafer unload to protect optics.'
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40061:
+      name: s375_euv_chamber_hydrogen_plasma_radical_flux_probe_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40063:
+      name: s375_euv_chamber_hydrogen_plasma_radical_flux_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s375_euv_chamber_hydrogen_plasma_radical_flux_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Hydrogen flush starvation, pyrophoric silane/tin
+    hydride explosion'

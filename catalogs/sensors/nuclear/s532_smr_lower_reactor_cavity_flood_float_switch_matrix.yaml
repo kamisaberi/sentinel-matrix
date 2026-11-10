@@ -1,0 +1,46 @@
+sensor_id: s532_smr_lower_reactor_cavity_flood_float_switch_matrix
+name: SMR Lower Reactor Cavity Flood Float Switch Matrix
+domain_id: 75
+domain_title: Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety
+  Sensors
+category: NUCLEAR
+target_protocol: MODBUS_TCP
+default_port: 15532
+interface: Triple-Redundant Magnetostrictive Switches
+description: 'SMR Lower Reactor Cavity Flood Float Switch Matrix is a specialized
+  Domain 75 (Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Triple-Redundant Magnetostrictive
+  Switches, it is specifically engineered to mitigate and detect Severe accident corium
+  cooling failure, reactor pressure vessel dryout. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Cavity water level: h_{cavity}
+  >= h_{submergence\_target}; level deficit opens external water storage tank gravity
+  lines in < 10\,seconds.. Any divergence between commanded network state and this
+  physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Severe accident corium cooling failure, reactor pressure vessel dryout
+core_invariant: 'Cavity water level: h_{cavity} >= h_{submergence\_target}; level
+  deficit opens external water storage tank gravity lines in < 10\,seconds.'
+physics:
+  engine: nuclear_decay
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: uSv/h
+registers:
+  holding_registers:
+    40021:
+      name: s532_smr_lower_reactor_cavity_flood_float_switch_matrix_pv
+      type: float32
+      scale: 1.0
+      unit: uSv/h
+    40023:
+      name: s532_smr_lower_reactor_cavity_flood_float_switch_matrix_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s532_smr_lower_reactor_cavity_flood_float_switch_matrix_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Severe accident corium cooling failure, reactor pressure
+    vessel dryout'

@@ -1,0 +1,45 @@
+sensor_id: s119_process_nuclear_magnetic_resonance_nmr_analyzer
+name: Process Nuclear Magnetic Resonance (NMR) Analyzer
+domain_id: 17
+domain_title: Bioprocess, Industrial Chemical & Physical Bio Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15119
+interface: Low-Field Permanent Magnet System
+description: 'Process Nuclear Magnetic Resonance (NMR) Analyzer is a specialized Domain
+  17 (Bioprocess, Industrial Chemical & Physical Bio Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Low-Field Permanent Magnet System, it is specifically
+  engineered to mitigate and detect Petrochemical octane rating spoofing, crude oil
+  pipeline adulteration. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Proton (^1H) spin-lattice relaxation time (T_1, T_2)
+  maps exact molecular hydrocarbon chain lengths in flowing crude oil.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Petrochemical octane rating spoofing, crude oil pipeline adulteration
+core_invariant: Proton (^1H) spin-lattice relaxation time (T_1, T_2) maps exact molecular
+  hydrocarbon chain lengths in flowing crude oil.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40171:
+      name: s119_process_nuclear_magnetic_resonance_nmr_analyzer_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40173:
+      name: s119_process_nuclear_magnetic_resonance_nmr_analyzer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s119_process_nuclear_magnetic_resonance_nmr_analyzer_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Petrochemical octane rating spoofing, crude oil pipeline
+    adulteration'

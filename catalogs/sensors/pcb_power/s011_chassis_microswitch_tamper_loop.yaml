@@ -1,0 +1,43 @@
+sensor_id: s011_chassis_microswitch_tamper_loop
+name: Chassis Microswitch Tamper Loop
+domain_id: 2
+domain_title: PCB, Power-Rail & Hardware Fault-Injection Sensors
+category: PCB_POWER
+target_protocol: MODBUS_TCP
+default_port: 15011
+interface: Normally-Closed Hardware Circuit
+description: 'Chassis Microswitch Tamper Loop is a specialized Domain 02 (PCB, Power-Rail
+  & Hardware Fault-Injection Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Normally-Closed Hardware Circuit, it is specifically engineered to
+  mitigate and detect Physical lid removal, hardware implant installation. In the
+  Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Physical loop open (0\,V) cuts battery-backed RAM holding encryption keys.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Physical lid removal, hardware implant installation
+core_invariant: Physical loop open (0\,V) cuts battery-backed RAM holding encryption
+  keys.
+physics:
+  engine: pcb_power_glitch
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mV
+registers:
+  holding_registers:
+    40101:
+      name: s011_chassis_microswitch_tamper_loop_pv
+      type: float32
+      scale: 1.0
+      unit: mV
+    40103:
+      name: s011_chassis_microswitch_tamper_loop_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s011_chassis_microswitch_tamper_loop_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Physical lid removal, hardware implant installation'

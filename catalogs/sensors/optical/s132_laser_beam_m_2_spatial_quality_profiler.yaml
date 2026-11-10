@@ -1,0 +1,45 @@
+sensor_id: s132_laser_beam_m_2_spatial_quality_profiler
+name: Laser Beam M^2 Spatial Quality Profiler
+domain_id: 19
+domain_title: High-Energy Laser, Directed Energy & Optoelectronic Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15132
+interface: CMOS Knife-Edge / Slit Array
+description: 'Laser Beam M^2 Spatial Quality Profiler is a specialized Domain 19 (High-Energy
+  Laser, Directed Energy & Optoelectronic Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via CMOS Knife-Edge / Slit Array, it is specifically engineered
+  to mitigate and detect High-energy laser thermal blooming, optical cavity misalignment.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Beam propagation factor M^2 = \frac{\pi w_0 \theta}{\lambda} <= 1.15; beam divergence
+  degradation automatically inhibits fire commands.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: High-energy laser thermal blooming, optical cavity misalignment
+core_invariant: Beam propagation factor M^2 = \frac{\pi w_0 \theta}{\lambda} <= 1.15;
+  beam divergence degradation automatically inhibits fire commands.
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40281:
+      name: s132_laser_beam_m_2_spatial_quality_profiler_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40283:
+      name: s132_laser_beam_m_2_spatial_quality_profiler_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s132_laser_beam_m_2_spatial_quality_profiler_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: High-energy laser thermal blooming, optical cavity
+    misalignment'

@@ -1,0 +1,44 @@
+sensor_id: s167_molten_aluminum_carrier_gas_hydrogen_analyzer
+name: Molten Aluminum Carrier Gas Hydrogen Analyzer
+domain_id: 24
+domain_title: High-Temperature Metallurgy & Molten Material Sensors
+category: METALLURGY
+target_protocol: MODBUS_TCP
+default_port: 15167
+interface: Closed-Loop Nitrogen Recirculation Probe
+description: 'Molten Aluminum Carrier Gas Hydrogen Analyzer is a specialized Domain
+  24 (High-Temperature Metallurgy & Molten Material Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Closed-Loop Nitrogen Recirculation Probe, it is
+  specifically engineered to mitigate and detect Hydrogen porosity in structural automotive/aerospace
+  aluminum. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Sieverts'' law: [H] = K_H \sqrt{P_{H_2}}; hydrogen concentration > 0.15\,mL/100g
+  triggers automated rotary degassing lances.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hydrogen porosity in structural automotive/aerospace aluminum
+core_invariant: 'Sieverts'' law: [H] = K_H \sqrt{P_{H_2}}; hydrogen concentration
+  > 0.15\,mL/100g triggers automated rotary degassing lances.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: degC
+registers:
+  holding_registers:
+    40121:
+      name: s167_molten_aluminum_carrier_gas_hydrogen_analyzer_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40123:
+      name: s167_molten_aluminum_carrier_gas_hydrogen_analyzer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s167_molten_aluminum_carrier_gas_hydrogen_analyzer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Hydrogen porosity in structural automotive/aerospace
+    aluminum'

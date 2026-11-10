@@ -1,0 +1,45 @@
+sensor_id: s483_dac_desiccant_silica_gel_moisture_breakthrough_sensor
+name: DAC Desiccant Silica Gel Moisture Breakthrough Sensor
+domain_id: 68
+domain_title: Carbon Dioxide Direct Air Capture (DAC) & Zeolite Adsorption Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15483
+interface: Thin-Film Capacitive Humidity Sensor
+description: 'DAC Desiccant Silica Gel Moisture Breakthrough Sensor is a specialized
+  Domain 68 (Carbon Dioxide Direct Air Capture (DAC) & Zeolite Adsorption Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Thin-Film Capacitive
+  Humidity Sensor, it is specifically engineered to mitigate and detect Water vapor
+  carryover into CO_2 compressor, carbonic acid corrosion. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Dew point: T_{dew} <= -40^\circC;
+  moisture breakthrough before compressor switches active desiccant drying towers..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Water vapor carryover into CO_2 compressor, carbonic acid corrosion
+core_invariant: 'Dew point: T_{dew} <= -40^\circC; moisture breakthrough before compressor
+  switches active desiccant drying towers.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40071:
+      name: s483_dac_desiccant_silica_gel_moisture_breakthrough_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40073:
+      name: s483_dac_desiccant_silica_gel_moisture_breakthrough_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s483_dac_desiccant_silica_gel_moisture_breakthrough_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Water vapor carryover into CO_2 compressor, carbonic
+    acid corrosion'

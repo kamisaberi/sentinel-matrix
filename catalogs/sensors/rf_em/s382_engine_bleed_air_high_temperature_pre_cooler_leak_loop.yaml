@@ -1,0 +1,45 @@
+sensor_id: s382_engine_bleed_air_high_temperature_pre_cooler_leak_loop
+name: Engine Bleed Air High-Temperature Pre-Cooler Leak Loop
+domain_id: 54
+domain_title: Commercial Aviation Cockpit Ingress & Flight Surface Fly-by-Wire Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15382
+interface: Dual-Continuous Pneumatic Fire Wire (Inconel)
+description: 'Engine Bleed Air High-Temperature Pre-Cooler Leak Loop is a specialized
+  Domain 54 (Commercial Aviation Cockpit Ingress & Flight Surface Fly-by-Wire Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Dual-Continuous Pneumatic
+  Fire Wire (Inconel), it is specifically engineered to mitigate and detect Bleed
+  air duct rupture, structural wing spar thermal weakening (400^\circC). In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Core resistance
+  drop of eutectic salt wire indicates localized hot air leak: T_{duct} >= 260^\circC;
+  isolates engine bleed valve in < 200\,ms.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Bleed air duct rupture, structural wing spar thermal weakening (400^\circC)
+core_invariant: 'Core resistance drop of eutectic salt wire indicates localized hot
+  air leak: T_{duct} >= 260^\circC; isolates engine bleed valve in < 200\,ms.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40101:
+      name: s382_engine_bleed_air_high_temperature_pre_cooler_leak_loop_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40103:
+      name: s382_engine_bleed_air_high_temperature_pre_cooler_leak_loop_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s382_engine_bleed_air_high_temperature_pre_cooler_leak_loop_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Bleed air duct rupture, structural wing spar thermal
+    weakening (400^\circC)'

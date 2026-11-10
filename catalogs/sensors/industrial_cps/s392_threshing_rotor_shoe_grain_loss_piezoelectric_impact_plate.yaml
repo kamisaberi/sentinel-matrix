@@ -1,0 +1,45 @@
+sensor_id: s392_threshing_rotor_shoe_grain_loss_piezoelectric_impact_plate
+name: Threshing Rotor Shoe Grain Loss Piezoelectric Impact Plate
+domain_id: 56
+domain_title: Autonomous Agricultural Combine Harvester & Grain Loss Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15392
+interface: High-Acoustic Impedance Sensor Plate
+description: 'Threshing Rotor Shoe Grain Loss Piezoelectric Impact Plate is a specialized
+  Domain 56 (Autonomous Agricultural Combine Harvester & Grain Loss Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Acoustic Impedance Sensor Plate,
+  it is specifically engineered to mitigate and detect Excessive grain loss over the
+  rotor shoe, threshing speed misconfiguration. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Grain impact frequency: N_{grain}
+  / second; impact energy discriminates grain kernels from crop chaff, auto-trimming
+  fan blower speed.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Excessive grain loss over the rotor shoe, threshing speed misconfiguration
+core_invariant: 'Grain impact frequency: N_{grain} / second; impact energy discriminates
+  grain kernels from crop chaff, auto-trimming fan blower speed.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40191:
+      name: s392_threshing_rotor_shoe_grain_loss_piezoelectric_impact_plate_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40193:
+      name: s392_threshing_rotor_shoe_grain_loss_piezoelectric_impact_plate_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s392_threshing_rotor_shoe_grain_loss_piezoelectric_impact_plate_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Excessive grain loss over the rotor shoe, threshing
+    speed misconfiguration'

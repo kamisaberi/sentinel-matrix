@@ -1,0 +1,43 @@
+sensor_id: s030_piezoelectric_acoustic_emission_sensor_1_mhz
+name: Piezoelectric Acoustic Emission Sensor (1 MHz)
+domain_id: 5
+domain_title: Acoustic, Ultrasonic & Vibration Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15030
+interface: High-Speed ADC (5 MSPS SPI)
+description: "Piezoelectric Acoustic Emission Sensor (1 MHz) is a specialized Domain\
+  \ 05 (Acoustic, Ultrasonic & Vibration Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via High-Speed ADC (5 MSPS SPI), it is specifically engineered\
+  \ to mitigate and detect Turbine/blade structural delamination, bearing micro-spalling.\
+  \ In the Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Cumulative acoustic burst energy \u2208t V^2 dt > \\tau; detects cracks weeks\
+  \ early.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Turbine/blade structural delamination, bearing micro-spalling
+core_invariant: "Cumulative acoustic burst energy \u2208t V^2 dt > \\tau; detects\
+  \ cracks weeks early."
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40291:
+      name: s030_piezoelectric_acoustic_emission_sensor_1_mhz_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40293:
+      name: s030_piezoelectric_acoustic_emission_sensor_1_mhz_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s030_piezoelectric_acoustic_emission_sensor_1_mhz_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Turbine/blade structural delamination, bearing micro-spalling'

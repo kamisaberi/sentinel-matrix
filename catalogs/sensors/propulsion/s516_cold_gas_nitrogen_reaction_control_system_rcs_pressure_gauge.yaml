@@ -1,0 +1,46 @@
+sensor_id: s516_cold_gas_nitrogen_reaction_control_system_rcs_pressure_gauge
+name: Cold-Gas Nitrogen Reaction Control System (RCS) Pressure Gauge
+domain_id: 73
+domain_title: Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15516
+interface: Stainless Steel Strain-Gauge Cell
+description: "Cold-Gas Nitrogen Reaction Control System (RCS) Pressure Gauge is a\
+  \ specialized Domain 73 (Reusable Rocket Booster Aerogrid Fins & Landing Mechanics\
+  \ Sensors) cyber-physical monitoring sensor. Interfacing directly via Stainless\
+  \ Steel Strain-Gauge Cell, it is specifically engineered to mitigate and detect\
+  \ Thruster stuck open, attitude authority loss outside the atmosphere. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Propellant\
+  \ tank pressure: P_{RCS} = P_0 - \u2208t \\dot{m} dt; anomalous pressure drop flags\
+  \ stuck-open cold-gas thruster; isolates valve.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Thruster stuck open, attitude authority loss outside the atmosphere
+core_invariant: "Propellant tank pressure: P_{RCS} = P_0 - \u2208t \\dot{m} dt; anomalous\
+  \ pressure drop flags stuck-open cold-gas thruster; isolates valve."
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40391:
+      name: s516_cold_gas_nitrogen_reaction_control_system_rcs_pressure_gauge_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40393:
+      name: s516_cold_gas_nitrogen_reaction_control_system_rcs_pressure_gauge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s516_cold_gas_nitrogen_reaction_control_system_rcs_pressure_gauge_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Thruster stuck open, attitude authority loss outside
+    the atmosphere'

@@ -1,0 +1,45 @@
+sensor_id: s282_water_recovery_centrifuge_multi_frequency_conductivity_probe
+name: Water Recovery Centrifuge Multi-Frequency Conductivity Probe
+domain_id: 40
+domain_title: Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15282
+interface: 4-Electrode AC Cell (1--100 kHz)
+description: "Water Recovery Centrifuge Multi-Frequency Conductivity Probe is a specialized\
+  \ Domain 40 (Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via 4-Electrode AC Cell (1--100 kHz),\
+  \ it is specifically engineered to mitigate and detect Urine processor brine carryover\
+  \ into potable water, urea breakthrough. In the Aryorithm edge architecture, it\
+  \ continuously asserts the operational invariant: Potable water electrical conductivity:\
+  \ \\kappa <= 1.5\\,\xB5S/cm; conductivity jump isolates product water tank to prevent\
+  \ poisoning.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Urine processor brine carryover into potable water, urea breakthrough
+core_invariant: "Potable water electrical conductivity: \\kappa <= 1.5\\,\xB5S/cm;\
+  \ conductivity jump isolates product water tank to prevent poisoning."
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40201:
+      name: s282_water_recovery_centrifuge_multi_frequency_conductivity_probe_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40203:
+      name: s282_water_recovery_centrifuge_multi_frequency_conductivity_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s282_water_recovery_centrifuge_multi_frequency_conductivity_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Urine processor brine carryover into potable water,
+    urea breakthrough'

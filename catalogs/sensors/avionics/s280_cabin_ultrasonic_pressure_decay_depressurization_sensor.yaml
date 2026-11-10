@@ -1,0 +1,45 @@
+sensor_id: s280_cabin_ultrasonic_pressure_decay_depressurization_sensor
+name: Cabin Ultrasonic Pressure Decay Depressurization Sensor
+domain_id: 40
+domain_title: Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15280
+interface: High-Frequency Piezoelectric Transducer
+description: 'Cabin Ultrasonic Pressure Decay Depressurization Sensor is a specialized
+  Domain 40 (Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Frequency Piezoelectric Transducer,
+  it is specifically engineered to mitigate and detect Micrometeoroid orbital debris
+  (MMOD) hull puncture, airlock seal leak. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Pressure decay ODE: \frac{dP_{cabin}}{dt}
+  = -\frac{A_{hole}}{V_{cabin}} \gamma P \sqrt{\frac{RT}{M}}; leak rates > 0.1\,kPa/min
+  fire emergency hatch isolation.. Any divergence between commanded network state
+  and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Micrometeoroid orbital debris (MMOD) hull puncture, airlock seal leak
+core_invariant: 'Pressure decay ODE: \frac{dP_{cabin}}{dt} = -\frac{A_{hole}}{V_{cabin}}
+  \gamma P \sqrt{\frac{RT}{M}}; leak rates > 0.1\,kPa/min fire emergency hatch isolation.'
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40181:
+      name: s280_cabin_ultrasonic_pressure_decay_depressurization_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40183:
+      name: s280_cabin_ultrasonic_pressure_decay_depressurization_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s280_cabin_ultrasonic_pressure_decay_depressurization_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Micrometeoroid orbital debris (MMOD) hull puncture,
+    airlock seal leak'

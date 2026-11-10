@@ -1,0 +1,44 @@
+sensor_id: s414_supersonic_cavity_flameholder_oh_chemiluminescence_sensor
+name: Supersonic Cavity Flameholder OH Chemiluminescence Sensor
+domain_id: 59
+domain_title: Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15414
+interface: Fiber-Coupled Photomultiplier (308 nm)
+description: 'Supersonic Cavity Flameholder OH Chemiluminescence Sensor is a specialized
+  Domain 59 (Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Fiber-Coupled Photomultiplier (308 nm),
+  it is specifically engineered to mitigate and detect Supersonic flame blowout, unburned
+  fuel pool in combustor. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Hydroxyl radical emission intensity: I_{OH} >= I_{threshold};
+  loss of radical signature indicates supersonic flame extinction.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Supersonic flame blowout, unburned fuel pool in combustor
+core_invariant: 'Hydroxyl radical emission intensity: I_{OH} >= I_{threshold}; loss
+  of radical signature indicates supersonic flame extinction.'
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40401:
+      name: s414_supersonic_cavity_flameholder_oh_chemiluminescence_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40403:
+      name: s414_supersonic_cavity_flameholder_oh_chemiluminescence_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s414_supersonic_cavity_flameholder_oh_chemiluminescence_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Supersonic flame blowout, unburned fuel pool in combustor'

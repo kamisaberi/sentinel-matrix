@@ -1,0 +1,45 @@
+sensor_id: s344_downhole_quartz_resonant_pressure_memory_gauge
+name: Downhole Quartz Resonant Pressure Memory Gauge
+domain_id: 49
+domain_title: Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15344
+interface: Hermetic Quartz Resonator (350^\circC)
+description: 'Downhole Quartz Resonant Pressure Memory Gauge is a specialized Domain
+  49 (Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Hermetic Quartz Resonator (350^\circC),
+  it is specifically engineered to mitigate and detect Reservoir drawdown pressure
+  collapse, wellbore casing collapse. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Resonant frequency shift tracks downhole hydrostatic
+  pressure (P <= 1{,}500\,bar) with 0.005\% precision under extreme geothermal heat..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Reservoir drawdown pressure collapse, wellbore casing collapse
+core_invariant: Resonant frequency shift tracks downhole hydrostatic pressure (P <=
+  1{,}500\,bar) with 0.005\% precision under extreme geothermal heat.
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40281:
+      name: s344_downhole_quartz_resonant_pressure_memory_gauge_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40283:
+      name: s344_downhole_quartz_resonant_pressure_memory_gauge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s344_downhole_quartz_resonant_pressure_memory_gauge_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Reservoir drawdown pressure collapse, wellbore casing
+    collapse'

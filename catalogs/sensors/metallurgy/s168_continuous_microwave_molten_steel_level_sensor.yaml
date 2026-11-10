@@ -1,0 +1,44 @@
+sensor_id: s168_continuous_microwave_molten_steel_level_sensor
+name: Continuous Microwave Molten Steel Level Sensor
+domain_id: 24
+domain_title: High-Temperature Metallurgy & Molten Material Sensors
+category: METALLURGY
+target_protocol: MODBUS_TCP
+default_port: 15168
+interface: Non-Contact FMCW Radar (24 GHz)
+description: "Continuous Microwave Molten Steel Level Sensor is a specialized Domain\
+  \ 24 (High-Temperature Metallurgy & Molten Material Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Non-Contact FMCW Radar (24 GHz), it is specifically\
+  \ engineered to mitigate and detect Continuous casting mold overflow, liquid steel\
+  \ breakout. In the Aryorithm edge architecture, it continuously asserts the operational\
+  \ invariant: Resolves surface meniscus position to within \xB1 0.5\\,mm; level drop\
+  \ rate \\frac{dh}{dt} > 20\\,mm/s trips emergency nozzle shutoff gate.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Continuous casting mold overflow, liquid steel breakout
+core_invariant: "Resolves surface meniscus position to within \xB1 0.5\\,mm; level\
+  \ drop rate \\frac{dh}{dt} > 20\\,mm/s trips emergency nozzle shutoff gate."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: degC
+registers:
+  holding_registers:
+    40131:
+      name: s168_continuous_microwave_molten_steel_level_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40133:
+      name: s168_continuous_microwave_molten_steel_level_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s168_continuous_microwave_molten_steel_level_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Continuous casting mold overflow, liquid steel breakout'

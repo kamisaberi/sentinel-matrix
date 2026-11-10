@@ -1,0 +1,47 @@
+sensor_id: s188_core_exit_thermocouple_cet_saturation_margin_sensor
+name: Core Exit Thermocouple (CET) Saturation Margin Sensor
+domain_id: 27
+domain_title: Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15188
+interface: Type K/N Hermetic Probe Array
+description: "Core Exit Thermocouple (CET) Saturation Margin Sensor is a specialized\
+  \ Domain 27 (Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Type K/N Hermetic Probe Array, it\
+  \ is specifically engineered to mitigate and detect Subcooling margin collapse,\
+  \ impending reactor core melting. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Saturation temperature margin: \u0394 T_{sub}\
+  \ = T_{sat}(P_{primary}) - T_{CET} >= 15^\\circC; margin collapse triggers automated\
+  \ Emergency Core Cooling System (ECCS).. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Subcooling margin collapse, impending reactor core melting
+core_invariant: "Saturation temperature margin: \u0394 T_{sub} = T_{sat}(P_{primary})\
+  \ - T_{CET} >= 15^\\circC; margin collapse triggers automated Emergency Core Cooling\
+  \ System (ECCS)."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40321:
+      name: s188_core_exit_thermocouple_cet_saturation_margin_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40323:
+      name: s188_core_exit_thermocouple_cet_saturation_margin_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s188_core_exit_thermocouple_cet_saturation_margin_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Subcooling margin collapse, impending reactor core
+    melting'

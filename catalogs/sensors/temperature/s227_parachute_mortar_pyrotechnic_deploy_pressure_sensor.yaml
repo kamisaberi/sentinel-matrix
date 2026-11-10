@@ -1,0 +1,45 @@
+sensor_id: s227_parachute_mortar_pyrotechnic_deploy_pressure_sensor
+name: Parachute Mortar Pyrotechnic Deploy Pressure Sensor
+domain_id: 32
+domain_title: Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15227
+interface: Sub-Millisecond Piezoresistive Transducer
+description: 'Parachute Mortar Pyrotechnic Deploy Pressure Sensor is a specialized
+  Domain 32 (Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)) cyber-physical
+  monitoring sensor. Interfacing directly via Sub-Millisecond Piezoresistive Transducer,
+  it is specifically engineered to mitigate and detect Drogue parachute deploy failure,
+  pyrotechnic squib misfire. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Peak gas pressure in mortar tube: P_{mortar} >= 250\,bar
+  with rise time < 5\,ms; squib failure triggers redundant tertiary mortar firing
+  circuit.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Drogue parachute deploy failure, pyrotechnic squib misfire
+core_invariant: 'Peak gas pressure in mortar tube: P_{mortar} >= 250\,bar with rise
+  time < 5\,ms; squib failure triggers redundant tertiary mortar firing circuit.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40171:
+      name: s227_parachute_mortar_pyrotechnic_deploy_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40173:
+      name: s227_parachute_mortar_pyrotechnic_deploy_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s227_parachute_mortar_pyrotechnic_deploy_pressure_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Drogue parachute deploy failure, pyrotechnic squib
+    misfire'

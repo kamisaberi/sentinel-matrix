@@ -1,0 +1,45 @@
+sensor_id: s506_yttria_stabilized_zirconia_ysz_oxygen_ion_conductivity_cell
+name: Yttria-Stabilized Zirconia (YSZ) Oxygen-Ion Conductivity Cell
+domain_id: 72
+domain_title: High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15506
+interface: High-Temperature Potentiometric Cell
+description: 'Yttria-Stabilized Zirconia (YSZ) Oxygen-Ion Conductivity Cell is a specialized
+  Domain 72 (High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via High-Temperature Potentiometric
+  Cell, it is specifically engineered to mitigate and detect Electrolyte ceramic micro-cracking,
+  hydrogen-to-oxygen cross-leak. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Open-Circuit Voltage (Nernst equation): E_{OCV}
+  = \frac{RT}{4F}\ln\frac{P_{O_2,anode}}{P_{O_2,cathode}}; voltage drop indicates
+  fuel cross-leak.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Electrolyte ceramic micro-cracking, hydrogen-to-oxygen cross-leak
+core_invariant: 'Open-Circuit Voltage (Nernst equation): E_{OCV} = \frac{RT}{4F}\ln\frac{P_{O_2,anode}}{P_{O_2,cathode}};
+  voltage drop indicates fuel cross-leak.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40291:
+      name: s506_yttria_stabilized_zirconia_ysz_oxygen_ion_conductivity_cell_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40293:
+      name: s506_yttria_stabilized_zirconia_ysz_oxygen_ion_conductivity_cell_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s506_yttria_stabilized_zirconia_ysz_oxygen_ion_conductivity_cell_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Electrolyte ceramic micro-cracking, hydrogen-to-oxygen
+    cross-leak'

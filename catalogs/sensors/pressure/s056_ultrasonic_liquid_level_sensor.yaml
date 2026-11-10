@@ -1,0 +1,43 @@
+sensor_id: s056_ultrasonic_liquid_level_sensor
+name: Ultrasonic Liquid Level Sensor
+domain_id: 9
+domain_title: Fluid, Pressure & Hydrodynamic Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15056
+interface: Modbus / Pulse Echo
+description: 'Ultrasonic Liquid Level Sensor is a specialized Domain 09 (Fluid, Pressure
+  & Hydrodynamic Sensors) cyber-physical monitoring sensor. Interfacing directly via
+  Modbus / Pulse Echo, it is specifically engineered to mitigate and detect Tank overfill
+  attacks (e.g. Buncefield oil depot explosion). In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: High-high level limit (h > h_{critical})
+  triggers hardware gravity dump valve.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Tank overfill attacks (e.g. Buncefield oil depot explosion)
+core_invariant: High-high level limit (h > h_{critical}) triggers hardware gravity
+  dump valve.
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40051:
+      name: s056_ultrasonic_liquid_level_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40053:
+      name: s056_ultrasonic_liquid_level_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s056_ultrasonic_liquid_level_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Tank overfill attacks (e.g. Buncefield oil depot
+    explosion)'

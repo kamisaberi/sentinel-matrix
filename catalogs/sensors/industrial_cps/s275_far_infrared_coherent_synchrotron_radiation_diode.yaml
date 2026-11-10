@@ -1,0 +1,45 @@
+sensor_id: s275_far_infrared_coherent_synchrotron_radiation_diode
+name: Far-Infrared Coherent Synchrotron Radiation Diode
+domain_id: 39
+domain_title: Particle Accelerator & Synchrotron Light Source Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15275
+interface: Cryogenic Hot-Electron Bolometer
+description: "Far-Infrared Coherent Synchrotron Radiation Diode is a specialized Domain\
+  \ 39 (Particle Accelerator & Synchrotron Light Source Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Cryogenic Hot-Electron Bolometer, it is specifically\
+  \ engineered to mitigate and detect Microbunching instability in free-electron lasers,\
+  \ beam current loss. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: CSR power scaling: P_{CSR} \u221D N_e^2; sudden coherent\
+  \ emission surge indicates longitudinal electron bunch micro-clustering.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Microbunching instability in free-electron lasers, beam current loss
+core_invariant: "CSR power scaling: P_{CSR} \u221D N_e^2; sudden coherent emission\
+  \ surge indicates longitudinal electron bunch micro-clustering."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40131:
+      name: s275_far_infrared_coherent_synchrotron_radiation_diode_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40133:
+      name: s275_far_infrared_coherent_synchrotron_radiation_diode_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s275_far_infrared_coherent_synchrotron_radiation_diode_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Microbunching instability in free-electron lasers,
+    beam current loss'

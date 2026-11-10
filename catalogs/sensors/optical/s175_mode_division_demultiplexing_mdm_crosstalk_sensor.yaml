@@ -1,0 +1,44 @@
+sensor_id: s175_mode_division_demultiplexing_mdm_crosstalk_sensor
+name: Mode-Division Demultiplexing (MDM) Crosstalk Sensor
+domain_id: 25
+domain_title: Photonic Integrated Circuit (PIC) & Optical Computing Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15175
+interface: Multi-Mode Waveguide Grating Receiver
+description: 'Mode-Division Demultiplexing (MDM) Crosstalk Sensor is a specialized
+  Domain 25 (Photonic Integrated Circuit (PIC) & Optical Computing Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Multi-Mode Waveguide Grating Receiver,
+  it is specifically engineered to mitigate and detect Inter-mode crosstalk injection,
+  optical channel eavesdropping. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Inter-modal extinction ratio IMER = 10 \log_{10}(P_{TE0}
+  / P_{TE1}) >= 25\,dB; mode leakage triggers automated waveguide phase re-trimming..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Inter-mode crosstalk injection, optical channel eavesdropping
+core_invariant: Inter-modal extinction ratio IMER = 10 \log_{10}(P_{TE0} / P_{TE1})
+  >= 25\,dB; mode leakage triggers automated waveguide phase re-trimming.
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40201:
+      name: s175_mode_division_demultiplexing_mdm_crosstalk_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40203:
+      name: s175_mode_division_demultiplexing_mdm_crosstalk_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s175_mode_division_demultiplexing_mdm_crosstalk_sensor_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Inter-mode crosstalk injection, optical channel eavesdropping'

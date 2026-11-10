@@ -1,0 +1,45 @@
+sensor_id: s458_waveguide_vacuum_window_optical_plasma_sensor
+name: Waveguide Vacuum Window Optical Plasma Sensor
+domain_id: 65
+domain_title: Directed-Energy Counter-Electronics (HPEM/HPM) Waveguide Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15458
+interface: Photomultiplier Tube on Beryllium Window
+description: 'Waveguide Vacuum Window Optical Plasma Sensor is a specialized Domain
+  65 (Directed-Energy Counter-Electronics (HPEM/HPM) Waveguide Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Photomultiplier Tube on Beryllium Window,
+  it is specifically engineered to mitigate and detect RF vacuum window flashover,
+  catastrophic ceramic window rupture. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Optical light emission at window interface indicates
+  plasma discharge; shuts down klystron drive in < 100\,ns to prevent window shatter..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: RF vacuum window flashover, catastrophic ceramic window rupture
+core_invariant: Optical light emission at window interface indicates plasma discharge;
+  shuts down klystron drive in < 100\,ns to prevent window shatter.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40321:
+      name: s458_waveguide_vacuum_window_optical_plasma_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40323:
+      name: s458_waveguide_vacuum_window_optical_plasma_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s458_waveguide_vacuum_window_optical_plasma_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: RF vacuum window flashover, catastrophic ceramic
+    window rupture'

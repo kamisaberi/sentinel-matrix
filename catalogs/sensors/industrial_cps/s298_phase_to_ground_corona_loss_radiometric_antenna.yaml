@@ -1,0 +1,45 @@
+sensor_id: s298_phase_to_ground_corona_loss_radiometric_antenna
+name: Phase-to-Ground Corona Loss Radiometric Antenna
+domain_id: 42
+domain_title: High-Tension Transmission Pylon & Dynamic Line Rating (DLR) Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15298
+interface: Wideband VHF Receiver (30--300 MHz)
+description: 'Phase-to-Ground Corona Loss Radiometric Antenna is a specialized Domain
+  42 (High-Tension Transmission Pylon & Dynamic Line Rating (DLR) Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Wideband VHF Receiver (30--300 MHz),
+  it is specifically engineered to mitigate and detect Wet snow flashover precursor,
+  severe porcelain insulator pollution. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Radiated electromagnetic corona pulses per half-cycle;
+  pulse count spike (> 500/cycle) warns of impending line flashover.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Wet snow flashover precursor, severe porcelain insulator pollution
+core_invariant: Radiated electromagnetic corona pulses per half-cycle; pulse count
+  spike (> 500/cycle) warns of impending line flashover.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40341:
+      name: s298_phase_to_ground_corona_loss_radiometric_antenna_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40343:
+      name: s298_phase_to_ground_corona_loss_radiometric_antenna_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s298_phase_to_ground_corona_loss_radiometric_antenna_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Wet snow flashover precursor, severe porcelain insulator
+    pollution'

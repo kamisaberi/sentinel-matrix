@@ -1,0 +1,44 @@
+sensor_id: s346_borehole_fiber_optic_acoustic_clamping_transducer
+name: Borehole Fiber-Optic Acoustic Clamping Transducer
+domain_id: 49
+domain_title: Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15346
+interface: Clamped DAS Fiber Element
+description: 'Borehole Fiber-Optic Acoustic Clamping Transducer is a specialized Domain
+  49 (Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Clamped DAS Fiber Element, it is specifically
+  engineered to mitigate and detect Subterranean shear-slip along casing, wellbore
+  shearing. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Measures high-frequency strain wave velocities (V_p, V_s); identifies
+  active tectonic shear displacement before well casing rupture.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Subterranean shear-slip along casing, wellbore shearing
+core_invariant: Measures high-frequency strain wave velocities (V_p, V_s); identifies
+  active tectonic shear displacement before well casing rupture.
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40301:
+      name: s346_borehole_fiber_optic_acoustic_clamping_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40303:
+      name: s346_borehole_fiber_optic_acoustic_clamping_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s346_borehole_fiber_optic_acoustic_clamping_transducer_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Subterranean shear-slip along casing, wellbore shearing'

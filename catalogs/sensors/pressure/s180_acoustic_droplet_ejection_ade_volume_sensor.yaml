@@ -1,0 +1,46 @@
+sensor_id: s180_acoustic_droplet_ejection_ade_volume_sensor
+name: Acoustic Droplet Ejection (ADE) Volume Sensor
+domain_id: 26
+domain_title: Microfluidic, Lab-on-a-Chip & DNA Synthesis Biosecurity Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15180
+interface: High-Frequency Piezoelectric Pulse-Echo
+description: "Acoustic Droplet Ejection (ADE) Volume Sensor is a specialized Domain\
+  \ 26 (Microfluidic, Lab-on-a-Chip & DNA Synthesis Biosecurity Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Frequency Piezoelectric Pulse-Echo,\
+  \ it is specifically engineered to mitigate and detect Micro-dosing poison injection,\
+  \ pharmaceutical high-throughput assay sabotage. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Fluid sound velocity c and\
+  \ acoustic impedance Z = \\rho c; droplet volume verification to within \xB1 10\\\
+  ,picoliters per acoustic burst.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Micro-dosing poison injection, pharmaceutical high-throughput assay
+  sabotage
+core_invariant: "Fluid sound velocity c and acoustic impedance Z = \\rho c; droplet\
+  \ volume verification to within \xB1 10\\,picoliters per acoustic burst."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40241:
+      name: s180_acoustic_droplet_ejection_ade_volume_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40243:
+      name: s180_acoustic_droplet_ejection_ade_volume_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s180_acoustic_droplet_ejection_ade_volume_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Micro-dosing poison injection, pharmaceutical high-throughput
+    assay sabotage'

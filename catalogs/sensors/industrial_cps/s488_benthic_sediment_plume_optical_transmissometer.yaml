@@ -1,0 +1,45 @@
+sensor_id: s488_benthic_sediment_plume_optical_transmissometer
+name: Benthic Sediment Plume Optical Transmissometer
+domain_id: 69
+domain_title: Deep Sea Mining Crawler & Slurry Riser Lift Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15488
+interface: Dual-Wavelength Light Beam (660\,nm)
+description: 'Benthic Sediment Plume Optical Transmissometer is a specialized Domain
+  69 (Deep Sea Mining Crawler & Slurry Riser Lift Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Dual-Wavelength Light Beam (660\,nm), it is specifically
+  engineered to mitigate and detect Benthic environmental boundary violation, illegal
+  plume dispersion. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Beam attenuation coefficient: c = -\frac{1}{L}\ln(I/I_0)
+  <= c_{permit}; exceeding plume boundary commands crawler speed reduction.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Benthic environmental boundary violation, illegal plume dispersion
+core_invariant: 'Beam attenuation coefficient: c = -\frac{1}{L}\ln(I/I_0) <= c_{permit};
+  exceeding plume boundary commands crawler speed reduction.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40121:
+      name: s488_benthic_sediment_plume_optical_transmissometer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40123:
+      name: s488_benthic_sediment_plume_optical_transmissometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s488_benthic_sediment_plume_optical_transmissometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Benthic environmental boundary violation, illegal
+    plume dispersion'

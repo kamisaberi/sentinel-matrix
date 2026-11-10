@@ -1,0 +1,45 @@
+sensor_id: s505_corner_casting_dynamic_hoist_strain_pin_transducer
+name: Corner-Casting Dynamic Hoist Strain Pin Transducer
+domain_id: 71
+domain_title: Autonomous Port Container Straddle Carrier & AGV Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15505
+interface: Instrumented Shear Load Pin in Spreader
+description: 'Corner-Casting Dynamic Hoist Strain Pin Transducer is a specialized
+  Domain 71 (Autonomous Port Container Straddle Carrier & AGV Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Instrumented Shear Load Pin in Spreader,
+  it is specifically engineered to mitigate and detect Asymmetric eccentric load distribution,
+  straddle carrier rollover. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Center-of-gravity eccentricity: e_{CoG} <= 10\% \cdot
+  L_{container}; excessive eccentricity limits maximum travel speed to 10\,km/h..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Asymmetric eccentric load distribution, straddle carrier rollover
+core_invariant: 'Center-of-gravity eccentricity: e_{CoG} <= 10\% \cdot L_{container};
+  excessive eccentricity limits maximum travel speed to 10\,km/h.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40281:
+      name: s505_corner_casting_dynamic_hoist_strain_pin_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40283:
+      name: s505_corner_casting_dynamic_hoist_strain_pin_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s505_corner_casting_dynamic_hoist_strain_pin_transducer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Asymmetric eccentric load distribution, straddle
+    carrier rollover'

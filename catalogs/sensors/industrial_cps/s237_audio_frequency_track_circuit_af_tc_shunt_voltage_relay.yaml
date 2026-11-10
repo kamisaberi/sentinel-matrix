@@ -1,0 +1,45 @@
+sensor_id: s237_audio_frequency_track_circuit_af_tc_shunt_voltage_relay
+name: Audio-Frequency Track Circuit (AF-TC) Shunt Voltage Relay
+domain_id: 34
+domain_title: Railway Signaling, Trackside Balise & Eurobalise PTC Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15237
+interface: FSK Trackside Receiver (Coded Audio)
+description: 'Audio-Frequency Track Circuit (AF-TC) Shunt Voltage Relay is a specialized
+  Domain 34 (Railway Signaling, Trackside Balise & Eurobalise PTC Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via FSK Trackside Receiver (Coded Audio),
+  it is specifically engineered to mitigate and detect Broken rail detection, track
+  shunt spoofing, false clear signal. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Rail-to-rail impedance shunt: V_{track} <= V_{shunt\_drop}
+  when train axle bridges rails; broken rail breaks audio carrier, turning signal
+  RED.. Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Broken rail detection, track shunt spoofing, false clear signal
+core_invariant: 'Rail-to-rail impedance shunt: V_{track} <= V_{shunt\_drop} when train
+  axle bridges rails; broken rail breaks audio carrier, turning signal RED.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40271:
+      name: s237_audio_frequency_track_circuit_af_tc_shunt_voltage_relay_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40273:
+      name: s237_audio_frequency_track_circuit_af_tc_shunt_voltage_relay_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s237_audio_frequency_track_circuit_af_tc_shunt_voltage_relay_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Broken rail detection, track shunt spoofing, false
+    clear signal'

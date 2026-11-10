@@ -1,0 +1,48 @@
+sensor_id: s529_thermosiphon_natural_circulation_ultrasonic_flowmeter
+name: Thermosiphon Natural Circulation Ultrasonic Flowmeter
+domain_id: 75
+domain_title: Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety
+  Sensors
+category: NUCLEAR
+target_protocol: MODBUS_TCP
+default_port: 15529
+interface: Non-Invasive Clamp-On Acoustic Transducer
+description: "Thermosiphon Natural Circulation Ultrasonic Flowmeter is a specialized\
+  \ Domain 75 (Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety\
+  \ Sensors) cyber-physical monitoring sensor. Interfacing directly via Non-Invasive\
+  \ Clamp-On Acoustic Transducer, it is specifically engineered to mitigate and detect\
+  \ Natural convection stall, core thermal stagnation under station blackout. In the\
+  \ Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Coolant flow velocity: v_{flow} \u221D \\sqrt[3]{\\dot{Q}_{core} \\cdot \u0394\
+  \ z_{buoyancy}}; flow stall (\u2248 0\\,m/s) triggers emergency borated water flooding..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Natural convection stall, core thermal stagnation under station blackout
+core_invariant: "Coolant flow velocity: v_{flow} \u221D \\sqrt[3]{\\dot{Q}_{core}\
+  \ \\cdot \u0394 z_{buoyancy}}; flow stall (\u2248 0\\,m/s) triggers emergency borated\
+  \ water flooding."
+physics:
+  engine: nuclear_decay
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: uSv/h
+registers:
+  holding_registers:
+    40491:
+      name: s529_thermosiphon_natural_circulation_ultrasonic_flowmeter_pv
+      type: float32
+      scale: 1.0
+      unit: uSv/h
+    40493:
+      name: s529_thermosiphon_natural_circulation_ultrasonic_flowmeter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s529_thermosiphon_natural_circulation_ultrasonic_flowmeter_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Natural convection stall, core thermal stagnation
+    under station blackout'

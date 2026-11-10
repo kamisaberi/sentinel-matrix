@@ -1,0 +1,44 @@
+sensor_id: s073_electromagnetic_induction_flow_meter_magmeter
+name: Electromagnetic Induction Flow Meter (Magmeter)
+domain_id: 11
+domain_title: Magnetic, Fluxgate & Magnetohydrodynamic (MHD) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15073
+interface: Pulsed DC Coils / Modbus
+description: 'Electromagnetic Induction Flow Meter (Magmeter) is a specialized Domain
+  11 (Magnetic, Fluxgate & Magnetohydrodynamic (MHD) Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Pulsed DC Coils / Modbus, it is specifically engineered
+  to mitigate and detect Industrial wastewater flow spoofing, chemical dilution attacks.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Faraday induction law: V = B \cdot v \cdot D; fluid velocity must strictly correlate
+  with downstream pump electrical power draw.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Industrial wastewater flow spoofing, chemical dilution attacks
+core_invariant: 'Faraday induction law: V = B \cdot v \cdot D; fluid velocity must
+  strictly correlate with downstream pump electrical power draw.'
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40221:
+      name: s073_electromagnetic_induction_flow_meter_magmeter_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40223:
+      name: s073_electromagnetic_induction_flow_meter_magmeter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s073_electromagnetic_induction_flow_meter_magmeter_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Industrial wastewater flow spoofing, chemical dilution
+    attacks'

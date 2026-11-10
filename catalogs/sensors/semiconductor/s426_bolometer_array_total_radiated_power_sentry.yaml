@@ -1,0 +1,45 @@
+sensor_id: s426_bolometer_array_total_radiated_power_sentry
+name: Bolometer Array Total Radiated Power Sentry
+domain_id: 60
+domain_title: Superconducting Tokamak Fusion Plasma Diagnostics Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15426
+interface: Gold-Foil Absorber Resistor Matrix
+description: 'Bolometer Array Total Radiated Power Sentry is a specialized Domain
+  60 (Superconducting Tokamak Fusion Plasma Diagnostics Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Gold-Foil Absorber Resistor Matrix, it is specifically
+  engineered to mitigate and detect Radiative thermal collapse, tungsten wall impurity
+  accumulation. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Total radiated power: P_{rad} <= 0.70 \cdot P_{heating}; radiation fraction
+  spike flags core cooling, requiring emergency RF heating.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Radiative thermal collapse, tungsten wall impurity accumulation
+core_invariant: 'Total radiated power: P_{rad} <= 0.70 \cdot P_{heating}; radiation
+  fraction spike flags core cooling, requiring emergency RF heating.'
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40011:
+      name: s426_bolometer_array_total_radiated_power_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40013:
+      name: s426_bolometer_array_total_radiated_power_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s426_bolometer_array_total_radiated_power_sentry_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Radiative thermal collapse, tungsten wall impurity
+    accumulation'

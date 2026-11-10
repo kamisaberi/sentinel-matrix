@@ -1,0 +1,45 @@
+sensor_id: s276_parametric_direct_current_current_transformer_dcct
+name: Parametric Direct-Current Current Transformer (DCCT)
+domain_id: 39
+domain_title: Particle Accelerator & Synchrotron Light Source Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15276
+interface: "Magnetic Modulator Loop (0.1\\,\xB5A resolution)"
+description: "Parametric Direct-Current Current Transformer (DCCT) is a specialized\
+  \ Domain 39 (Particle Accelerator & Synchrotron Light Source Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Magnetic Modulator Loop (0.1\\,\xB5\
+  A resolution), it is specifically engineered to mitigate and detect Unreported beam\
+  \ lifetime decay, covert secondary target extraction. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Stored beam current: \\frac{dI_{beam}}{dt}\
+  \ = -\\frac{I_{beam}}{\\tau_{Touschek}}; unexpected step drop indicates beam interception..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Unreported beam lifetime decay, covert secondary target extraction
+core_invariant: 'Stored beam current: \frac{dI_{beam}}{dt} = -\frac{I_{beam}}{\tau_{Touschek}};
+  unexpected step drop indicates beam interception.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40141:
+      name: s276_parametric_direct_current_current_transformer_dcct_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40143:
+      name: s276_parametric_direct_current_current_transformer_dcct_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s276_parametric_direct_current_current_transformer_dcct_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Unreported beam lifetime decay, covert secondary
+    target extraction'

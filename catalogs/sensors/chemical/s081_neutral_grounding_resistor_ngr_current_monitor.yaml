@@ -1,0 +1,45 @@
+sensor_id: s081_neutral_grounding_resistor_ngr_current_monitor
+name: Neutral Grounding Resistor (NGR) Current Monitor
+domain_id: 12
+domain_title: High-Voltage Electrical, Arc & Dielectric Breakdown Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15081
+interface: High-Current CT / Modbus
+description: "Neutral Grounding Resistor (NGR) Current Monitor is a specialized Domain\
+  \ 12 (High-Voltage Electrical, Arc & Dielectric Breakdown Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Current CT / Modbus, it is specifically\
+  \ engineered to mitigate and detect Single-line-to-ground fault injection, substation\
+  \ phase-ground shorting. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Neutral current must remain I_{neutral} \u2248 0\\\
+  ,A; continuous current > 5\\,A trips ground-fault protection in < 100\\,ms.. Any\
+  \ divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Single-line-to-ground fault injection, substation phase-ground shorting
+core_invariant: "Neutral current must remain I_{neutral} \u2248 0\\,A; continuous\
+  \ current > 5\\,A trips ground-fault protection in < 100\\,ms."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40301:
+      name: s081_neutral_grounding_resistor_ngr_current_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40303:
+      name: s081_neutral_grounding_resistor_ngr_current_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s081_neutral_grounding_resistor_ngr_current_monitor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Single-line-to-ground fault injection, substation
+    phase-ground shorting'

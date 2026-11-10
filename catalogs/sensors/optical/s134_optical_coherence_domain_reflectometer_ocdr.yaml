@@ -1,0 +1,45 @@
+sensor_id: s134_optical_coherence_domain_reflectometer_ocdr
+name: Optical Coherence Domain Reflectometer (OCDR)
+domain_id: 19
+domain_title: High-Energy Laser, Directed Energy & Optoelectronic Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15134
+interface: Low-Coherence Interferometer Tap
+description: 'Optical Coherence Domain Reflectometer (OCDR) is a specialized Domain
+  19 (High-Energy Laser, Directed Energy & Optoelectronic Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Low-Coherence Interferometer Tap, it
+  is specifically engineered to mitigate and detect Microscopic localized core cracks
+  in high-power fiber optic cables. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Sub-millimeter spatial resolution; backscatter
+  reflectivity spikes indicate localized core melting before fiber combustion.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Microscopic localized core cracks in high-power fiber optic cables
+core_invariant: Sub-millimeter spatial resolution; backscatter reflectivity spikes
+  indicate localized core melting before fiber combustion.
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40301:
+      name: s134_optical_coherence_domain_reflectometer_ocdr_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40303:
+      name: s134_optical_coherence_domain_reflectometer_ocdr_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s134_optical_coherence_domain_reflectometer_ocdr_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Microscopic localized core cracks in high-power fiber
+    optic cables'

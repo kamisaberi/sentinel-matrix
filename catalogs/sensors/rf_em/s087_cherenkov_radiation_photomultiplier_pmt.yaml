@@ -1,0 +1,45 @@
+sensor_id: s087_cherenkov_radiation_photomultiplier_pmt
+name: Cherenkov Radiation Photomultiplier (PMT)
+domain_id: 13
+domain_title: Nuclear, Radiological & Particle Detection Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15087
+interface: High-Sensitivity Optical Sensor
+description: "Cherenkov Radiation Photomultiplier (PMT) is a specialized Domain 13\
+  \ (Nuclear, Radiological & Particle Detection Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via High-Sensitivity Optical Sensor, it is specifically\
+  \ engineered to mitigate and detect Spent fuel pool illicit fuel rod removal, reactor\
+  \ prompt criticality. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Blue Cherenkov light intensity (\\lambda \u2248 400--450\\\
+  ,nm) must correlate with reactor thermal fission power P_{thermal}.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Spent fuel pool illicit fuel rod removal, reactor prompt criticality
+core_invariant: "Blue Cherenkov light intensity (\\lambda \u2248 400--450\\,nm) must\
+  \ correlate with reactor thermal fission power P_{thermal}."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40361:
+      name: s087_cherenkov_radiation_photomultiplier_pmt_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40363:
+      name: s087_cherenkov_radiation_photomultiplier_pmt_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s087_cherenkov_radiation_photomultiplier_pmt_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Spent fuel pool illicit fuel rod removal, reactor
+    prompt criticality'

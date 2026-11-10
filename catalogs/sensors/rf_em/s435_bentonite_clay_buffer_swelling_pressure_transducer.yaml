@@ -1,0 +1,45 @@
+sensor_id: s435_bentonite_clay_buffer_swelling_pressure_transducer
+name: Bentonite Clay Buffer Swelling Pressure Transducer
+domain_id: 62
+domain_title: Deep Underground Geological Radioactive Waste Repository (DGR) Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15435
+interface: High-Stress Piezoresistive Diaphragm
+description: "Bentonite Clay Buffer Swelling Pressure Transducer is a specialized\
+  \ Domain 62 (Deep Underground Geological Radioactive Waste Repository (DGR) Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via High-Stress Piezoresistive\
+  \ Diaphragm, it is specifically engineered to mitigate and detect Buffer seal loss,\
+  \ ground water channeling to spent nuclear fuel canisters. In the Aryorithm edge\
+  \ architecture, it continuously asserts the operational invariant: Swelling pressure:\
+  \ P_{swell} \u2208 [5.0, 10.0\\,MPa]; pressure drop < 4.0\\,MPa indicates bentonite\
+  \ erosion or piping failure.. Any divergence between commanded network state and\
+  \ this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Buffer seal loss, ground water channeling to spent nuclear fuel canisters
+core_invariant: "Swelling pressure: P_{swell} \u2208 [5.0, 10.0\\,MPa]; pressure drop\
+  \ < 4.0\\,MPa indicates bentonite erosion or piping failure."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40091:
+      name: s435_bentonite_clay_buffer_swelling_pressure_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40093:
+      name: s435_bentonite_clay_buffer_swelling_pressure_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s435_bentonite_clay_buffer_swelling_pressure_transducer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Buffer seal loss, ground water channeling to spent
+    nuclear fuel canisters'

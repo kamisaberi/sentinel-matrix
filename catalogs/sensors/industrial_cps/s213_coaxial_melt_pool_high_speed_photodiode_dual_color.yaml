@@ -1,0 +1,47 @@
+sensor_id: s213_coaxial_melt_pool_high_speed_photodiode_dual_color
+name: Coaxial Melt-Pool High-Speed Photodiode (Dual-Color)
+domain_id: 31
+domain_title: Metal Additive Manufacturing (3D Printing) Melt-Pool Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15213
+interface: Two-Color Pyrometry (100 kHz)
+description: 'Coaxial Melt-Pool High-Speed Photodiode (Dual-Color) is a specialized
+  Domain 31 (Metal Additive Manufacturing (3D Printing) Melt-Pool Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Two-Color Pyrometry (100 kHz), it is
+  specifically engineered to mitigate and detect Laser power cyber-tampering, lack-of-fusion
+  defect injection. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Ratio of spectral emissions: \frac{I_{\lambda 1}}{I_{\lambda
+  2}} = <=ft(\frac{\lambda_2}{\lambda_1}\right)^5 \frac{\exp(c_2/\lambda_2 T) - 1}{\exp(c_2/\lambda_1
+  T) - 1}; melt pool temperature must remain between 1{,}650^\circC and 2{,}200^\circC..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Laser power cyber-tampering, lack-of-fusion defect injection
+core_invariant: 'Ratio of spectral emissions: \frac{I_{\lambda 1}}{I_{\lambda 2}}
+  = <=ft(\frac{\lambda_2}{\lambda_1}\right)^5 \frac{\exp(c_2/\lambda_2 T) - 1}{\exp(c_2/\lambda_1
+  T) - 1}; melt pool temperature must remain between 1{,}650^\circC and 2{,}200^\circC.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40041:
+      name: s213_coaxial_melt_pool_high_speed_photodiode_dual_color_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40043:
+      name: s213_coaxial_melt_pool_high_speed_photodiode_dual_color_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s213_coaxial_melt_pool_high_speed_photodiode_dual_color_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Laser power cyber-tampering, lack-of-fusion defect
+    injection'

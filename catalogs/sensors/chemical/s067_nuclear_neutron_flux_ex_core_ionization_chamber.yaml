@@ -1,0 +1,43 @@
+sensor_id: s067_nuclear_neutron_flux_ex_core_ionization_chamber
+name: Nuclear Neutron Flux Ex-Core Ionization Chamber
+domain_id: 10
+domain_title: Chemical, Gas & Dielectric Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15067
+interface: High-Voltage Coaxial Cable
+description: 'Nuclear Neutron Flux Ex-Core Ionization Chamber is a specialized Domain
+  10 (Chemical, Gas & Dielectric Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via High-Voltage Coaxial Cable, it is specifically engineered to mitigate
+  and detect Reactor prompt-critical reactivity insertion accidents. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Period of
+  power rise must remain T_{period} >= 10\,seconds; breach trips SCRAM.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Reactor prompt-critical reactivity insertion accidents
+core_invariant: Period of power rise must remain T_{period} >= 10\,seconds; breach
+  trips SCRAM.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40161:
+      name: s067_nuclear_neutron_flux_ex_core_ionization_chamber_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40163:
+      name: s067_nuclear_neutron_flux_ex_core_ionization_chamber_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s067_nuclear_neutron_flux_ex_core_ionization_chamber_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Reactor prompt-critical reactivity insertion accidents'

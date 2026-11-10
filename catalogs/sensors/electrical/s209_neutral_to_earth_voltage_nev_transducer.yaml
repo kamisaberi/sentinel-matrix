@@ -1,0 +1,45 @@
+sensor_id: s209_neutral_to_earth_voltage_nev_transducer
+name: Neutral-to-Earth Voltage (NEV) Transducer
+domain_id: 30
+domain_title: Electrical Grid Frequency, Power Quality & High-Harmonic Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15209
+interface: True-RMS Voltage Conditioner
+description: 'Neutral-to-Earth Voltage (NEV) Transducer is a specialized Domain 30
+  (Electrical Grid Frequency, Power Quality & High-Harmonic Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via True-RMS Voltage Conditioner, it is
+  specifically engineered to mitigate and detect Stray voltage injection, dairy farm
+  grounding sabotage, neutral disconnection. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Neutral voltage V_{NE} <= 10.0\,V;
+  voltage rise indicates open neutral conductor or ground fault, preventing equipment
+  electrocution hazards.. Any divergence between commanded network state and this
+  physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Stray voltage injection, dairy farm grounding sabotage, neutral disconnection
+core_invariant: Neutral voltage V_{NE} <= 10.0\,V; voltage rise indicates open neutral
+  conductor or ground fault, preventing equipment electrocution hazards.
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40011:
+      name: s209_neutral_to_earth_voltage_nev_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40013:
+      name: s209_neutral_to_earth_voltage_nev_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s209_neutral_to_earth_voltage_nev_transducer_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Stray voltage injection, dairy farm grounding sabotage,
+    neutral disconnection'

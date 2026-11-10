@@ -1,0 +1,45 @@
+sensor_id: s256_subsea_meg_methanol_injection_coriolis_meter
+name: Subsea MEG / Methanol Injection Coriolis Meter
+domain_id: 37
+domain_title: Subsea Well Intervention, Choke & Hydrate Management Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15256
+interface: High-Pressure Subsea Coriolis Transmitter
+description: 'Subsea MEG / Methanol Injection Coriolis Meter is a specialized Domain
+  37 (Subsea Well Intervention, Choke & Hydrate Management Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Pressure Subsea Coriolis Transmitter,
+  it is specifically engineered to mitigate and detect Methane hydrate line blockage,
+  freeze-up of subsea production lines. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Mass flow rate of thermodynamic hydrate inhibitor
+  (MEG): \dot{m}_{MEG} >= \dot{m}_{water} \cdot \mathcal{F}_{Hammerschmidt}(P, T)..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Methane hydrate line blockage, freeze-up of subsea production lines
+core_invariant: 'Mass flow rate of thermodynamic hydrate inhibitor (MEG): \dot{m}_{MEG}
+  >= \dot{m}_{water} \cdot \mathcal{F}_{Hammerschmidt}(P, T).'
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40461:
+      name: s256_subsea_meg_methanol_injection_coriolis_meter_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40463:
+      name: s256_subsea_meg_methanol_injection_coriolis_meter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s256_subsea_meg_methanol_injection_coriolis_meter_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Methane hydrate line blockage, freeze-up of subsea
+    production lines'

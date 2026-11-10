@@ -1,0 +1,45 @@
+sensor_id: s490_slurry_lift_acoustic_doppler_velocity_profiler
+name: Slurry Lift Acoustic Doppler Velocity Profiler
+domain_id: 69
+domain_title: Deep Sea Mining Crawler & Slurry Riser Lift Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15490
+interface: Non-Invasive Clamp-On Acoustic Sensor
+description: 'Slurry Lift Acoustic Doppler Velocity Profiler is a specialized Domain
+  69 (Deep Sea Mining Crawler & Slurry Riser Lift Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Non-Invasive Clamp-On Acoustic Sensor, it is specifically
+  engineered to mitigate and detect Particle settling velocity transition, solid compaction
+  plug. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Bulk slurry velocity: v_{slurry} >= 1.3 \cdot v_{settling\_critical}
+  (Durand deposition limit); velocity drop speeds up lift pumps.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Particle settling velocity transition, solid compaction plug
+core_invariant: 'Bulk slurry velocity: v_{slurry} >= 1.3 \cdot v_{settling\_critical}
+  (Durand deposition limit); velocity drop speeds up lift pumps.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40141:
+      name: s490_slurry_lift_acoustic_doppler_velocity_profiler_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40143:
+      name: s490_slurry_lift_acoustic_doppler_velocity_profiler_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s490_slurry_lift_acoustic_doppler_velocity_profiler_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Particle settling velocity transition, solid compaction
+    plug'

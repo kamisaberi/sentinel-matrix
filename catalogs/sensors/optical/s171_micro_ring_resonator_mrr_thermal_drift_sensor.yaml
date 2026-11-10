@@ -1,0 +1,47 @@
+sensor_id: s171_micro_ring_resonator_mrr_thermal_drift_sensor
+name: Micro-Ring Resonator (MRR) Thermal Drift Sensor
+domain_id: 25
+domain_title: Photonic Integrated Circuit (PIC) & Optical Computing Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15171
+interface: Integrated Micro-Heater Sense Wire
+description: "Micro-Ring Resonator (MRR) Thermal Drift Sensor is a specialized Domain\
+  \ 25 (Photonic Integrated Circuit (PIC) & Optical Computing Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Integrated Micro-Heater Sense Wire,\
+  \ it is specifically engineered to mitigate and detect Thermal detuning sabotage,\
+  \ optical neural network weight alteration. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Lorentzian resonance transmission:\
+  \ T(\\lambda) = \\frac{(1-r^2)^2}{(1-r^2)^2 + 4r^2\\sin^2(\\pi n_{eff} L / \\lambda)};\
+  \ wavelength shift \u0394 \\lambda_0 > 50\\,pm forces thermo-optic heater recalibration..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Thermal detuning sabotage, optical neural network weight alteration
+core_invariant: "Lorentzian resonance transmission: T(\\lambda) = \\frac{(1-r^2)^2}{(1-r^2)^2\
+  \ + 4r^2\\sin^2(\\pi n_{eff} L / \\lambda)}; wavelength shift \u0394 \\lambda_0\
+  \ > 50\\,pm forces thermo-optic heater recalibration."
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40161:
+      name: s171_micro_ring_resonator_mrr_thermal_drift_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40163:
+      name: s171_micro_ring_resonator_mrr_thermal_drift_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s171_micro_ring_resonator_mrr_thermal_drift_sensor_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Thermal detuning sabotage, optical neural network
+    weight alteration'

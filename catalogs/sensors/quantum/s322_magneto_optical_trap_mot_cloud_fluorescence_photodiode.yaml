@@ -1,0 +1,45 @@
+sensor_id: s322_magneto_optical_trap_mot_cloud_fluorescence_photodiode
+name: Magneto-Optical Trap (MOT) Cloud Fluorescence Photodiode
+domain_id: 46
+domain_title: Quantum Gravimetry & Cold Atom Inertial Sensors
+category: QUANTUM
+target_protocol: MODBUS_TCP
+default_port: 15322
+interface: High-Gain Photodiode Preamp
+description: "Magneto-Optical Trap (MOT) Cloud Fluorescence Photodiode is a specialized\
+  \ Domain 46 (Quantum Gravimetry & Cold Atom Inertial Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via High-Gain Photodiode Preamp, it is specifically\
+  \ engineered to mitigate and detect Anti-Helmholtz coil current tampering, cold\
+  \ atom trap collapse. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Trap atom population N \u221D I_{fluor}; sudden drop\
+  \ in atomic fluorescence indicates magnetic field drift or vacuum seal failure..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Anti-Helmholtz coil current tampering, cold atom trap collapse
+core_invariant: "Trap atom population N \u221D I_{fluor}; sudden drop in atomic fluorescence\
+  \ indicates magnetic field drift or vacuum seal failure."
+physics:
+  engine: quantum_squid
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mK
+registers:
+  holding_registers:
+    40061:
+      name: s322_magneto_optical_trap_mot_cloud_fluorescence_photodiode_pv
+      type: float32
+      scale: 1.0
+      unit: mK
+    40063:
+      name: s322_magneto_optical_trap_mot_cloud_fluorescence_photodiode_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s322_magneto_optical_trap_mot_cloud_fluorescence_photodiode_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Anti-Helmholtz coil current tampering, cold atom
+    trap collapse'

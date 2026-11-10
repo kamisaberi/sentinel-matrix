@@ -1,0 +1,42 @@
+sensor_id: s044_optical_arc_flash_photodiode_detector
+name: Optical Arc-Flash Photodiode Detector
+domain_id: 7
+domain_title: Photonic & Fiber-Optic Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15044
+interface: Solar-Blind High-Speed Photodiode
+description: 'Optical Arc-Flash Photodiode Detector is a specialized Domain 07 (Photonic
+  & Fiber-Optic Sensors) cyber-physical monitoring sensor. Interfacing directly via
+  Solar-Blind High-Speed Photodiode, it is specifically engineered to mitigate and
+  detect Switchgear arc-flash explosions. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Light intensity > 10{,}000\,lux with < 1\,ms
+  rise time trips main breaker in < 2\,ms.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Switchgear arc-flash explosions
+core_invariant: Light intensity > 10{,}000\,lux with < 1\,ms rise time trips main
+  breaker in < 2\,ms.
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40431:
+      name: s044_optical_arc_flash_photodiode_detector_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40433:
+      name: s044_optical_arc_flash_photodiode_detector_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s044_optical_arc_flash_photodiode_detector_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Switchgear arc-flash explosions'

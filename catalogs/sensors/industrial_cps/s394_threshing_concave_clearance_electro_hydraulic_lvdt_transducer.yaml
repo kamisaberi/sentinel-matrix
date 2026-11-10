@@ -1,0 +1,45 @@
+sensor_id: s394_threshing_concave_clearance_electro_hydraulic_lvdt_transducer
+name: Threshing Concave Clearance Electro-Hydraulic LVDT Transducer
+domain_id: 56
+domain_title: Autonomous Agricultural Combine Harvester & Grain Loss Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15394
+interface: Linear Inductive Position Transducer
+description: 'Threshing Concave Clearance Electro-Hydraulic LVDT Transducer is a specialized
+  Domain 56 (Autonomous Agricultural Combine Harvester & Grain Loss Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Linear Inductive Position Transducer,
+  it is specifically engineered to mitigate and detect Stone trap jamming, threshing
+  cylinder mechanical seizure. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Concave gap: d_{concave} >= d_{minimum\_crop};
+  foreign object ingress forces emergency stone-trap release in < 50\,ms.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Stone trap jamming, threshing cylinder mechanical seizure
+core_invariant: 'Concave gap: d_{concave} >= d_{minimum\_crop}; foreign object ingress
+  forces emergency stone-trap release in < 50\,ms.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40211:
+      name: s394_threshing_concave_clearance_electro_hydraulic_lvdt_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40213:
+      name: s394_threshing_concave_clearance_electro_hydraulic_lvdt_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s394_threshing_concave_clearance_electro_hydraulic_lvdt_transducer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Stone trap jamming, threshing cylinder mechanical
+    seizure'

@@ -1,0 +1,46 @@
+sensor_id: s535_ultra_wideband_uwb_time_of_flight_ranging_transceiver
+name: Ultra-Wideband (UWB) Time-of-Flight Ranging Transceiver
+domain_id: 76
+domain_title: Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15535
+interface: IEEE 802.15.4z Secure UWB Chipset
+description: 'Ultra-Wideband (UWB) Time-of-Flight Ranging Transceiver is a specialized
+  Domain 76 (Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via IEEE 802.15.4z Secure
+  UWB Chipset, it is specifically engineered to mitigate and detect GPS-denied relative
+  positioning spoofing, inter-drone collision in swarm. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Two-way ranging distance: d_{ij}
+  = c \cdot \frac{(T_{round1} - T_{reply1}) + (T_{round2} - T_{reply2})}{4}; cryptographic
+  STS preamble prevents distance manipulation.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: GPS-denied relative positioning spoofing, inter-drone collision in
+  swarm
+core_invariant: 'Two-way ranging distance: d_{ij} = c \cdot \frac{(T_{round1} - T_{reply1})
+  + (T_{round2} - T_{reply2})}{4}; cryptographic STS preamble prevents distance manipulation.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40051:
+      name: s535_ultra_wideband_uwb_time_of_flight_ranging_transceiver_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40053:
+      name: s535_ultra_wideband_uwb_time_of_flight_ranging_transceiver_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s535_ultra_wideband_uwb_time_of_flight_ranging_transceiver_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: GPS-denied relative positioning spoofing, inter-drone
+    collision in swarm'

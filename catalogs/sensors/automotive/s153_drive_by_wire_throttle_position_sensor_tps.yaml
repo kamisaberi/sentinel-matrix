@@ -1,0 +1,44 @@
+sensor_id: s153_drive_by_wire_throttle_position_sensor_tps
+name: Drive-by-Wire Throttle Position Sensor (TPS)
+domain_id: 22
+domain_title: Advanced Automotive & Autonomous Drive-by-Wire Sensors
+category: AUTOMOTIVE
+target_protocol: MODBUS_TCP
+default_port: 15153
+interface: Dual Opposing Analog Potentiometers
+description: "Drive-by-Wire Throttle Position Sensor (TPS) is a specialized Domain\
+  \ 22 (Advanced Automotive & Autonomous Drive-by-Wire Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Dual Opposing Analog Potentiometers, it is specifically\
+  \ engineered to mitigate and detect Unintended acceleration, electronic throttle\
+  \ manipulation. In the Aryorithm edge architecture, it continuously asserts the\
+  \ operational invariant: Channel 1 (0.5--4.5V) must sum complementarily with Channel\
+  \ 2 (4.5--0.5V): V_1 + V_2 = 5.0V \xB1 0.1V; mismatch cuts fuel.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Unintended acceleration, electronic throttle manipulation
+core_invariant: "Channel 1 (0.5--4.5V) must sum complementarily with Channel 2 (4.5--0.5V):\
+  \ V_1 + V_2 = 5.0V \xB1 0.1V; mismatch cuts fuel."
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -180.0
+  max_value: 180.0
+  noise_sigma: 0.02
+  unit: deg
+registers:
+  holding_registers:
+    40481:
+      name: s153_drive_by_wire_throttle_position_sensor_tps_pv
+      type: float32
+      scale: 1.0
+      unit: deg
+    40483:
+      name: s153_drive_by_wire_throttle_position_sensor_tps_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s153_drive_by_wire_throttle_position_sensor_tps_fault
+  action: step_increase
+  value: 45.0
+  description: 'Injects anomaly: Unintended acceleration, electronic throttle manipulation'

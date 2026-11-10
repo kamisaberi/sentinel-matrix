@@ -1,0 +1,42 @@
+sensor_id: s006_page_fault_frequency_sensor
+name: Page Fault Frequency Sensor
+domain_id: 1
+domain_title: Microarchitectural, CPU & Memory Sensors (Host Hardware Security)
+category: MICROARCH
+target_protocol: PMU_PERF
+default_port: 15006
+interface: Kernel Tracepoint (`page_fault_user`)
+description: 'Page Fault Frequency Sensor is a specialized Domain 01 (Microarchitectural,
+  CPU & Memory Sensors (Host Hardware Security)) cyber-physical monitoring sensor.
+  Interfacing directly via Kernel Tracepoint (`page_fault_user`), it is specifically
+  engineered to mitigate and detect Memory scraping, buffer overflow brute-forcing.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Abnormal spike in minor/major page faults indicates ASLR derandomization.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Memory scraping, buffer overflow brute-forcing
+core_invariant: Abnormal spike in minor/major page faults indicates ASLR derandomization.
+physics:
+  engine: pmu_microarch
+  baseline_value: 1.2
+  min_value: 0.1
+  max_value: 4.0
+  noise_sigma: 0.05
+  unit: IPC
+registers:
+  holding_registers:
+    40051:
+      name: s006_page_fault_frequency_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: IPC
+    40053:
+      name: s006_page_fault_frequency_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s006_page_fault_frequency_sensor_fault
+  action: step_decrease
+  value: -0.8
+  description: 'Injects anomaly: Memory scraping, buffer overflow brute-forcing'

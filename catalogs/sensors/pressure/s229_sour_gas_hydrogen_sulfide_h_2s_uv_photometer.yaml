@@ -1,0 +1,45 @@
+sensor_id: s229_sour_gas_hydrogen_sulfide_h_2s_uv_photometer
+name: Sour Gas Hydrogen Sulfide (H_2S) UV Photometer
+domain_id: 33
+domain_title: Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15229
+interface: Inline Dual-Beam UV (214 nm)
+description: 'Sour Gas Hydrogen Sulfide (H_2S) UV Photometer is a specialized Domain
+  33 (Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Inline Dual-Beam UV (214 nm), it is
+  specifically engineered to mitigate and detect Lethal toxic gas breakout, amine
+  treating unit cyber bypass. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Beer-Lambert absorption: [H_2S] = -\frac{1}{\epsilon
+  L} \ln(I/I_0); concentration exceeding safety threshold (> 10\,ppm) activates emergency
+  flare diversion.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Lethal toxic gas breakout, amine treating unit cyber bypass
+core_invariant: 'Beer-Lambert absorption: [H_2S] = -\frac{1}{\epsilon L} \ln(I/I_0);
+  concentration exceeding safety threshold (> 10\,ppm) activates emergency flare diversion.'
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40191:
+      name: s229_sour_gas_hydrogen_sulfide_h_2s_uv_photometer_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40193:
+      name: s229_sour_gas_hydrogen_sulfide_h_2s_uv_photometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s229_sour_gas_hydrogen_sulfide_h_2s_uv_photometer_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Lethal toxic gas breakout, amine treating unit cyber
+    bypass'

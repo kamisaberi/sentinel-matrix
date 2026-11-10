@@ -1,0 +1,46 @@
+sensor_id: s145_vibrating_wire_pore_water_piezometer
+name: Vibrating Wire Pore-Water Piezometer
+domain_id: 21
+domain_title: Extreme Geological, Seismic & Borehole Telemetry Sensors
+category: GEOLOGICAL
+target_protocol: MODBUS_TCP
+default_port: 15145
+interface: Frequency-Pickup Coil
+description: "Vibrating Wire Pore-Water Piezometer is a specialized Domain 21 (Extreme\
+  \ Geological, Seismic & Borehole Telemetry Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via Frequency-Pickup Coil, it is specifically engineered\
+  \ to mitigate and detect Mine tailings dam liquefaction, foundation uplift overpressure.\
+  \ In the Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Resonant frequency f^2 \u221D \\sigma_{wire} \u221D P_{pore}; pore pressure ratio\
+  \ r_u = \\frac{u}{\\gamma h} >= 0.5 triggers automatic emergency spillway diversion..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Mine tailings dam liquefaction, foundation uplift overpressure
+core_invariant: "Resonant frequency f^2 \u221D \\sigma_{wire} \u221D P_{pore}; pore\
+  \ pressure ratio r_u = \\frac{u}{\\gamma h} >= 0.5 triggers automatic emergency\
+  \ spillway diversion."
+physics:
+  engine: seismic_geophone
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mm/s
+registers:
+  holding_registers:
+    40411:
+      name: s145_vibrating_wire_pore_water_piezometer_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40413:
+      name: s145_vibrating_wire_pore_water_piezometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s145_vibrating_wire_pore_water_piezometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Mine tailings dam liquefaction, foundation uplift
+    overpressure'

@@ -1,0 +1,45 @@
+sensor_id: s242_liquid_hydrogen_coaxial_capacitive_level_sensor
+name: Liquid Hydrogen Coaxial Capacitive Level Sensor
+domain_id: 35
+domain_title: Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15242
+interface: Ultra-Low Temperature Capacitance Bridge
+description: "Liquid Hydrogen Coaxial Capacitive Level Sensor is a specialized Domain\
+  \ 35 (Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Ultra-Low Temperature Capacitance\
+  \ Bridge, it is specifically engineered to mitigate and detect LH_2 rocket propellant\
+  \ mass spoofing, dry-run pump destruction. In the Aryorithm edge architecture, it\
+  \ continuously asserts the operational invariant: Liquid phase dielectric constant:\
+  \ \\epsilon_r(LH_2) = 1.23 vs vapor \\epsilon_r \u2248 1.00; continuous liquid mass\
+  \ verification at 20.28 K.. Any divergence between commanded network state and this\
+  \ physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: LH_2 rocket propellant mass spoofing, dry-run pump destruction
+core_invariant: "Liquid phase dielectric constant: \\epsilon_r(LH_2) = 1.23 vs vapor\
+  \ \\epsilon_r \u2248 1.00; continuous liquid mass verification at 20.28 K."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40321:
+      name: s242_liquid_hydrogen_coaxial_capacitive_level_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40323:
+      name: s242_liquid_hydrogen_coaxial_capacitive_level_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s242_liquid_hydrogen_coaxial_capacitive_level_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: LH_2 rocket propellant mass spoofing, dry-run pump
+    destruction'

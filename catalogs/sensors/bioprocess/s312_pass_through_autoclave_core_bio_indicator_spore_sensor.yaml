@@ -1,0 +1,45 @@
+sensor_id: s312_pass_through_autoclave_core_bio_indicator_spore_sensor
+name: Pass-Through Autoclave Core Bio-Indicator Spore Sensor
+domain_id: 44
+domain_title: High-Containment BSL-4 / Biosecurity Facility Environmental Sensors
+category: BIOPROCESS
+target_protocol: MODBUS_TCP
+default_port: 15312
+interface: Rapid Fluorescence Enzyme Detector
+description: 'Pass-Through Autoclave Core Bio-Indicator Spore Sensor is a specialized
+  Domain 44 (High-Containment BSL-4 / Biosecurity Facility Environmental Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Rapid Fluorescence Enzyme
+  Detector, it is specifically engineered to mitigate and detect Incomplete sterilization
+  of bio-waste, live anthrax spore release. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Optical fluorescence reading of
+  Geobacillus stearothermophilus enzyme; positive signal alarms before autoclave outer
+  door unlocks.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Incomplete sterilization of bio-waste, live anthrax spore release
+core_invariant: Optical fluorescence reading of Geobacillus stearothermophilus enzyme;
+  positive signal alarms before autoclave outer door unlocks.
+physics:
+  engine: bioprocess_cell
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: pH
+registers:
+  holding_registers:
+    40481:
+      name: s312_pass_through_autoclave_core_bio_indicator_spore_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: pH
+    40483:
+      name: s312_pass_through_autoclave_core_bio_indicator_spore_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s312_pass_through_autoclave_core_bio_indicator_spore_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Incomplete sterilization of bio-waste, live anthrax
+    spore release'

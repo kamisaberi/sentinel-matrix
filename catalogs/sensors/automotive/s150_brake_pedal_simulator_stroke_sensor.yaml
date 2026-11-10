@@ -1,0 +1,43 @@
+sensor_id: s150_brake_pedal_simulator_stroke_sensor
+name: Brake Pedal Simulator Stroke Sensor
+domain_id: 22
+domain_title: Advanced Automotive & Autonomous Drive-by-Wire Sensors
+category: AUTOMOTIVE
+target_protocol: MODBUS_TCP
+default_port: 15150
+interface: Dual Hall-Effect Ratio-Metric
+description: 'Brake Pedal Simulator Stroke Sensor is a specialized Domain 22 (Advanced
+  Automotive & Autonomous Drive-by-Wire Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Dual Hall-Effect Ratio-Metric, it is specifically engineered
+  to mitigate and detect Brake-by-wire pedal spoofing, phantom braking injection.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Pedal travel stroke s(t) must strictly correlate with master cylinder hydraulic
+  pressure: P_{hyd} = \Phi_{boost}(s(t)).. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Brake-by-wire pedal spoofing, phantom braking injection
+core_invariant: 'Pedal travel stroke s(t) must strictly correlate with master cylinder
+  hydraulic pressure: P_{hyd} = \Phi_{boost}(s(t)).'
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -180.0
+  max_value: 180.0
+  noise_sigma: 0.02
+  unit: deg
+registers:
+  holding_registers:
+    40451:
+      name: s150_brake_pedal_simulator_stroke_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: deg
+    40453:
+      name: s150_brake_pedal_simulator_stroke_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s150_brake_pedal_simulator_stroke_sensor_fault
+  action: step_increase
+  value: 45.0
+  description: 'Injects anomaly: Brake-by-wire pedal spoofing, phantom braking injection'

@@ -1,0 +1,45 @@
+sensor_id: s143_broadband_force_balance_seismometer_0_01_50_hz
+name: "Broadband Force-Balance Seismometer (0.01\u201350 Hz)"
+domain_id: 21
+domain_title: Extreme Geological, Seismic & Borehole Telemetry Sensors
+category: GEOLOGICAL
+target_protocol: MODBUS_TCP
+default_port: 15143
+interface: Capactive Velocity Transducer
+description: "Broadband Force-Balance Seismometer (0.01\u201350 Hz) is a specialized\
+  \ Domain 21 (Extreme Geological, Seismic & Borehole Telemetry Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Capactive Velocity Transducer, it\
+  \ is specifically engineered to mitigate and detect Hydroelectric dam abutment micro-tremors,\
+  \ tectonic fault slip. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Dynamic ground velocity displacement; cross-checks\
+  \ dam structural strain against bedrock seismic excitation in real time.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Hydroelectric dam abutment micro-tremors, tectonic fault slip
+core_invariant: Dynamic ground velocity displacement; cross-checks dam structural
+  strain against bedrock seismic excitation in real time.
+physics:
+  engine: seismic_geophone
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mm/s
+registers:
+  holding_registers:
+    40391:
+      name: s143_broadband_force_balance_seismometer_0_01_50_hz_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40393:
+      name: s143_broadband_force_balance_seismometer_0_01_50_hz_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s143_broadband_force_balance_seismometer_0_01_50_hz_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Hydroelectric dam abutment micro-tremors, tectonic
+    fault slip'

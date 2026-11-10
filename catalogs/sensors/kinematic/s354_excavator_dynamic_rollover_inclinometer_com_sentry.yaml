@@ -1,0 +1,46 @@
+sensor_id: s354_excavator_dynamic_rollover_inclinometer_com_sentry
+name: Excavator Dynamic Rollover Inclinometer & CoM Sentry
+domain_id: 50
+domain_title: Autonomous Heavy Earthmoving & Excavator Kinematic Sensors
+category: KINEMATIC
+target_protocol: MODBUS_TCP
+default_port: 15354
+interface: Dual MEMS Gyro/Accelerometer Unit
+description: "Excavator Dynamic Rollover Inclinometer & CoM Sentry is a specialized\
+  \ Domain 50 (Autonomous Heavy Earthmoving & Excavator Kinematic Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Dual MEMS Gyro/Accelerometer Unit,\
+  \ it is specifically engineered to mitigate and detect Vehicle tipping on slope,\
+  \ dynamic load rollover on unstable soil. In the Aryorithm edge architecture, it\
+  \ continuously asserts the operational invariant: Zero-Moment Point (ZMP) stability\
+  \ criterion: \\mathbf{p}_{ZMP} \u2208 \\mathcal{P}_{support\\_polygon}; tipping\
+  \ margin breach auto-drops bucket to ground.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Vehicle tipping on slope, dynamic load rollover on unstable soil
+core_invariant: "Zero-Moment Point (ZMP) stability criterion: \\mathbf{p}_{ZMP} \u2208\
+  \ \\mathcal{P}_{support\\_polygon}; tipping margin breach auto-drops bucket to ground."
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -180.0
+  max_value: 180.0
+  noise_sigma: 0.02
+  unit: mm
+registers:
+  holding_registers:
+    40371:
+      name: s354_excavator_dynamic_rollover_inclinometer_com_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: mm
+    40373:
+      name: s354_excavator_dynamic_rollover_inclinometer_com_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s354_excavator_dynamic_rollover_inclinometer_com_sentry_fault
+  action: step_increase
+  value: 45.0
+  description: 'Injects anomaly: Vehicle tipping on slope, dynamic load rollover on
+    unstable soil'

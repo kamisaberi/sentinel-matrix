@@ -1,0 +1,45 @@
+sensor_id: s407_secondary_insulation_barrier_nitrogen_gas_hydrocarbon_sensor
+name: Secondary Insulation Barrier Nitrogen Gas Hydrocarbon Sensor
+domain_id: 58
+domain_title: Liquefied Natural Gas (LNG) Carrier Tank Sloshing & Boil-Off Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15407
+interface: NDIR / Catalytic Hydrocarbon Analyzer
+description: 'Secondary Insulation Barrier Nitrogen Gas Hydrocarbon Sensor is a specialized
+  Domain 58 (Liquefied Natural Gas (LNG) Carrier Tank Sloshing & Boil-Off Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via NDIR / Catalytic Hydrocarbon
+  Analyzer, it is specifically engineered to mitigate and detect Primary membrane
+  barrier crack, liquid methane leakage into insulation. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Methane concentration in nitrogen
+  barrier space: [CH_4] <= 30\% LEL in nitrogen; hydrocarbon rise activates emergency
+  cargo transfer.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Primary membrane barrier crack, liquid methane leakage into insulation
+core_invariant: 'Methane concentration in nitrogen barrier space: [CH_4] <= 30\% LEL
+  in nitrogen; hydrocarbon rise activates emergency cargo transfer.'
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40331:
+      name: s407_secondary_insulation_barrier_nitrogen_gas_hydrocarbon_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40333:
+      name: s407_secondary_insulation_barrier_nitrogen_gas_hydrocarbon_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s407_secondary_insulation_barrier_nitrogen_gas_hydrocarbon_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Primary membrane barrier crack, liquid methane leakage
+    into insulation'

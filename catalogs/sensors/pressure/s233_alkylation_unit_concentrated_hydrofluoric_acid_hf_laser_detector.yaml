@@ -1,0 +1,46 @@
+sensor_id: s233_alkylation_unit_concentrated_hydrofluoric_acid_hf_laser_detector
+name: Alkylation Unit Concentrated Hydrofluoric Acid (HF) Laser Detector
+domain_id: 33
+domain_title: Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15233
+interface: "Open-Path Tunable Diode Laser (1.31\\,\xB5m)"
+description: "Alkylation Unit Concentrated Hydrofluoric Acid (HF) Laser Detector is\
+  \ a specialized Domain 33 (Petrochemical Refining & Fluid Catalytic Cracking (FCC)\
+  \ Sensors) cyber-physical monitoring sensor. Interfacing directly via Open-Path\
+  \ Tunable Diode Laser (1.31\\,\xB5m), it is specifically engineered to mitigate\
+  \ and detect Catastrophic toxic HF acid cloud release in alkylation units. In the\
+  \ Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Path-integrated concentration: \u2208t [HF] dl <= 2\\,ppm\\cdotm; breach activates\
+  \ automated water deluge scrubbing curtains in < 2.5\\,seconds.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Catastrophic toxic HF acid cloud release in alkylation units
+core_invariant: "Path-integrated concentration: \u2208t [HF] dl <= 2\\,ppm\\cdotm;\
+  \ breach activates automated water deluge scrubbing curtains in < 2.5\\,seconds."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40231:
+      name: s233_alkylation_unit_concentrated_hydrofluoric_acid_hf_laser_detector_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40233:
+      name: s233_alkylation_unit_concentrated_hydrofluoric_acid_hf_laser_detector_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s233_alkylation_unit_concentrated_hydrofluoric_acid_hf_laser_detector_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Catastrophic toxic HF acid cloud release in alkylation
+    units'

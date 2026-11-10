@@ -1,0 +1,45 @@
+sensor_id: s299_flotation_froth_surface_velocity_machine_vision_sensor
+name: Flotation Froth Surface Velocity Machine Vision Sensor
+domain_id: 43
+domain_title: Mining Flotation & Mineral Beneficiation Process Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15299
+interface: High-Speed Downward Camera (60 fps)
+description: 'Flotation Froth Surface Velocity Machine Vision Sensor is a specialized
+  Domain 43 (Mining Flotation & Mineral Beneficiation Process Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Speed Downward Camera (60 fps),
+  it is specifically engineered to mitigate and detect Reagent dosing manipulation,
+  mineral tailing loss, froth collapse. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Froth bubble velocity vector field: v_{froth}
+  = OpticalFlow(I_t, I_{t+1}); bubble burst rate determines optimal air flow injection..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Reagent dosing manipulation, mineral tailing loss, froth collapse
+core_invariant: 'Froth bubble velocity vector field: v_{froth} = OpticalFlow(I_t,
+  I_{t+1}); bubble burst rate determines optimal air flow injection.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40351:
+      name: s299_flotation_froth_surface_velocity_machine_vision_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40353:
+      name: s299_flotation_froth_surface_velocity_machine_vision_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s299_flotation_froth_surface_velocity_machine_vision_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Reagent dosing manipulation, mineral tailing loss,
+    froth collapse'

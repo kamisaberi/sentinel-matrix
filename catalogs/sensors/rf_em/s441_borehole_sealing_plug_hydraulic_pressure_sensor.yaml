@@ -1,0 +1,45 @@
+sensor_id: s441_borehole_sealing_plug_hydraulic_pressure_sensor
+name: Borehole Sealing Plug Hydraulic Pressure Sensor
+domain_id: 62
+domain_title: Deep Underground Geological Radioactive Waste Repository (DGR) Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15441
+interface: Low-Drift Quartz Bourdon Gauge
+description: "Borehole Sealing Plug Hydraulic Pressure Sensor is a specialized Domain\
+  \ 62 (Deep Underground Geological Radioactive Waste Repository (DGR) Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Low-Drift Quartz Bourdon Gauge, it\
+  \ is specifically engineered to mitigate and detect Repository main shaft backfill\
+  \ seal breach, radionuclide migration. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Hydraulic head differential: \u0394 H_{plug}\
+  \ >= 5.0\\,MPa; seal integrity prevents groundwater bypass through access shafts..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Repository main shaft backfill seal breach, radionuclide migration
+core_invariant: "Hydraulic head differential: \u0394 H_{plug} >= 5.0\\,MPa; seal integrity\
+  \ prevents groundwater bypass through access shafts."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40151:
+      name: s441_borehole_sealing_plug_hydraulic_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40153:
+      name: s441_borehole_sealing_plug_hydraulic_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s441_borehole_sealing_plug_hydraulic_pressure_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Repository main shaft backfill seal breach, radionuclide
+    migration'

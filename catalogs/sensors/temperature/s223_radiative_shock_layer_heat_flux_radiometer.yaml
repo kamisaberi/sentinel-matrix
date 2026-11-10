@@ -1,0 +1,46 @@
+sensor_id: s223_radiative_shock_layer_heat_flux_radiometer
+name: Radiative Shock Layer Heat Flux Radiometer
+domain_id: 32
+domain_title: Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15223
+interface: Sapphire Window Thermopile (200--4000 nm)
+description: 'Radiative Shock Layer Heat Flux Radiometer is a specialized Domain 32
+  (Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)) cyber-physical
+  monitoring sensor. Interfacing directly via Sapphire Window Thermopile (200--4000
+  nm), it is specifically engineered to mitigate and detect Inadvertent steep re-entry
+  flight path angle, excessive radiative shock. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Stefan-Boltzmann shock radiation:
+  q''''_{rad} = \sigma \epsilon T_{shock}^4 <= q''''_{max}; radiative heat surge triggers
+  immediate aerodynamic lift-vector bank roll.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Inadvertent steep re-entry flight path angle, excessive radiative shock
+core_invariant: 'Stefan-Boltzmann shock radiation: q''''_{rad} = \sigma \epsilon T_{shock}^4
+  <= q''''_{max}; radiative heat surge triggers immediate aerodynamic lift-vector
+  bank roll.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40131:
+      name: s223_radiative_shock_layer_heat_flux_radiometer_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40133:
+      name: s223_radiative_shock_layer_heat_flux_radiometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s223_radiative_shock_layer_heat_flux_radiometer_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Inadvertent steep re-entry flight path angle, excessive
+    radiative shock'

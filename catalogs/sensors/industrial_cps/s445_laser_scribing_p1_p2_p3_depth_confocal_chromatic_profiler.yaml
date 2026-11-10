@@ -1,0 +1,47 @@
+sensor_id: s445_laser_scribing_p1_p2_p3_depth_confocal_chromatic_profiler
+name: Laser Scribing (P1/P2/P3) Depth Confocal Chromatic Profiler
+domain_id: 63
+domain_title: Advanced Photovoltaic Perovskite-Silicon Tandem Fab & Degradation Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15445
+interface: High-Speed Confocal Sensor (70 kHz)
+description: "Laser Scribing (P1/P2/P3) Depth Confocal Chromatic Profiler is a specialized\
+  \ Domain 63 (Advanced Photovoltaic Perovskite-Silicon Tandem Fab & Degradation Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via High-Speed Confocal\
+  \ Sensor (70 kHz), it is specifically engineered to mitigate and detect Scribing\
+  \ depth error, dead-area widening, electrical series isolation breach. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Scribing\
+  \ groove depth: d_{scribe} = d_{layer} \xB1 10\\,nm; over-etching into silicon substrate\
+  \ halts laser processing in < 50\\,\xB5s.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Scribing depth error, dead-area widening, electrical series isolation
+  breach
+core_invariant: "Scribing groove depth: d_{scribe} = d_{layer} \xB1 10\\,nm; over-etching\
+  \ into silicon substrate halts laser processing in < 50\\,\xB5s."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40191:
+      name: s445_laser_scribing_p1_p2_p3_depth_confocal_chromatic_profiler_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40193:
+      name: s445_laser_scribing_p1_p2_p3_depth_confocal_chromatic_profiler_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s445_laser_scribing_p1_p2_p3_depth_confocal_chromatic_profiler_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Scribing depth error, dead-area widening, electrical
+    series isolation breach'

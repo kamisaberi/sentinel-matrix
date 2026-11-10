@@ -1,0 +1,45 @@
+sensor_id: s449_ice_belt_hull_plating_high_density_strain_matrix
+name: Ice-Belt Hull Plating High-Density Strain Matrix
+domain_id: 64
+domain_title: Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15449
+interface: Optical FBG Strain Arrays on Framing
+description: 'Ice-Belt Hull Plating High-Density Strain Matrix is a specialized Domain
+  64 (Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Optical FBG Strain Arrays on Framing,
+  it is specifically engineered to mitigate and detect Multi-year ridge ice compressive
+  impact, hull plate plastic buckling. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Hull framing bending stress: \sigma_{hull} <=
+  0.85 \cdot \sigma_{yield}; stress spikes trigger automated azipod propulsion de-rate..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Multi-year ridge ice compressive impact, hull plate plastic buckling
+core_invariant: 'Hull framing bending stress: \sigma_{hull} <= 0.85 \cdot \sigma_{yield};
+  stress spikes trigger automated azipod propulsion de-rate.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40231:
+      name: s449_ice_belt_hull_plating_high_density_strain_matrix_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40233:
+      name: s449_ice_belt_hull_plating_high_density_strain_matrix_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s449_ice_belt_hull_plating_high_density_strain_matrix_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Multi-year ridge ice compressive impact, hull plate
+    plastic buckling'

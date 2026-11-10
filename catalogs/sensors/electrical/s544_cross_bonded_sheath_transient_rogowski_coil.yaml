@@ -1,0 +1,45 @@
+sensor_id: s544_cross_bonded_sheath_transient_rogowski_coil
+name: Cross-Bonded Sheath Transient Rogowski Coil
+domain_id: 77
+domain_title: High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15544
+interface: Wideband RF Rogowski Coil (100 MHz)
+description: 'Cross-Bonded Sheath Transient Rogowski Coil is a specialized Domain
+  77 (High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Wideband RF Rogowski Coil (100 MHz),
+  it is specifically engineered to mitigate and detect Sheath voltage limiter (SVL)
+  failure, switching surge overvoltage. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Induced sheath current transient: I_{sheath}
+  <= I_{allowable}; current surge indicates lightning flashover or insulation puncture..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Sheath voltage limiter (SVL) failure, switching surge overvoltage
+core_invariant: 'Induced sheath current transient: I_{sheath} <= I_{allowable}; current
+  surge indicates lightning flashover or insulation puncture.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40121:
+      name: s544_cross_bonded_sheath_transient_rogowski_coil_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40123:
+      name: s544_cross_bonded_sheath_transient_rogowski_coil_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s544_cross_bonded_sheath_transient_rogowski_coil_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Sheath voltage limiter (SVL) failure, switching surge
+    overvoltage'

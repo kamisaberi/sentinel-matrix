@@ -1,0 +1,45 @@
+sensor_id: s508_soec_stack_interconnect_thermal_expansion_sentry
+name: SOEC Stack Interconnect Thermal Expansion Sentry
+domain_id: 72
+domain_title: High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15508
+interface: High-Temperature Optical Extensometer
+description: "SOEC Stack Interconnect Thermal Expansion Sentry is a specialized Domain\
+  \ 72 (High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Temperature Optical Extensometer,\
+  \ it is specifically engineered to mitigate and detect Stack thermal gradient stress,\
+  \ ceramic-to-metal seal delamination. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Stack axial expansion: \u0394 L = \\alpha L\
+  \ \u0394 T; thermal gradient \\frac{dT}{dz} <= 10\\,^\\circC/cm; excessive gradient\
+  \ throttles electric heating.. Any divergence between commanded network state and\
+  \ this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Stack thermal gradient stress, ceramic-to-metal seal delamination
+core_invariant: "Stack axial expansion: \u0394 L = \\alpha L \u0394 T; thermal gradient\
+  \ \\frac{dT}{dz} <= 10\\,^\\circC/cm; excessive gradient throttles electric heating."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40311:
+      name: s508_soec_stack_interconnect_thermal_expansion_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40313:
+      name: s508_soec_stack_interconnect_thermal_expansion_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s508_soec_stack_interconnect_thermal_expansion_sentry_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Stack thermal gradient stress, ceramic-to-metal seal
+    delamination'

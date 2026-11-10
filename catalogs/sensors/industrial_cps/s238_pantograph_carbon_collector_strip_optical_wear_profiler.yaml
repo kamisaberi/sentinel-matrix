@@ -1,0 +1,45 @@
+sensor_id: s238_pantograph_carbon_collector_strip_optical_wear_profiler
+name: Pantograph Carbon Collector Strip Optical Wear Profiler
+domain_id: 34
+domain_title: Railway Signaling, Trackside Balise & Eurobalise PTC Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15238
+interface: Trackside 3D Laser Triangulation Camera
+description: 'Pantograph Carbon Collector Strip Optical Wear Profiler is a specialized
+  Domain 34 (Railway Signaling, Trackside Balise & Eurobalise PTC Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Trackside 3D Laser Triangulation Camera,
+  it is specifically engineered to mitigate and detect Broken collector strip, overhead
+  wire entanglement at 300\,km/h. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Carbon strip residual thickness: d_{carbon} >=
+  6.0\,mm; groove defect or missing chunk commands automated pantograph lower.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Broken collector strip, overhead wire entanglement at 300\,km/h
+core_invariant: 'Carbon strip residual thickness: d_{carbon} >= 6.0\,mm; groove defect
+  or missing chunk commands automated pantograph lower.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40281:
+      name: s238_pantograph_carbon_collector_strip_optical_wear_profiler_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40283:
+      name: s238_pantograph_carbon_collector_strip_optical_wear_profiler_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s238_pantograph_carbon_collector_strip_optical_wear_profiler_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Broken collector strip, overhead wire entanglement
+    at 300\,km/h'

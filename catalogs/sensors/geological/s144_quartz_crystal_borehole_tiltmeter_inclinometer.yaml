@@ -1,0 +1,45 @@
+sensor_id: s144_quartz_crystal_borehole_tiltmeter_inclinometer
+name: Quartz Crystal Borehole Tiltmeter / Inclinometer
+domain_id: 21
+domain_title: Extreme Geological, Seismic & Borehole Telemetry Sensors
+category: GEOLOGICAL
+target_protocol: MODBUS_TCP
+default_port: 15144
+interface: Precision Electrolytic Level Bridge
+description: 'Quartz Crystal Borehole Tiltmeter / Inclinometer is a specialized Domain
+  21 (Extreme Geological, Seismic & Borehole Telemetry Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Precision Electrolytic Level Bridge, it is specifically
+  engineered to mitigate and detect Subsurface CO2/gas reservoir caprock uplift, volcanic
+  inflation. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Resolves angular tilt down to 1\,nanoradian; tilt rate \frac{d\theta}{dt}
+  > 50\,nrad/day flags caprock rupture danger in carbon storage.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Subsurface CO2/gas reservoir caprock uplift, volcanic inflation
+core_invariant: Resolves angular tilt down to 1\,nanoradian; tilt rate \frac{d\theta}{dt}
+  > 50\,nrad/day flags caprock rupture danger in carbon storage.
+physics:
+  engine: seismic_geophone
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mm/s
+registers:
+  holding_registers:
+    40401:
+      name: s144_quartz_crystal_borehole_tiltmeter_inclinometer_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40403:
+      name: s144_quartz_crystal_borehole_tiltmeter_inclinometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s144_quartz_crystal_borehole_tiltmeter_inclinometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Subsurface CO2/gas reservoir caprock uplift, volcanic
+    inflation'

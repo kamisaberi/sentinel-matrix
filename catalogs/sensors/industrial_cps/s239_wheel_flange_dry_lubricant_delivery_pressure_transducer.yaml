@@ -1,0 +1,47 @@
+sensor_id: s239_wheel_flange_dry_lubricant_delivery_pressure_transducer
+name: Wheel Flange Dry Lubricant Delivery Pressure Transducer
+domain_id: 34
+domain_title: Railway Signaling, Trackside Balise & Eurobalise PTC Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15239
+interface: High-Pressure Hydraulic Sensor
+description: "Wheel Flange Dry Lubricant Delivery Pressure Transducer is a specialized\
+  \ Domain 34 (Railway Signaling, Trackside Balise & Eurobalise PTC Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Pressure Hydraulic Sensor, it\
+  \ is specifically engineered to mitigate and detect Flange climb derailment on sharp\
+  \ rail curves, lubrication sabotage. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Nadir derailment criterion: \\frac{L}{V} <=\
+  \ \\frac{\\tan\\delta - \xB5}{1 + \xB5 \\tan\\delta}; friction coefficient \xB5\
+  \ <= 0.35 maintained by wheel flange spray.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Flange climb derailment on sharp rail curves, lubrication sabotage
+core_invariant: "Nadir derailment criterion: \\frac{L}{V} <= \\frac{\\tan\\delta -\
+  \ \xB5}{1 + \xB5 \\tan\\delta}; friction coefficient \xB5 <= 0.35 maintained by\
+  \ wheel flange spray."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40291:
+      name: s239_wheel_flange_dry_lubricant_delivery_pressure_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40293:
+      name: s239_wheel_flange_dry_lubricant_delivery_pressure_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s239_wheel_flange_dry_lubricant_delivery_pressure_transducer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Flange climb derailment on sharp rail curves, lubrication
+    sabotage'

@@ -1,0 +1,45 @@
+sensor_id: s159_ion_mobility_spectrometry_ims_drift_tube
+name: Ion Mobility Spectrometry (IMS) Drift Tube
+domain_id: 23
+domain_title: Environmental Biosecurity, Pathogen & CBRN Defense Sensors
+category: BIOPROCESS
+target_protocol: MODBUS_TCP
+default_port: 15159
+interface: Radioactive Ni-63 Ionization Cell
+description: 'Ion Mobility Spectrometry (IMS) Drift Tube is a specialized Domain 23
+  (Environmental Biosecurity, Pathogen & CBRN Defense Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Radioactive Ni-63 Ionization Cell, it is specifically
+  engineered to mitigate and detect Explosive trace vapor injection, chemical industrial
+  sabotage. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Resolves ion drift velocity v_d = K_0 \cdot E against standard reduced
+  mobility tables (K_0 matches TNT, RDX, PETN, or C4).. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Explosive trace vapor injection, chemical industrial sabotage
+core_invariant: Resolves ion drift velocity v_d = K_0 \cdot E against standard reduced
+  mobility tables (K_0 matches TNT, RDX, PETN, or C4).
+physics:
+  engine: bioprocess_cell
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: pH
+registers:
+  holding_registers:
+    40041:
+      name: s159_ion_mobility_spectrometry_ims_drift_tube_pv
+      type: float32
+      scale: 1.0
+      unit: pH
+    40043:
+      name: s159_ion_mobility_spectrometry_ims_drift_tube_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s159_ion_mobility_spectrometry_ims_drift_tube_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Explosive trace vapor injection, chemical industrial
+    sabotage'

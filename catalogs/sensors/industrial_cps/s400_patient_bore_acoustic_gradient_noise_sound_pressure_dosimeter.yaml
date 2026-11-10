@@ -1,0 +1,45 @@
+sensor_id: s400_patient_bore_acoustic_gradient_noise_sound_pressure_dosimeter
+name: Patient Bore Acoustic Gradient Noise Sound Pressure Dosimeter
+domain_id: 57
+domain_title: Ultra-High Field (7T/11.7T) MRI Safety & Patient Protection Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15400
+interface: Optical Micro-Microphone (Non-Metallic)
+description: 'Patient Bore Acoustic Gradient Noise Sound Pressure Dosimeter is a specialized
+  Domain 57 (Ultra-High Field (7T/11.7T) MRI Safety & Patient Protection Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Optical Micro-Microphone
+  (Non-Metallic), it is specifically engineered to mitigate and detect Patient acoustic
+  hearing trauma, gradient coil acoustic resonance. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Peak sound pressure: L_{peak}
+  <= 140\,dB; continuous A-weighted sound L_{Aeq} <= 99\,dBA with hearing protection
+  enforced.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Patient acoustic hearing trauma, gradient coil acoustic resonance
+core_invariant: 'Peak sound pressure: L_{peak} <= 140\,dB; continuous A-weighted sound
+  L_{Aeq} <= 99\,dBA with hearing protection enforced.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40271:
+      name: s400_patient_bore_acoustic_gradient_noise_sound_pressure_dosimeter_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40273:
+      name: s400_patient_bore_acoustic_gradient_noise_sound_pressure_dosimeter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s400_patient_bore_acoustic_gradient_noise_sound_pressure_dosimeter_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Patient acoustic hearing trauma, gradient coil acoustic
+    resonance'

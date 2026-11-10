@@ -1,0 +1,43 @@
+sensor_id: s015_af_xdp_umem_drop_counter
+name: AF_XDP UMEM Drop Counter
+domain_id: 3
+domain_title: Wire-Speed Network & Protocol Telemetry Sensors
+category: NETWORK
+target_protocol: UDP_STREAM
+default_port: 15015
+interface: eBPF Kernel Driver Ring
+description: "AF_XDP UMEM Drop Counter is a specialized Domain 03 (Wire-Speed Network\
+  \ & Protocol Telemetry Sensors) cyber-physical monitoring sensor. Interfacing directly\
+  \ via eBPF Kernel Driver Ring, it is specifically engineered to mitigate and detect\
+  \ Volumetric UDP/SYN floods, line-rate DDoS. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Verifies sub-microsecond (<\
+  \ 0.84\\,\xB5s) kernel drops before socket buffer allocation.. Any divergence between\
+  \ commanded network state and this physical reading triggers sub-microsecond in-kernel\
+  \ eBPF packet mitigation."
+target_threat: Volumetric UDP/SYN floods, line-rate DDoS
+core_invariant: "Verifies sub-microsecond (< 0.84\\,\xB5s) kernel drops before socket\
+  \ buffer allocation."
+physics:
+  engine: network_ebpf
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: packets
+registers:
+  holding_registers:
+    40141:
+      name: s015_af_xdp_umem_drop_counter_pv
+      type: float32
+      scale: 1.0
+      unit: packets
+    40143:
+      name: s015_af_xdp_umem_drop_counter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s015_af_xdp_umem_drop_counter_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Volumetric UDP/SYN floods, line-rate DDoS'

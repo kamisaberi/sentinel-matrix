@@ -1,0 +1,46 @@
+sensor_id: s493_kirkpatrick_baez_kb_mirror_piezo_bender_strain_sensor
+name: Kirkpatrick-Baez (KB) Mirror Piezo Bender Strain Sensor
+domain_id: 70
+domain_title: X-Ray Free-Electron Laser (XFEL) Beamline Optics Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15493
+interface: High-Precision Strain Bridge on Silicon
+description: "Kirkpatrick-Baez (KB) Mirror Piezo Bender Strain Sensor is a specialized\
+  \ Domain 70 (X-Ray Free-Electron Laser (XFEL) Beamline Optics Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Precision Strain Bridge on Silicon,\
+  \ it is specifically engineered to mitigate and detect Mirror radius-of-curvature\
+  \ tampering, focal spot distortion. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Surface radius of curvature: R = \\frac{L^2}{8\
+  \ \\delta} \xB1 0.1\\%; piezoceramic bender voltage drift is corrected in < 10\\\
+  ,\xB5s to preserve focal spot size.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Mirror radius-of-curvature tampering, focal spot distortion
+core_invariant: "Surface radius of curvature: R = \\frac{L^2}{8 \\delta} \xB1 0.1\\\
+  %; piezoceramic bender voltage drift is corrected in < 10\\,\xB5s to preserve focal\
+  \ spot size."
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40171:
+      name: s493_kirkpatrick_baez_kb_mirror_piezo_bender_strain_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40173:
+      name: s493_kirkpatrick_baez_kb_mirror_piezo_bender_strain_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s493_kirkpatrick_baez_kb_mirror_piezo_bender_strain_sensor_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Mirror radius-of-curvature tampering, focal spot
+    distortion'

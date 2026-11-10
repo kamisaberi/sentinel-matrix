@@ -1,0 +1,45 @@
+sensor_id: s372_euv_collector_mirror_tin_debris_thickness_quartz_monitor
+name: EUV Collector Mirror Tin Debris Thickness Quartz Monitor
+domain_id: 53
+domain_title: Extreme Ultraviolet (EUV) Lithography Optics & Sn-Plasma Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15372
+interface: Dual-Crystal Microbalance (QCM)
+description: "EUV Collector Mirror Tin Debris Thickness Quartz Monitor is a specialized\
+  \ Domain 53 (Extreme Ultraviolet (EUV) Lithography Optics & Sn-Plasma Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Dual-Crystal Microbalance (QCM), it\
+  \ is specifically engineered to mitigate and detect Debris mitigation hydrogen buffer\
+  \ flow failure, collector mirror destruction. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Sputtered tin mass accumulation:\
+  \ \u0394 m <= 0.1\\,nm/hour; mass deposition surge triggers high-power hydrogen\
+  \ radical etch flow.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Debris mitigation hydrogen buffer flow failure, collector mirror destruction
+core_invariant: "Sputtered tin mass accumulation: \u0394 m <= 0.1\\,nm/hour; mass\
+  \ deposition surge triggers high-power hydrogen radical etch flow."
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40031:
+      name: s372_euv_collector_mirror_tin_debris_thickness_quartz_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40033:
+      name: s372_euv_collector_mirror_tin_debris_thickness_quartz_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s372_euv_collector_mirror_tin_debris_thickness_quartz_monitor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Debris mitigation hydrogen buffer flow failure, collector
+    mirror destruction'

@@ -1,0 +1,44 @@
+sensor_id: s393_clean_grain_elevator_radiometric_mass_yield_photodiode
+name: Clean-Grain Elevator Radiometric Mass Yield Photodiode
+domain_id: 56
+domain_title: Autonomous Agricultural Combine Harvester & Grain Loss Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15393
+interface: Infrared Beam Interruption Array
+description: 'Clean-Grain Elevator Radiometric Mass Yield Photodiode is a specialized
+  Domain 56 (Autonomous Agricultural Combine Harvester & Grain Loss Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Infrared Beam Interruption Array, it
+  is specifically engineered to mitigate and detect Grain yield data falsification,
+  elevator auger plugging. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Crop volume flux: Q_{grain} = \sum A_{paddle} \cdot v_{chain};
+  mass flow correlates with engine load and combine ground speed.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Grain yield data falsification, elevator auger plugging
+core_invariant: 'Crop volume flux: Q_{grain} = \sum A_{paddle} \cdot v_{chain}; mass
+  flow correlates with engine load and combine ground speed.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40201:
+      name: s393_clean_grain_elevator_radiometric_mass_yield_photodiode_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40203:
+      name: s393_clean_grain_elevator_radiometric_mass_yield_photodiode_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s393_clean_grain_elevator_radiometric_mass_yield_photodiode_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Grain yield data falsification, elevator auger plugging'

@@ -1,0 +1,45 @@
+sensor_id: s497_crystal_monochromator_bragg_angle_piezo_tilt_sensor
+name: Crystal Monochromator Bragg Angle Piezo Tilt Sensor
+domain_id: 70
+domain_title: X-Ray Free-Electron Laser (XFEL) Beamline Optics Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15497
+interface: Multi-Axis Laser Interferometer Gauge
+description: "Crystal Monochromator Bragg Angle Piezo Tilt Sensor is a specialized\
+  \ Domain 70 (X-Ray Free-Electron Laser (XFEL) Beamline Optics Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Multi-Axis Laser Interferometer Gauge,\
+  \ it is specifically engineered to mitigate and detect Monochromator crystal detuning,\
+  \ loss of monochromatic flux. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Bragg condition: \\lambda = 2d \\sin\\theta_B;\
+  \ angular stability \u0394 \\theta_B <= 0.05\\,\xB5rad; detuning triggers automated\
+  \ crystal tilt compensation.. Any divergence between commanded network state and\
+  \ this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Monochromator crystal detuning, loss of monochromatic flux
+core_invariant: "Bragg condition: \\lambda = 2d \\sin\\theta_B; angular stability\
+  \ \u0394 \\theta_B <= 0.05\\,\xB5rad; detuning triggers automated crystal tilt compensation."
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40211:
+      name: s497_crystal_monochromator_bragg_angle_piezo_tilt_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40213:
+      name: s497_crystal_monochromator_bragg_angle_piezo_tilt_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s497_crystal_monochromator_bragg_angle_piezo_tilt_sensor_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Monochromator crystal detuning, loss of monochromatic
+    flux'

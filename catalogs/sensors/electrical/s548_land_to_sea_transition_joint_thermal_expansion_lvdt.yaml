@@ -1,0 +1,45 @@
+sensor_id: s548_land_to_sea_transition_joint_thermal_expansion_lvdt
+name: Land-to-Sea Transition Joint Thermal Expansion LVDT
+domain_id: 77
+domain_title: High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15548
+interface: Submersible Linear Transducer
+description: "Land-to-Sea Transition Joint Thermal Expansion LVDT is a specialized\
+  \ Domain 77 (High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Submersible Linear Transducer, it\
+  \ is specifically engineered to mitigate and detect Mechanical pulling of submarine\
+  \ cable from shore landing vault. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Relative axial joint movement: \u0394 x_{joint}\
+  \ <= 25\\,mm; excessive strain triggers shore clamping actuator to prevent joint\
+  \ pull-out.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Mechanical pulling of submarine cable from shore landing vault
+core_invariant: "Relative axial joint movement: \u0394 x_{joint} <= 25\\,mm; excessive\
+  \ strain triggers shore clamping actuator to prevent joint pull-out."
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40161:
+      name: s548_land_to_sea_transition_joint_thermal_expansion_lvdt_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40163:
+      name: s548_land_to_sea_transition_joint_thermal_expansion_lvdt_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s548_land_to_sea_transition_joint_thermal_expansion_lvdt_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Mechanical pulling of submarine cable from shore
+    landing vault'

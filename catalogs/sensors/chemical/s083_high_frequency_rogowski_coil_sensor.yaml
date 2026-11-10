@@ -1,0 +1,45 @@
+sensor_id: s083_high_frequency_rogowski_coil_sensor
+name: High-Frequency Rogowski Coil Sensor
+domain_id: 12
+domain_title: High-Voltage Electrical, Arc & Dielectric Breakdown Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15083
+interface: Analog Integrator Circuit
+description: 'High-Frequency Rogowski Coil Sensor is a specialized Domain 12 (High-Voltage
+  Electrical, Arc & Dielectric Breakdown Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Analog Integrator Circuit, it is specifically engineered
+  to mitigate and detect Sub-millisecond breaker trip verification, HVDC commutation
+  failure. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Bandwidth up to 50\,MHz; detects exact instantaneous current zero-crossing
+  point (I(t) = 0) for synchronous breaker opening.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Sub-millisecond breaker trip verification, HVDC commutation failure
+core_invariant: Bandwidth up to 50\,MHz; detects exact instantaneous current zero-crossing
+  point (I(t) = 0) for synchronous breaker opening.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40321:
+      name: s083_high_frequency_rogowski_coil_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40323:
+      name: s083_high_frequency_rogowski_coil_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s083_high_frequency_rogowski_coil_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Sub-millisecond breaker trip verification, HVDC commutation
+    failure'

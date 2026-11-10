@@ -1,0 +1,47 @@
+sensor_id: s433_drive_axle_dynamic_torsional_elasticity_strain_bridge
+name: Drive Axle Dynamic Torsional Elasticity Strain Bridge
+domain_id: 61
+domain_title: High-Speed Electric Vehicle (EV) Powertrain & Silicon Carbide (SiC)
+  Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15433
+interface: Wireless Telemetry Torque Ring
+description: 'Drive Axle Dynamic Torsional Elasticity Strain Bridge is a specialized
+  Domain 61 (High-Speed Electric Vehicle (EV) Powertrain & Silicon Carbide (SiC) Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Wireless Telemetry Torque
+  Ring, it is specifically engineered to mitigate and detect Traction torque ripple,
+  drivetrain resonance, half-shaft mechanical snap. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Half-shaft torsional twist: \theta_{twist}
+  = \frac{T L}{G J} <= \theta_{yield}; torque spikes command active motor damping
+  torque in < 1.0\,ms.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Traction torque ripple, drivetrain resonance, half-shaft mechanical
+  snap
+core_invariant: 'Half-shaft torsional twist: \theta_{twist} = \frac{T L}{G J} <= \theta_{yield};
+  torque spikes command active motor damping torque in < 1.0\,ms.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40071:
+      name: s433_drive_axle_dynamic_torsional_elasticity_strain_bridge_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40073:
+      name: s433_drive_axle_dynamic_torsional_elasticity_strain_bridge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s433_drive_axle_dynamic_torsional_elasticity_strain_bridge_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Traction torque ripple, drivetrain resonance, half-shaft
+    mechanical snap'

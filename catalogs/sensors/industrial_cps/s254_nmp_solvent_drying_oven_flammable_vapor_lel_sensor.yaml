@@ -1,0 +1,44 @@
+sensor_id: s254_nmp_solvent_drying_oven_flammable_vapor_lel_sensor
+name: NMP Solvent Drying Oven Flammable Vapor LEL Sensor
+domain_id: 36
+domain_title: Battery Gigafactory Roll-to-Roll & Electrode Calendering Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15254
+interface: Flame Ionization Detector (FID)
+description: 'NMP Solvent Drying Oven Flammable Vapor LEL Sensor is a specialized
+  Domain 36 (Battery Gigafactory Roll-to-Roll & Electrode Calendering Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Flame Ionization Detector (FID), it
+  is specifically engineered to mitigate and detect N-Methyl-2-pyrrolidone (NMP) dryer
+  vapor explosion. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Solvent vapor concentration: LEL <= 25\%; exhaust damper
+  opens and heating lowers if solvent accumulation approaches explosion limits.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: N-Methyl-2-pyrrolidone (NMP) dryer vapor explosion
+core_invariant: 'Solvent vapor concentration: LEL <= 25\%; exhaust damper opens and
+  heating lowers if solvent accumulation approaches explosion limits.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40441:
+      name: s254_nmp_solvent_drying_oven_flammable_vapor_lel_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40443:
+      name: s254_nmp_solvent_drying_oven_flammable_vapor_lel_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s254_nmp_solvent_drying_oven_flammable_vapor_lel_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: N-Methyl-2-pyrrolidone (NMP) dryer vapor explosion'

@@ -1,0 +1,47 @@
+sensor_id: s225_aerogel_insulation_compressive_micro_strain_fiber
+name: Aerogel Insulation Compressive Micro-Strain Fiber
+domain_id: 32
+domain_title: Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15225
+interface: Embedded FBG Optical Strain Gauge
+description: "Aerogel Insulation Compressive Micro-Strain Fiber is a specialized Domain\
+  \ 32 (Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Embedded FBG Optical Strain Gauge,\
+  \ it is specifically engineered to mitigate and detect Structural heat-shield crushing,\
+  \ aerodynamic buffet delamination. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Optical Bragg wavelength: \u0394 \\lambda_B\
+  \ = \\lambda_B (1 - p_e) \\epsilon_{compressive}; strain exceeding mechanical crushing\
+  \ limit triggers aerodynamic deceleration.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Structural heat-shield crushing, aerodynamic buffet delamination
+core_invariant: "Optical Bragg wavelength: \u0394 \\lambda_B = \\lambda_B (1 - p_e)\
+  \ \\epsilon_{compressive}; strain exceeding mechanical crushing limit triggers aerodynamic\
+  \ deceleration."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40151:
+      name: s225_aerogel_insulation_compressive_micro_strain_fiber_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40153:
+      name: s225_aerogel_insulation_compressive_micro_strain_fiber_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s225_aerogel_insulation_compressive_micro_strain_fiber_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Structural heat-shield crushing, aerodynamic buffet
+    delamination'

@@ -1,0 +1,45 @@
+sensor_id: s124_ramsey_interferometry_atomic_phase_comparator
+name: Ramsey Interferometry Atomic Phase Comparator
+domain_id: 18
+domain_title: Quantum Metrology, Superconducting & Qubit Sensors
+category: QUANTUM
+target_protocol: MODBUS_TCP
+default_port: 15124
+interface: Optical Atomic Fountain Probe
+description: 'Ramsey Interferometry Atomic Phase Comparator is a specialized Domain
+  18 (Quantum Metrology, Superconducting & Qubit Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Optical Atomic Fountain Probe, it is specifically
+  engineered to mitigate and detect Laser phase injection attacks, optical lattice
+  clock frequency drift. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Ramsey fringe visibility \mathcal{V} = \cos((\omega -
+  \omega_0)T); phase divergence from primary Cs/Sr atomic standard halts timing servos..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Laser phase injection attacks, optical lattice clock frequency drift
+core_invariant: Ramsey fringe visibility \mathcal{V} = \cos((\omega - \omega_0)T);
+  phase divergence from primary Cs/Sr atomic standard halts timing servos.
+physics:
+  engine: quantum_squid
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mK
+registers:
+  holding_registers:
+    40201:
+      name: s124_ramsey_interferometry_atomic_phase_comparator_pv
+      type: float32
+      scale: 1.0
+      unit: mK
+    40203:
+      name: s124_ramsey_interferometry_atomic_phase_comparator_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s124_ramsey_interferometry_atomic_phase_comparator_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Laser phase injection attacks, optical lattice clock
+    frequency drift'

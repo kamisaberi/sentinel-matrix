@@ -1,0 +1,45 @@
+sensor_id: s559_pem_electrolyzer_high_frequency_resistance_hfr_probe
+name: PEM Electrolyzer High-Frequency Resistance (HFR) Probe
+domain_id: 79
+domain_title: Microgrid Renewable Water Electrolyzer (Alkaline & PEM) Hydrogen Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15559
+interface: In-Operando AC Impedance Bridge (1 kHz)
+description: 'PEM Electrolyzer High-Frequency Resistance (HFR) Probe is a specialized
+  Domain 79 (Microgrid Renewable Water Electrolyzer (Alkaline & PEM) Hydrogen Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via In-Operando AC Impedance
+  Bridge (1 kHz), it is specifically engineered to mitigate and detect Membrane dehydration,
+  catalyst delamination, catastrophic drying. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: High-frequency resistance: R_{HFR}
+  <= 0.08\,\Omega\cdotcm^2; resistance rise indicates dry-out, increasing deionized
+  water feed rate.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Membrane dehydration, catalyst delamination, catastrophic drying
+core_invariant: 'High-frequency resistance: R_{HFR} <= 0.08\,\Omega\cdotcm^2; resistance
+  rise indicates dry-out, increasing deionized water feed rate.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40271:
+      name: s559_pem_electrolyzer_high_frequency_resistance_hfr_probe_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40273:
+      name: s559_pem_electrolyzer_high_frequency_resistance_hfr_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s559_pem_electrolyzer_high_frequency_resistance_hfr_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Membrane dehydration, catalyst delamination, catastrophic
+    drying'

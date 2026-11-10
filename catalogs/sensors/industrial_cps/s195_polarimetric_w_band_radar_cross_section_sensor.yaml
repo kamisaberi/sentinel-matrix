@@ -1,0 +1,45 @@
+sensor_id: s195_polarimetric_w_band_radar_cross_section_sensor
+name: Polarimetric W-Band Radar Cross-Section Sensor
+domain_id: 28
+domain_title: Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15195
+interface: Dual-Orthogonal Waveguide Horns
+description: 'Polarimetric W-Band Radar Cross-Section Sensor is a specialized Domain
+  28 (Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Dual-Orthogonal Waveguide Horns, it is specifically
+  engineered to mitigate and detect Intermodal container seal tampering, hidden human
+  stowaways. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Co-polarized (S_{VV}) vs cross-polarized (S_{VH}) radar backscatter;
+  cross-polarization ratio spikes on biological tissue and structural cuts.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Intermodal container seal tampering, hidden human stowaways
+core_invariant: Co-polarized (S_{VV}) vs cross-polarized (S_{VH}) radar backscatter;
+  cross-polarization ratio spikes on biological tissue and structural cuts.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40391:
+      name: s195_polarimetric_w_band_radar_cross_section_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40393:
+      name: s195_polarimetric_w_band_radar_cross_section_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s195_polarimetric_w_band_radar_cross_section_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Intermodal container seal tampering, hidden human
+    stowaways'

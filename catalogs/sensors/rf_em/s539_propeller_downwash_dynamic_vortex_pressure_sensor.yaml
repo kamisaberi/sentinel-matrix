@@ -1,0 +1,45 @@
+sensor_id: s539_propeller_downwash_dynamic_vortex_pressure_sensor
+name: Propeller Downwash Dynamic Vortex Pressure Sensor
+domain_id: 76
+domain_title: Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15539
+interface: Multi-Port Pitot Sensor on Top Cowling
+description: 'Propeller Downwash Dynamic Vortex Pressure Sensor is a specialized Domain
+  76 (Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Multi-Port Pitot Sensor on Top Cowling,
+  it is specifically engineered to mitigate and detect Flying into leading drone''s
+  turbulent wake, uncommanded loss of lift. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Dynamic pressure fluctuation: \frac{p''_{RMS}}{\bar{q}}
+  <= 0.15; wake vortex detection triggers lateral breakout maneuver in < 50\,ms..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Flying into leading drone's turbulent wake, uncommanded loss of lift
+core_invariant: 'Dynamic pressure fluctuation: \frac{p''_{RMS}}{\bar{q}} <= 0.15;
+  wake vortex detection triggers lateral breakout maneuver in < 50\,ms.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40081:
+      name: s539_propeller_downwash_dynamic_vortex_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40083:
+      name: s539_propeller_downwash_dynamic_vortex_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s539_propeller_downwash_dynamic_vortex_pressure_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Flying into leading drone''s turbulent wake, uncommanded
+    loss of lift'

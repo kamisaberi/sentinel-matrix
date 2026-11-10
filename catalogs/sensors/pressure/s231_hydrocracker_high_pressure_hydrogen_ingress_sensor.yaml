@@ -1,0 +1,45 @@
+sensor_id: s231_hydrocracker_high_pressure_hydrogen_ingress_sensor
+name: Hydrocracker High-Pressure Hydrogen Ingress Sensor
+domain_id: 33
+domain_title: Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15231
+interface: Solid-State Palladium Field-Effect Probe
+description: 'Hydrocracker High-Pressure Hydrogen Ingress Sensor is a specialized
+  Domain 33 (Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Solid-State Palladium Field-Effect Probe,
+  it is specifically engineered to mitigate and detect Hydrogen embrittlement crack
+  propagation, reactor wall blowout. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Hydrogen partial pressure: P_{H_2} <= 180\,bar;
+  Nelson curve limits enforced: operating points above safe temperature/pressure boundary
+  trip feed pumps.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hydrogen embrittlement crack propagation, reactor wall blowout
+core_invariant: 'Hydrogen partial pressure: P_{H_2} <= 180\,bar; Nelson curve limits
+  enforced: operating points above safe temperature/pressure boundary trip feed pumps.'
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40211:
+      name: s231_hydrocracker_high_pressure_hydrogen_ingress_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40213:
+      name: s231_hydrocracker_high_pressure_hydrogen_ingress_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s231_hydrocracker_high_pressure_hydrogen_ingress_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Hydrogen embrittlement crack propagation, reactor
+    wall blowout'

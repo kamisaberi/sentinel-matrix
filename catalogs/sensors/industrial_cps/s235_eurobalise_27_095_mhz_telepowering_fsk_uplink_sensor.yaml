@@ -1,0 +1,45 @@
+sensor_id: s235_eurobalise_27_095_mhz_telepowering_fsk_uplink_sensor
+name: Eurobalise 27.095 MHz Telepowering & FSK Uplink Sensor
+domain_id: 34
+domain_title: Railway Signaling, Trackside Balise & Eurobalise PTC Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15235
+interface: On-Train Balise Transmission Module (BTM)
+description: 'Eurobalise 27.095 MHz Telepowering & FSK Uplink Sensor is a specialized
+  Domain 34 (Railway Signaling, Trackside Balise & Eurobalise PTC Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via On-Train Balise Transmission Module
+  (BTM), it is specifically engineered to mitigate and detect Forged movement authority
+  (MA), ghost track-occupation injection. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: 27.095 MHz magnetic telepowering flux verified;
+  FSK uplink (4.23 MHz) decoded; validates Eurobalise telegram telegram-number sequence
+  and CRC-32.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Forged movement authority (MA), ghost track-occupation injection
+core_invariant: 27.095 MHz magnetic telepowering flux verified; FSK uplink (4.23 MHz)
+  decoded; validates Eurobalise telegram telegram-number sequence and CRC-32.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40251:
+      name: s235_eurobalise_27_095_mhz_telepowering_fsk_uplink_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40253:
+      name: s235_eurobalise_27_095_mhz_telepowering_fsk_uplink_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s235_eurobalise_27_095_mhz_telepowering_fsk_uplink_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Forged movement authority (MA), ghost track-occupation
+    injection'

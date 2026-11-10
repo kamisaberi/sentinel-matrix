@@ -1,0 +1,44 @@
+sensor_id: s018_modbus_function_code_register_whitelist_sensor
+name: Modbus Function Code / Register Whitelist Sensor
+domain_id: 3
+domain_title: Wire-Speed Network & Protocol Telemetry Sensors
+category: NETWORK
+target_protocol: UDP_STREAM
+default_port: 15018
+interface: eBPF Dissector (`xdp_drop.c`)
+description: 'Modbus Function Code / Register Whitelist Sensor is a specialized Domain
+  03 (Wire-Speed Network & Protocol Telemetry Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via eBPF Dissector (`xdp_drop.c`), it is specifically engineered
+  to mitigate and detect Unauthorized PLC coil writes (FC 0x05, 0x06, 0x0F, 0x10).
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Drops writes originating from non-engineering workstation IPs in < 120\,ns.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Unauthorized PLC coil writes (FC 0x05, 0x06, 0x0F, 0x10)
+core_invariant: Drops writes originating from non-engineering workstation IPs in <
+  120\,ns.
+physics:
+  engine: network_ebpf
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: packets
+registers:
+  holding_registers:
+    40171:
+      name: s018_modbus_function_code_register_whitelist_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: packets
+    40173:
+      name: s018_modbus_function_code_register_whitelist_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s018_modbus_function_code_register_whitelist_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Unauthorized PLC coil writes (FC 0x05, 0x06, 0x0F,
+    0x10)'

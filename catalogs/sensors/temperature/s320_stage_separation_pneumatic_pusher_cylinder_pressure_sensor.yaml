@@ -1,0 +1,45 @@
+sensor_id: s320_stage_separation_pneumatic_pusher_cylinder_pressure_sensor
+name: Stage Separation Pneumatic Pusher Cylinder Pressure Sensor
+domain_id: 45
+domain_title: Launch Vehicle Cryogenic Propulsion & TVC Gimbal Mechanics Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15320
+interface: Fast-Response Pressure Gauge (500 kHz)
+description: 'Stage Separation Pneumatic Pusher Cylinder Pressure Sensor is a specialized
+  Domain 45 (Launch Vehicle Cryogenic Propulsion & TVC Gimbal Mechanics Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Fast-Response Pressure Gauge (500 kHz),
+  it is specifically engineered to mitigate and detect Asymmetric stage separation
+  pusher force, interstage re-collision. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Pusher piston pressure profile: P_{pusher}(t)
+  >= P_{nominal}; ensures minimum stage clearance velocity v_{sep} >= 2.5\,m/s.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Asymmetric stage separation pusher force, interstage re-collision
+core_invariant: 'Pusher piston pressure profile: P_{pusher}(t) >= P_{nominal}; ensures
+  minimum stage clearance velocity v_{sep} >= 2.5\,m/s.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40041:
+      name: s320_stage_separation_pneumatic_pusher_cylinder_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40043:
+      name: s320_stage_separation_pneumatic_pusher_cylinder_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s320_stage_separation_pneumatic_pusher_cylinder_pressure_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Asymmetric stage separation pusher force, interstage
+    re-collision'

@@ -1,0 +1,45 @@
+sensor_id: s315_turbopump_inter_propellant_seal_helium_purge_sensor
+name: Turbopump Inter-Propellant Seal Helium Purge Sensor
+domain_id: 45
+domain_title: Launch Vehicle Cryogenic Propulsion & TVC Gimbal Mechanics Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15315
+interface: Pressure & Optical Sniffer Cavity
+description: 'Turbopump Inter-Propellant Seal Helium Purge Sensor is a specialized
+  Domain 45 (Launch Vehicle Cryogenic Propulsion & TVC Gimbal Mechanics Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Pressure & Optical Sniffer Cavity, it
+  is specifically engineered to mitigate and detect Catastrophic mixing of Liquid
+  Oxygen (LOX) and Rocket Propellant (RP-1). In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Purge barrier pressure: P_{He\_purge}
+  > \max(P_{LOX}, P_{fuel}); pressure drop flags seal breach before explosive contact
+  occurs.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Catastrophic mixing of Liquid Oxygen (LOX) and Rocket Propellant (RP-1)
+core_invariant: 'Purge barrier pressure: P_{He\_purge} > \max(P_{LOX}, P_{fuel});
+  pressure drop flags seal breach before explosive contact occurs.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40001:
+      name: s315_turbopump_inter_propellant_seal_helium_purge_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40003:
+      name: s315_turbopump_inter_propellant_seal_helium_purge_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s315_turbopump_inter_propellant_seal_helium_purge_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Catastrophic mixing of Liquid Oxygen (LOX) and Rocket
+    Propellant (RP-1)'

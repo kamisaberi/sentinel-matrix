@@ -1,0 +1,45 @@
+sensor_id: s317_payload_fairing_internal_acoustic_sound_pressure_sensor
+name: Payload Fairing Internal Acoustic Sound Pressure Sensor
+domain_id: 45
+domain_title: Launch Vehicle Cryogenic Propulsion & TVC Gimbal Mechanics Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15317
+interface: High-Dynamic-Range Pressure Transducer
+description: 'Payload Fairing Internal Acoustic Sound Pressure Sensor is a specialized
+  Domain 45 (Launch Vehicle Cryogenic Propulsion & TVC Gimbal Mechanics Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Dynamic-Range Pressure Transducer,
+  it is specifically engineered to mitigate and detect Transonic acoustic buffet,
+  payload satellite solar array destruction. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Overall Sound Pressure Level (OASPL):
+  SPL <= 142\,dB; water sound suppression deluge on launch pad tuned to acoustic levels..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Transonic acoustic buffet, payload satellite solar array destruction
+core_invariant: 'Overall Sound Pressure Level (OASPL): SPL <= 142\,dB; water sound
+  suppression deluge on launch pad tuned to acoustic levels.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40011:
+      name: s317_payload_fairing_internal_acoustic_sound_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40013:
+      name: s317_payload_fairing_internal_acoustic_sound_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s317_payload_fairing_internal_acoustic_sound_pressure_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Transonic acoustic buffet, payload satellite solar
+    array destruction'

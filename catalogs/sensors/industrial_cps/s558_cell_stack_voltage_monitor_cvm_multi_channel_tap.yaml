@@ -1,0 +1,45 @@
+sensor_id: s558_cell_stack_voltage_monitor_cvm_multi_channel_tap
+name: Cell Stack Voltage Monitor (CVM) Multi-Channel Tap
+domain_id: 79
+domain_title: Microgrid Renewable Water Electrolyzer (Alkaline & PEM) Hydrogen Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15558
+interface: Isolated Multi-Channel Analog MUX
+description: "Cell Stack Voltage Monitor (CVM) Multi-Channel Tap is a specialized\
+  \ Domain 79 (Microgrid Renewable Water Electrolyzer (Alkaline & PEM) Hydrogen Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Isolated Multi-Channel\
+  \ Analog MUX, it is specifically engineered to mitigate and detect Membrane pinhole\
+  \ perforation, individual cell reverse polarity. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Cell individual voltage: V_{cell}\
+  \ \u2208 [1.60, 2.10\\,V]; single cell voltage drop < 1.30\\,V indicates short-circuit,\
+  \ shutting down stack.. Any divergence between commanded network state and this\
+  \ physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Membrane pinhole perforation, individual cell reverse polarity
+core_invariant: "Cell individual voltage: V_{cell} \u2208 [1.60, 2.10\\,V]; single\
+  \ cell voltage drop < 1.30\\,V indicates short-circuit, shutting down stack."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40261:
+      name: s558_cell_stack_voltage_monitor_cvm_multi_channel_tap_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40263:
+      name: s558_cell_stack_voltage_monitor_cvm_multi_channel_tap_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s558_cell_stack_voltage_monitor_cvm_multi_channel_tap_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Membrane pinhole perforation, individual cell reverse
+    polarity'

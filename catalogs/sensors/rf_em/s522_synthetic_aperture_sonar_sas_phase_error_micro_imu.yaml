@@ -1,0 +1,47 @@
+sensor_id: s522_synthetic_aperture_sonar_sas_phase_error_micro_imu
+name: Synthetic Aperture Sonar (SAS) Phase-Error Micro-IMU
+domain_id: 74
+domain_title: Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15522
+interface: High-Rate Navigational Sub-IMU (1 kHz)
+description: "Synthetic Aperture Sonar (SAS) Phase-Error Micro-IMU is a specialized\
+  \ Domain 74 (Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via High-Rate Navigational\
+  \ Sub-IMU (1 kHz), it is specifically engineered to mitigate and detect Seafloor\
+  \ imaging decorrelation, acoustic phase-shift spoofing. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Ping-to-ping trajectory error:\
+  \ \u0394 x_{error} <= \\lambda / 16; phase drift exceeding limit triggers automated\
+  \ phase-gradient autofocus (PGA) correction.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Seafloor imaging decorrelation, acoustic phase-shift spoofing
+core_invariant: "Ping-to-ping trajectory error: \u0394 x_{error} <= \\lambda / 16;\
+  \ phase drift exceeding limit triggers automated phase-gradient autofocus (PGA)\
+  \ correction."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40431:
+      name: s522_synthetic_aperture_sonar_sas_phase_error_micro_imu_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40433:
+      name: s522_synthetic_aperture_sonar_sas_phase_error_micro_imu_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s522_synthetic_aperture_sonar_sas_phase_error_micro_imu_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Seafloor imaging decorrelation, acoustic phase-shift
+    spoofing'

@@ -1,0 +1,46 @@
+sensor_id: s358_resonant_cavity_perturbation_dielectric_sensor
+name: Resonant Cavity Perturbation Dielectric Sensor
+domain_id: 51
+domain_title: Industrial Microwave & RF Dielectric Processing Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15358
+interface: Low-Power Microwave Sweeper Tap
+description: "Resonant Cavity Perturbation Dielectric Sensor is a specialized Domain\
+  \ 51 (Industrial Microwave & RF Dielectric Processing Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Low-Power Microwave Sweeper Tap, it is specifically\
+  \ engineered to mitigate and detect Loss factor tampering, uneven dielectric heating\
+  \ in food/rubber. In the Aryorithm edge architecture, it continuously asserts the\
+  \ operational invariant: Cavity resonance shift: \\frac{\u0394 f}{f_0} \u221D \\\
+  epsilon', \u0394<=ft(\\frac{1}{Q}\\right) \u221D \\epsilon''; tracks complex permittivity\
+  \ during heating.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Loss factor tampering, uneven dielectric heating in food/rubber
+core_invariant: "Cavity resonance shift: \\frac{\u0394 f}{f_0} \u221D \\epsilon',\
+  \ \u0394<=ft(\\frac{1}{Q}\\right) \u221D \\epsilon''; tracks complex permittivity\
+  \ during heating."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40411:
+      name: s358_resonant_cavity_perturbation_dielectric_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40413:
+      name: s358_resonant_cavity_perturbation_dielectric_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s358_resonant_cavity_perturbation_dielectric_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Loss factor tampering, uneven dielectric heating
+    in food/rubber'

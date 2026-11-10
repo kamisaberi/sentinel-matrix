@@ -1,0 +1,45 @@
+sensor_id: s568_trackside_stator_winding_ground_fault_zero_sequence_ct
+name: Trackside Stator Winding Ground-Fault Zero-Sequence CT
+domain_id: 80
+domain_title: Rail Transit Magnetic Levitation (EMS/EDS) Levitation Gap Sensors
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15568
+interface: Ring-Type Core Balance Current Transformer
+description: 'Trackside Stator Winding Ground-Fault Zero-Sequence CT is a specialized
+  Domain 80 (Rail Transit Magnetic Levitation (EMS/EDS) Levitation Gap Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Ring-Type Core Balance Current Transformer,
+  it is specifically engineered to mitigate and detect Linear motor stator insulation
+  puncture, ground-fault flashover. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Zero-sequence current: I_0 = \frac{1}{3}(I_A
+  + I_B + I_C) <= 1.0\,A; ground fault isolates the active trackside inverter block
+  in < 5\,ms.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Linear motor stator insulation puncture, ground-fault flashover
+core_invariant: 'Zero-sequence current: I_0 = \frac{1}{3}(I_A + I_B + I_C) <= 1.0\,A;
+  ground fault isolates the active trackside inverter block in < 5\,ms.'
+physics:
+  engine: magnetic_flux
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: uT
+registers:
+  holding_registers:
+    40341:
+      name: s568_trackside_stator_winding_ground_fault_zero_sequence_ct_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40343:
+      name: s568_trackside_stator_winding_ground_fault_zero_sequence_ct_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s568_trackside_stator_winding_ground_fault_zero_sequence_ct_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Linear motor stator insulation puncture, ground-fault
+    flashover'

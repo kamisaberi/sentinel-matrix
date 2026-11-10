@@ -1,0 +1,45 @@
+sensor_id: s336_solar_wing_aeroelastic_camber_inclinometer
+name: Solar Wing Aeroelastic Camber Inclinometer
+domain_id: 48
+domain_title: High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15336
+interface: Dual-Axis MEMS Micro-Sensor
+description: 'Solar Wing Aeroelastic Camber Inclinometer is a specialized Domain 48
+  (High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Dual-Axis MEMS Micro-Sensor, it is specifically
+  engineered to mitigate and detect Wing structural aeroelastic twisting, aerodynamic
+  flutter divergence. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Wing torsional twist: \theta_{twist}(y) <= \theta_{flutter\_margin};
+  excessive structural twist trims ailerons to relieve aerodynamic loads.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Wing structural aeroelastic twisting, aerodynamic flutter divergence
+core_invariant: 'Wing torsional twist: \theta_{twist}(y) <= \theta_{flutter\_margin};
+  excessive structural twist trims ailerons to relieve aerodynamic loads.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40201:
+      name: s336_solar_wing_aeroelastic_camber_inclinometer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40203:
+      name: s336_solar_wing_aeroelastic_camber_inclinometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s336_solar_wing_aeroelastic_camber_inclinometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Wing structural aeroelastic twisting, aerodynamic
+    flutter divergence'

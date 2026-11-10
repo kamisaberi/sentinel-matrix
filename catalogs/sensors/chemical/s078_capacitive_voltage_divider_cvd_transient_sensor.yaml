@@ -1,0 +1,45 @@
+sensor_id: s078_capacitive_voltage_divider_cvd_transient_sensor
+name: Capacitive Voltage Divider (CVD) Transient Sensor
+domain_id: 12
+domain_title: High-Voltage Electrical, Arc & Dielectric Breakdown Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15078
+interface: Sub-Nanosecond Coaxial Cable
+description: "Capacitive Voltage Divider (CVD) Transient Sensor is a specialized Domain\
+  \ 12 (High-Voltage Electrical, Arc & Dielectric Breakdown Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Sub-Nanosecond Coaxial Cable, it is\
+  \ specifically engineered to mitigate and detect High-voltage switching surge, lightning\
+  \ strike overvoltage injection. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Captures sub-microsecond voltage wavefronts\
+  \ (dV/dt > 100\\,kV/\xB5s), verifying lightning arrester conduction before transformer\
+  \ flashover.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: High-voltage switching surge, lightning strike overvoltage injection
+core_invariant: "Captures sub-microsecond voltage wavefronts (dV/dt > 100\\,kV/\xB5\
+  s), verifying lightning arrester conduction before transformer flashover."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40271:
+      name: s078_capacitive_voltage_divider_cvd_transient_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40273:
+      name: s078_capacitive_voltage_divider_cvd_transient_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s078_capacitive_voltage_divider_cvd_transient_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: High-voltage switching surge, lightning strike overvoltage
+    injection'

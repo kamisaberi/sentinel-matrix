@@ -1,0 +1,46 @@
+sensor_id: s524_torpedo_optical_wake_homing_bubble_extinction_meter
+name: Torpedo Optical Wake-Homing Bubble Extinction Meter
+domain_id: 74
+domain_title: Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15524
+interface: Pulsed Green Laser (532 nm) Transceiver
+description: "Torpedo Optical Wake-Homing Bubble Extinction Meter is a specialized\
+  \ Domain 74 (Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Pulsed Green Laser\
+  \ (532 nm) Transceiver, it is specifically engineered to mitigate and detect Enemy\
+  \ torpedo wake-homing trajectory lock, acoustic stealth compromise. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Optical\
+  \ extinction coefficient: \\alpha_{ext} \u221D N_{microbubbles}; wake detection\
+  \ triggers emergency rudder evasion and countermeasure launch.. Any divergence between\
+  \ commanded network state and this physical reading triggers sub-microsecond in-kernel\
+  \ eBPF packet mitigation."
+target_threat: Enemy torpedo wake-homing trajectory lock, acoustic stealth compromise
+core_invariant: "Optical extinction coefficient: \\alpha_{ext} \u221D N_{microbubbles};\
+  \ wake detection triggers emergency rudder evasion and countermeasure launch."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40451:
+      name: s524_torpedo_optical_wake_homing_bubble_extinction_meter_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40453:
+      name: s524_torpedo_optical_wake_homing_bubble_extinction_meter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s524_torpedo_optical_wake_homing_bubble_extinction_meter_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Enemy torpedo wake-homing trajectory lock, acoustic
+    stealth compromise'

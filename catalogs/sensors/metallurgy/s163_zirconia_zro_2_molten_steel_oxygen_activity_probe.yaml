@@ -1,0 +1,45 @@
+sensor_id: s163_zirconia_zro_2_molten_steel_oxygen_activity_probe
+name: Zirconia (ZrO_2) Molten Steel Oxygen Activity Probe
+domain_id: 24
+domain_title: High-Temperature Metallurgy & Molten Material Sensors
+category: METALLURGY
+target_protocol: MODBUS_TCP
+default_port: 15163
+interface: High-Temperature Ceramic EMF Lance
+description: 'Zirconia (ZrO_2) Molten Steel Oxygen Activity Probe is a specialized
+  Domain 24 (High-Temperature Metallurgy & Molten Material Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Temperature Ceramic EMF Lance,
+  it is specifically engineered to mitigate and detect Steel deoxidation failure,
+  blowhole formation in aerospace alloys. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Nernst equation EMF: E = \frac{RT}{4F} \ln\frac{P_{O_2,ref}}{a_{[O]}};
+  oxygen activity must reach target balance before tapping into vacuum degasser..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Steel deoxidation failure, blowhole formation in aerospace alloys
+core_invariant: 'Nernst equation EMF: E = \frac{RT}{4F} \ln\frac{P_{O_2,ref}}{a_{[O]}};
+  oxygen activity must reach target balance before tapping into vacuum degasser.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: degC
+registers:
+  holding_registers:
+    40081:
+      name: s163_zirconia_zro_2_molten_steel_oxygen_activity_probe_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40083:
+      name: s163_zirconia_zro_2_molten_steel_oxygen_activity_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s163_zirconia_zro_2_molten_steel_oxygen_activity_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Steel deoxidation failure, blowhole formation in
+    aerospace alloys'

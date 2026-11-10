@@ -1,0 +1,45 @@
+sensor_id: s477_triggered_spark_gap_plasma_jitter_optical_fiber_sensor
+name: Triggered Spark Gap Plasma Jitter Optical Fiber Sensor
+domain_id: 67
+domain_title: Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15477
+interface: Multi-Core Optical Fiber Pickup
+description: 'Triggered Spark Gap Plasma Jitter Optical Fiber Sensor is a specialized
+  Domain 67 (Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Multi-Core Optical Fiber
+  Pickup, it is specifically engineered to mitigate and detect Spark gap jitter injection,
+  desynchronized multi-switch firing. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Trigger-to-arc delay time: t_{delay} = t_{arc}
+  - t_{laser} <= 2.0\,ns; timing jitter > 5.0\,ns inhibits high-voltage master fire
+  command.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Spark gap jitter injection, desynchronized multi-switch firing
+core_invariant: 'Trigger-to-arc delay time: t_{delay} = t_{arc} - t_{laser} <= 2.0\,ns;
+  timing jitter > 5.0\,ns inhibits high-voltage master fire command.'
+physics:
+  engine: magnetic_flux
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: uT
+registers:
+  holding_registers:
+    40011:
+      name: s477_triggered_spark_gap_plasma_jitter_optical_fiber_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40013:
+      name: s477_triggered_spark_gap_plasma_jitter_optical_fiber_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s477_triggered_spark_gap_plasma_jitter_optical_fiber_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Spark gap jitter injection, desynchronized multi-switch
+    firing'

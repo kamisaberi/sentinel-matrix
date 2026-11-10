@@ -1,0 +1,44 @@
+sensor_id: s569_maglev_lateral_guidance_dynamic_strain_bridge
+name: Maglev Lateral Guidance Dynamic Strain Bridge
+domain_id: 80
+domain_title: Rail Transit Magnetic Levitation (EMS/EDS) Levitation Gap Sensors
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15569
+interface: Full-Bridge Piezoresistive Load Cell
+description: 'Maglev Lateral Guidance Dynamic Strain Bridge is a specialized Domain
+  80 (Rail Transit Magnetic Levitation (EMS/EDS) Levitation Gap Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Full-Bridge Piezoresistive Load Cell,
+  it is specifically engineered to mitigate and detect Lateral guide-rail collision,
+  guidance magnet saturation. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Lateral guidance force: F_{guidance} <= F_{structural\_limit};
+  excessive lateral force trims vehicle speed on tight turns.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Lateral guide-rail collision, guidance magnet saturation
+core_invariant: 'Lateral guidance force: F_{guidance} <= F_{structural\_limit}; excessive
+  lateral force trims vehicle speed on tight turns.'
+physics:
+  engine: magnetic_flux
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: uT
+registers:
+  holding_registers:
+    40351:
+      name: s569_maglev_lateral_guidance_dynamic_strain_bridge_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40353:
+      name: s569_maglev_lateral_guidance_dynamic_strain_bridge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s569_maglev_lateral_guidance_dynamic_strain_bridge_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Lateral guide-rail collision, guidance magnet saturation'

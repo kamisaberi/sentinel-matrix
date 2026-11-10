@@ -1,0 +1,47 @@
+sensor_id: s431_dc_link_busbar_stray_inductance_l_sigma_voltage_probe
+name: DC-Link Busbar Stray Inductance (L_\sigma) Voltage Probe
+domain_id: 61
+domain_title: High-Speed Electric Vehicle (EV) Powertrain & Silicon Carbide (SiC)
+  Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15431
+interface: High-Voltage Differential Probe
+description: "DC-Link Busbar Stray Inductance (L_\\sigma) Voltage Probe is a specialized\
+  \ Domain 61 (High-Speed Electric Vehicle (EV) Powertrain & Silicon Carbide (SiC)\
+  \ Sensors) cyber-physical monitoring sensor. Interfacing directly via High-Voltage\
+  \ Differential Probe, it is specifically engineered to mitigate and detect DC-link\
+  \ capacitor bank decoupling, catastrophic SiC voltage overshoots. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Turn-off\
+  \ transient spike: \u0394 V = -L_\\sigma \\frac{dI}{dt} <= V_{breakdown} - V_{DC};\
+  \ excessive ringing flags busbar delamination.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: DC-link capacitor bank decoupling, catastrophic SiC voltage overshoots
+core_invariant: "Turn-off transient spike: \u0394 V = -L_\\sigma \\frac{dI}{dt} <=\
+  \ V_{breakdown} - V_{DC}; excessive ringing flags busbar delamination."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40051:
+      name: s431_dc_link_busbar_stray_inductance_l_sigma_voltage_probe_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40053:
+      name: s431_dc_link_busbar_stray_inductance_l_sigma_voltage_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s431_dc_link_busbar_stray_inductance_l_sigma_voltage_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: DC-link capacitor bank decoupling, catastrophic SiC
+    voltage overshoots'

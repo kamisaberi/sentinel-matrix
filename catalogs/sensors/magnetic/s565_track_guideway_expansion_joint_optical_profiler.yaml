@@ -1,0 +1,45 @@
+sensor_id: s565_track_guideway_expansion_joint_optical_profiler
+name: Track Guideway Expansion Joint Optical Profiler
+domain_id: 80
+domain_title: Rail Transit Magnetic Levitation (EMS/EDS) Levitation Gap Sensors
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15565
+interface: Track-Facing Optical Telemetry Laser
+description: "Track Guideway Expansion Joint Optical Profiler is a specialized Domain\
+  \ 80 (Rail Transit Magnetic Levitation (EMS/EDS) Levitation Gap Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Track-Facing Optical Telemetry Laser,\
+  \ it is specifically engineered to mitigate and detect Guideway bridge alignment\
+  \ fault, severe thermal rail misalignment. In the Aryorithm edge architecture, it\
+  \ continuously asserts the operational invariant: Joint step height: \u0394 z_{joint}\
+  \ <= 1.0\\,mm; horizontal gap \u0394 x <= 20\\,mm; misaligned step trips emergency\
+  \ linear motor braking.. Any divergence between commanded network state and this\
+  \ physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Guideway bridge alignment fault, severe thermal rail misalignment
+core_invariant: "Joint step height: \u0394 z_{joint} <= 1.0\\,mm; horizontal gap \u0394\
+  \ x <= 20\\,mm; misaligned step trips emergency linear motor braking."
+physics:
+  engine: magnetic_flux
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: uT
+registers:
+  holding_registers:
+    40321:
+      name: s565_track_guideway_expansion_joint_optical_profiler_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40323:
+      name: s565_track_guideway_expansion_joint_optical_profiler_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s565_track_guideway_expansion_joint_optical_profiler_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Guideway bridge alignment fault, severe thermal rail
+    misalignment'

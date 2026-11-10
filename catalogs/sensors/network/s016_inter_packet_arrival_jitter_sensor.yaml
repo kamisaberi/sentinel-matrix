@@ -1,0 +1,42 @@
+sensor_id: s016_inter_packet_arrival_jitter_sensor
+name: Inter-Packet Arrival Jitter Sensor
+domain_id: 3
+domain_title: Wire-Speed Network & Protocol Telemetry Sensors
+category: NETWORK
+target_protocol: UDP_STREAM
+default_port: 15016
+interface: Nanosecond NIC Hardware Timestamps
+description: "Inter-Packet Arrival Jitter Sensor is a specialized Domain 03 (Wire-Speed\
+  \ Network & Protocol Telemetry Sensors) cyber-physical monitoring sensor. Interfacing\
+  \ directly via Nanosecond NIC Hardware Timestamps, it is specifically engineered\
+  \ to mitigate and detect Covert timing channels, network scan pacing. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Evaluates\
+  \ packet delta \u0394 t; detects robotic scanning intervals.. Any divergence between\
+  \ commanded network state and this physical reading triggers sub-microsecond in-kernel\
+  \ eBPF packet mitigation."
+target_threat: Covert timing channels, network scan pacing
+core_invariant: "Evaluates packet delta \u0394 t; detects robotic scanning intervals."
+physics:
+  engine: network_ebpf
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: packets
+registers:
+  holding_registers:
+    40151:
+      name: s016_inter_packet_arrival_jitter_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: packets
+    40153:
+      name: s016_inter_packet_arrival_jitter_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s016_inter_packet_arrival_jitter_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Covert timing channels, network scan pacing'

@@ -1,0 +1,45 @@
+sensor_id: s363_anechoic_rubber_tile_hydrodynamic_shear_strain_sensor
+name: Anechoic Rubber Tile Hydrodynamic Shear Strain Sensor
+domain_id: 52
+domain_title: Naval Submarine Acoustic Stealth & Hull Integrity Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15363
+interface: Embedded Piezoelectric Foil on Hull
+description: 'Anechoic Rubber Tile Hydrodynamic Shear Strain Sensor is a specialized
+  Domain 52 (Naval Submarine Acoustic Stealth & Hull Integrity Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Embedded Piezoelectric Foil on Hull,
+  it is specifically engineered to mitigate and detect Anechoic tile peeling at high
+  speed, submarine acoustic signature spike. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Shear strain between steel hull
+  and rubber: \gamma_{tile} <= \gamma_{debonding}; debonding detection alerts crew
+  before tile detachment.. Any divergence between commanded network state and this
+  physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Anechoic tile peeling at high speed, submarine acoustic signature spike
+core_invariant: 'Shear strain between steel hull and rubber: \gamma_{tile} <= \gamma_{debonding};
+  debonding detection alerts crew before tile detachment.'
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40461:
+      name: s363_anechoic_rubber_tile_hydrodynamic_shear_strain_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40463:
+      name: s363_anechoic_rubber_tile_hydrodynamic_shear_strain_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s363_anechoic_rubber_tile_hydrodynamic_shear_strain_sensor_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Anechoic tile peeling at high speed, submarine acoustic
+    signature spike'

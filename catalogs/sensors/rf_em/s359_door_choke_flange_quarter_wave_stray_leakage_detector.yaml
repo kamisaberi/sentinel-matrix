@@ -1,0 +1,45 @@
+sensor_id: s359_door_choke_flange_quarter_wave_stray_leakage_detector
+name: Door Choke Flange Quarter-Wave Stray Leakage Detector
+domain_id: 51
+domain_title: Industrial Microwave & RF Dielectric Processing Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15359
+interface: Resonant RF Dipole Strip around Door
+description: 'Door Choke Flange Quarter-Wave Stray Leakage Detector is a specialized
+  Domain 51 (Industrial Microwave & RF Dielectric Processing Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Resonant RF Dipole Strip around Door,
+  it is specifically engineered to mitigate and detect Microwave radiation leakage,
+  door seal safety interlock defeat. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Stray electromagnetic field strength: S_{leak}
+  <= 5.0\,mW/cm^2 (OSHA safety limit); field breach cuts high-voltage transformer
+  in < 20\,ms.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Microwave radiation leakage, door seal safety interlock defeat
+core_invariant: 'Stray electromagnetic field strength: S_{leak} <= 5.0\,mW/cm^2 (OSHA
+  safety limit); field breach cuts high-voltage transformer in < 20\,ms.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40421:
+      name: s359_door_choke_flange_quarter_wave_stray_leakage_detector_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40423:
+      name: s359_door_choke_flange_quarter_wave_stray_leakage_detector_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s359_door_choke_flange_quarter_wave_stray_leakage_detector_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Microwave radiation leakage, door seal safety interlock
+    defeat'

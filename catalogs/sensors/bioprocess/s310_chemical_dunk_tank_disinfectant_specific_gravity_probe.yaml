@@ -1,0 +1,45 @@
+sensor_id: s310_chemical_dunk_tank_disinfectant_specific_gravity_probe
+name: Chemical Dunk Tank Disinfectant Specific Gravity Probe
+domain_id: 44
+domain_title: High-Containment BSL-4 / Biosecurity Facility Environmental Sensors
+category: BIOPROCESS
+target_protocol: MODBUS_TCP
+default_port: 15310
+interface: Tuning-Fork Immersion Density Sensor
+description: 'Chemical Dunk Tank Disinfectant Specific Gravity Probe is a specialized
+  Domain 44 (High-Containment BSL-4 / Biosecurity Facility Environmental Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Tuning-Fork Immersion
+  Density Sensor, it is specifically engineered to mitigate and detect Disinfectant
+  dilution fraud, surface pass-through biocontainment breach. In the Aryorithm edge
+  architecture, it continuously asserts the operational invariant: Chemical specific
+  gravity: SG_{disinfectant} >= 1.050; dilution with water triggers automated chemical
+  top-up injection.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Disinfectant dilution fraud, surface pass-through biocontainment breach
+core_invariant: 'Chemical specific gravity: SG_{disinfectant} >= 1.050; dilution with
+  water triggers automated chemical top-up injection.'
+physics:
+  engine: bioprocess_cell
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: pH
+registers:
+  holding_registers:
+    40461:
+      name: s310_chemical_dunk_tank_disinfectant_specific_gravity_probe_pv
+      type: float32
+      scale: 1.0
+      unit: pH
+    40463:
+      name: s310_chemical_dunk_tank_disinfectant_specific_gravity_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s310_chemical_dunk_tank_disinfectant_specific_gravity_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Disinfectant dilution fraud, surface pass-through
+    biocontainment breach'

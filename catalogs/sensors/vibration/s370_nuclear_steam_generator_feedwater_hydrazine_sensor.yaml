@@ -1,0 +1,45 @@
+sensor_id: s370_nuclear_steam_generator_feedwater_hydrazine_sensor
+name: Nuclear Steam Generator Feedwater Hydrazine Sensor
+domain_id: 52
+domain_title: Naval Submarine Acoustic Stealth & Hull Integrity Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15370
+interface: Electrochemical Amperometric Flow Cell
+description: 'Nuclear Steam Generator Feedwater Hydrazine Sensor is a specialized
+  Domain 52 (Naval Submarine Acoustic Stealth & Hull Integrity Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Electrochemical Amperometric Flow Cell,
+  it is specifically engineered to mitigate and detect Dissolved oxygen corrosion
+  in nuclear steam generator, tube rupture. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Hydrazine scavenger residual: [N_2H_4]
+  >= 3 \cdot [O_2]; maintains zero dissolved oxygen ([O_2] < 5\,ppb) to prevent stress
+  corrosion.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Dissolved oxygen corrosion in nuclear steam generator, tube rupture
+core_invariant: 'Hydrazine scavenger residual: [N_2H_4] >= 3 \cdot [O_2]; maintains
+  zero dissolved oxygen ([O_2] < 5\,ppb) to prevent stress corrosion.'
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40021:
+      name: s370_nuclear_steam_generator_feedwater_hydrazine_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40023:
+      name: s370_nuclear_steam_generator_feedwater_hydrazine_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s370_nuclear_steam_generator_feedwater_hydrazine_sensor_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Dissolved oxygen corrosion in nuclear steam generator,
+    tube rupture'

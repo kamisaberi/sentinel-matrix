@@ -1,0 +1,47 @@
+sensor_id: s385_molten_salt_fluoride_redox_potential_uf_4_uf_3_voltammetry_probe
+name: Molten Salt Fluoride Redox Potential (UF_4/UF_3) Voltammetry Probe
+domain_id: 55
+domain_title: Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15385
+interface: High-Temperature Iridium/Mo Electrode (650^\circC)
+description: "Molten Salt Fluoride Redox Potential (UF_4/UF_3) Voltammetry Probe is\
+  \ a specialized Domain 55 (Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide\
+  \ Sensors) cyber-physical monitoring sensor. Interfacing directly via High-Temperature\
+  \ Iridium/Mo Electrode (650^\\circC), it is specifically engineered to mitigate\
+  \ and detect Hastelloy vessel corrosion, chromium leaching, structural vessel thinning.\
+  \ In the Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Thermodynamic redox ratio: \\frac{[UF_4]}{[UF_3]} \u2208 [10, 100]; redox ratio\
+  \ spike indicates free fluorine corrosion, commanding beryllium metal addition..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Hastelloy vessel corrosion, chromium leaching, structural vessel thinning
+core_invariant: "Thermodynamic redox ratio: \\frac{[UF_4]}{[UF_3]} \u2208 [10, 100];\
+  \ redox ratio spike indicates free fluorine corrosion, commanding beryllium metal\
+  \ addition."
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40121:
+      name: s385_molten_salt_fluoride_redox_potential_uf_4_uf_3_voltammetry_probe_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40123:
+      name: s385_molten_salt_fluoride_redox_potential_uf_4_uf_3_voltammetry_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s385_molten_salt_fluoride_redox_potential_uf_4_uf_3_voltammetry_probe_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Hastelloy vessel corrosion, chromium leaching, structural
+    vessel thinning'

@@ -1,0 +1,44 @@
+sensor_id: s494_diamond_blade_transmission_beam_position_monitor_xbpm
+name: Diamond Blade Transmission Beam Position Monitor (XBPM)
+domain_id: 70
+domain_title: X-Ray Free-Electron Laser (XFEL) Beamline Optics Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15494
+interface: 4-Quadrant Semitransparent Diamond Diode
+description: "Diamond Blade Transmission Beam Position Monitor (XBPM) is a specialized\
+  \ Domain 70 (X-Ray Free-Electron Laser (XFEL) Beamline Optics Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via 4-Quadrant Semitransparent Diamond\
+  \ Diode, it is specifically engineered to mitigate and detect X-ray beam pointing\
+  \ drift, vacuum chamber ablation. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Beam centroid position: x = K \\frac{(I_A +\
+  \ I_D) - (I_B + I_C)}{\\sum I_i}; drift > 1.0\\,\xB5m commands active piezo mirror\
+  \ steering.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: X-ray beam pointing drift, vacuum chamber ablation
+core_invariant: "Beam centroid position: x = K \\frac{(I_A + I_D) - (I_B + I_C)}{\\\
+  sum I_i}; drift > 1.0\\,\xB5m commands active piezo mirror steering."
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40181:
+      name: s494_diamond_blade_transmission_beam_position_monitor_xbpm_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40183:
+      name: s494_diamond_blade_transmission_beam_position_monitor_xbpm_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s494_diamond_blade_transmission_beam_position_monitor_xbpm_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: X-ray beam pointing drift, vacuum chamber ablation'

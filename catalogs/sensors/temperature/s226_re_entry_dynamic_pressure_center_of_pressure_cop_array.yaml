@@ -1,0 +1,47 @@
+sensor_id: s226_re_entry_dynamic_pressure_center_of_pressure_cop_array
+name: Re-entry Dynamic Pressure Center-of-Pressure (CoP) Array
+domain_id: 32
+domain_title: Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15226
+interface: High-Temperature Pressure Ports
+description: "Re-entry Dynamic Pressure Center-of-Pressure (CoP) Array is a specialized\
+  \ Domain 32 (Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS))\
+  \ cyber-physical monitoring sensor. Interfacing directly via High-Temperature Pressure\
+  \ Ports, it is specifically engineered to mitigate and detect Aerodynamic instability,\
+  \ vehicle tumbling during hypersonic entry. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Center of pressure location:\
+  \ x_{CoP} = \\frac{\u2208t x \\cdot \u0394 P(x) dx}{\u2208t \u0394 P(x) dx}; static\
+  \ stability margin x_{CoP} - x_{CoM} > 0 must remain strictly positive.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Aerodynamic instability, vehicle tumbling during hypersonic entry
+core_invariant: "Center of pressure location: x_{CoP} = \\frac{\u2208t x \\cdot \u0394\
+  \ P(x) dx}{\u2208t \u0394 P(x) dx}; static stability margin x_{CoP} - x_{CoM} >\
+  \ 0 must remain strictly positive."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40161:
+      name: s226_re_entry_dynamic_pressure_center_of_pressure_cop_array_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40163:
+      name: s226_re_entry_dynamic_pressure_center_of_pressure_cop_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s226_re_entry_dynamic_pressure_center_of_pressure_cop_array_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Aerodynamic instability, vehicle tumbling during
+    hypersonic entry'

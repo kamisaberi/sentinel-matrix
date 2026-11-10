@@ -1,0 +1,44 @@
+sensor_id: s355_hydraulic_oil_optical_particle_contamination_monitor
+name: Hydraulic Oil Optical Particle Contamination Monitor
+domain_id: 50
+domain_title: Autonomous Heavy Earthmoving & Excavator Kinematic Sensors
+category: KINEMATIC
+target_protocol: MODBUS_TCP
+default_port: 15355
+interface: Laser Light Extinction Sensor (ISO 4406)
+description: 'Hydraulic Oil Optical Particle Contamination Monitor is a specialized
+  Domain 50 (Autonomous Heavy Earthmoving & Excavator Kinematic Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Laser Light Extinction Sensor (ISO 4406),
+  it is specifically engineered to mitigate and detect Hydraulic pump cavitation debris,
+  valve spool sticking. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Particle count distribution: ISO 4406 code must remain
+  <= 18/16/13; metallic particle surge indicates impending pump failure.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Hydraulic pump cavitation debris, valve spool sticking
+core_invariant: 'Particle count distribution: ISO 4406 code must remain <= 18/16/13;
+  metallic particle surge indicates impending pump failure.'
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -180.0
+  max_value: 180.0
+  noise_sigma: 0.02
+  unit: mm
+registers:
+  holding_registers:
+    40381:
+      name: s355_hydraulic_oil_optical_particle_contamination_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: mm
+    40383:
+      name: s355_hydraulic_oil_optical_particle_contamination_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s355_hydraulic_oil_optical_particle_contamination_monitor_fault
+  action: step_increase
+  value: 45.0
+  description: 'Injects anomaly: Hydraulic pump cavitation debris, valve spool sticking'

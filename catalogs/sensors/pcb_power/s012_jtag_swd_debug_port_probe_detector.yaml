@@ -1,0 +1,42 @@
+sensor_id: s012_jtag_swd_debug_port_probe_detector
+name: JTAG / SWD Debug Port Probe Detector
+domain_id: 2
+domain_title: PCB, Power-Rail & Hardware Fault-Injection Sensors
+category: PCB_POWER
+target_protocol: MODBUS_TCP
+default_port: 15012
+interface: Pull-Up / Pull-Down GPIO Monitor
+description: 'JTAG / SWD Debug Port Probe Detector is a specialized Domain 02 (PCB,
+  Power-Rail & Hardware Fault-Injection Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Pull-Up / Pull-Down GPIO Monitor, it is specifically engineered
+  to mitigate and detect Unauthorized hardware debugger attachment. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Any clock
+  signal on `TCK` or `SWCLK` in production mode halts CPU.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Unauthorized hardware debugger attachment
+core_invariant: Any clock signal on `TCK` or `SWCLK` in production mode halts CPU.
+physics:
+  engine: pcb_power_glitch
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mV
+registers:
+  holding_registers:
+    40111:
+      name: s012_jtag_swd_debug_port_probe_detector_pv
+      type: float32
+      scale: 1.0
+      unit: mV
+    40113:
+      name: s012_jtag_swd_debug_port_probe_detector_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s012_jtag_swd_debug_port_probe_detector_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Unauthorized hardware debugger attachment'

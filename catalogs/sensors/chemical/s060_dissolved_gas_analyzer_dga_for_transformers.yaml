@@ -1,0 +1,44 @@
+sensor_id: s060_dissolved_gas_analyzer_dga_for_transformers
+name: Dissolved Gas Analyzer (DGA) for Transformers
+domain_id: 10
+domain_title: Chemical, Gas & Dielectric Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15060
+interface: Modbus / IEC 61850 Stream
+description: 'Dissolved Gas Analyzer (DGA) for Transformers is a specialized Domain
+  10 (Chemical, Gas & Dielectric Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Modbus / IEC 61850 Stream, it is specifically engineered to mitigate
+  and detect Substation transformer internal arcing, paper insulation breakdown. In
+  the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Enforces Duval Triangle ratios: C_2H_2 / C_2H_4 spikes indicate active arcing..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Substation transformer internal arcing, paper insulation breakdown
+core_invariant: 'Enforces Duval Triangle ratios: C_2H_2 / C_2H_4 spikes indicate active
+  arcing.'
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40091:
+      name: s060_dissolved_gas_analyzer_dga_for_transformers_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40093:
+      name: s060_dissolved_gas_analyzer_dga_for_transformers_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s060_dissolved_gas_analyzer_dga_for_transformers_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Substation transformer internal arcing, paper insulation
+    breakdown'

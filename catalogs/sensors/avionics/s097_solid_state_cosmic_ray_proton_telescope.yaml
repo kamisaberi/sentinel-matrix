@@ -1,0 +1,44 @@
+sensor_id: s097_solid_state_cosmic_ray_proton_telescope
+name: Solid-State Cosmic Ray Proton Telescope
+domain_id: 14
+domain_title: Aerospace, Avionics & Spacecraft Physical Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15097
+interface: Silicon Microstrip Array
+description: 'Solid-State Cosmic Ray Proton Telescope is a specialized Domain 14 (Aerospace,
+  Avionics & Spacecraft Physical Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Silicon Microstrip Array, it is specifically engineered to mitigate
+  and detect Solar Particle Event (SPE) radiation storms, single-event latchups. In
+  the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Proton flux > 100\,pfu at > 10\,MeV commands satellite payload computers to shut
+  down into hardened safe-mode.. Any divergence between commanded network state and
+  this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Solar Particle Event (SPE) radiation storms, single-event latchups
+core_invariant: Proton flux > 100\,pfu at > 10\,MeV commands satellite payload computers
+  to shut down into hardened safe-mode.
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40451:
+      name: s097_solid_state_cosmic_ray_proton_telescope_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40453:
+      name: s097_solid_state_cosmic_ray_proton_telescope_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s097_solid_state_cosmic_ray_proton_telescope_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Solar Particle Event (SPE) radiation storms, single-event
+    latchups'

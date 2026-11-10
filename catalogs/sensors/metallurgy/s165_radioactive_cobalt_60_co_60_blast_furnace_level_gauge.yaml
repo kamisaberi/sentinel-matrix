@@ -1,0 +1,44 @@
+sensor_id: s165_radioactive_cobalt_60_co_60_blast_furnace_level_gauge
+name: Radioactive Cobalt-60 (Co-60) Blast Furnace Level Gauge
+domain_id: 24
+domain_title: High-Temperature Metallurgy & Molten Material Sensors
+category: METALLURGY
+target_protocol: MODBUS_TCP
+default_port: 15165
+interface: Gamma Source + Scintillation Receiver
+description: 'Radioactive Cobalt-60 (Co-60) Blast Furnace Level Gauge is a specialized
+  Domain 24 (High-Temperature Metallurgy & Molten Material Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Gamma Source + Scintillation Receiver,
+  it is specifically engineered to mitigate and detect Blast furnace burden stockline
+  level falsification. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Gamma radiation transmission through furnace walls; verifies
+  physical burden height independently of radar level gauges.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Blast furnace burden stockline level falsification
+core_invariant: Gamma radiation transmission through furnace walls; verifies physical
+  burden height independently of radar level gauges.
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: degC
+registers:
+  holding_registers:
+    40101:
+      name: s165_radioactive_cobalt_60_co_60_blast_furnace_level_gauge_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40103:
+      name: s165_radioactive_cobalt_60_co_60_blast_furnace_level_gauge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s165_radioactive_cobalt_60_co_60_blast_furnace_level_gauge_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Blast furnace burden stockline level falsification'

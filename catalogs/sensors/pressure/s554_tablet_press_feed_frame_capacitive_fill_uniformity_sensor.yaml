@@ -1,0 +1,45 @@
+sensor_id: s554_tablet_press_feed_frame_capacitive_fill_uniformity_sensor
+name: Tablet Press Feed Frame Capacitive Fill Uniformity Sensor
+domain_id: 78
+domain_title: Pharmaceutical Continuous Twin-Screw Wet Granulation & Fluid Bed Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15554
+interface: Multi-Electrode Die-Cavity Array
+description: "Tablet Press Feed Frame Capacitive Fill Uniformity Sensor is a specialized\
+  \ Domain 78 (Pharmaceutical Continuous Twin-Screw Wet Granulation & Fluid Bed Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Multi-Electrode Die-Cavity\
+  \ Array, it is specifically engineered to mitigate and detect Uneven tablet die\
+  \ filling, active drug under-dosing / over-dosing. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Powder dielectric mass in die:\
+  \ m_{die} \u221D C_{die} = m_{nominal} \xB1 1.0\\%; mass deviation flags mechanical\
+  \ feed frame paddle slip.. Any divergence between commanded network state and this\
+  \ physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Uneven tablet die filling, active drug under-dosing / over-dosing
+core_invariant: "Powder dielectric mass in die: m_{die} \u221D C_{die} = m_{nominal}\
+  \ \xB1 1.0\\%; mass deviation flags mechanical feed frame paddle slip."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40221:
+      name: s554_tablet_press_feed_frame_capacitive_fill_uniformity_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40223:
+      name: s554_tablet_press_feed_frame_capacitive_fill_uniformity_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s554_tablet_press_feed_frame_capacitive_fill_uniformity_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Uneven tablet die filling, active drug under-dosing
+    / over-dosing'

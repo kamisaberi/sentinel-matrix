@@ -1,0 +1,45 @@
+sensor_id: s452_azipod_propeller_blade_milling_dynamic_torque_sentry
+name: Azipod Propeller Blade Milling Dynamic Torque Sentry
+domain_id: 64
+domain_title: Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15452
+interface: Shaft Surface Acoustic Wave (SAW) Sensor
+description: 'Azipod Propeller Blade Milling Dynamic Torque Sentry is a specialized
+  Domain 64 (Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Shaft Surface Acoustic Wave (SAW) Sensor,
+  it is specifically engineered to mitigate and detect Blade edge plastic deformation,
+  ice-milling hydrodynamic stall. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Instantaneous milling torque: \tau_{ice} <= \tau_{maximum\_shaft};
+  torque spike commands cyclic pitch reversal in < 5\,ms.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Blade edge plastic deformation, ice-milling hydrodynamic stall
+core_invariant: 'Instantaneous milling torque: \tau_{ice} <= \tau_{maximum\_shaft};
+  torque spike commands cyclic pitch reversal in < 5\,ms.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40261:
+      name: s452_azipod_propeller_blade_milling_dynamic_torque_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40263:
+      name: s452_azipod_propeller_blade_milling_dynamic_torque_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s452_azipod_propeller_blade_milling_dynamic_torque_sentry_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Blade edge plastic deformation, ice-milling hydrodynamic
+    stall'

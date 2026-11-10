@@ -1,0 +1,45 @@
+sensor_id: s348_mud_pulse_telemetry_surface_pressure_transducer
+name: Mud Pulse Telemetry Surface Pressure Transducer
+domain_id: 49
+domain_title: Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15348
+interface: Strain-Gauge Mud Line Sensor
+description: 'Mud Pulse Telemetry Surface Pressure Transducer is a specialized Domain
+  49 (Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Strain-Gauge Mud Line Sensor, it is
+  specifically engineered to mitigate and detect Downhole telemetry jamming, false
+  drilling direction telemetry. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Decodes positive/negative pressure pulse trains
+  (1--24\,Hz); validates telemetry checksum against downhole MWD tool state.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Downhole telemetry jamming, false drilling direction telemetry
+core_invariant: Decodes positive/negative pressure pulse trains (1--24\,Hz); validates
+  telemetry checksum against downhole MWD tool state.
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40321:
+      name: s348_mud_pulse_telemetry_surface_pressure_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40323:
+      name: s348_mud_pulse_telemetry_surface_pressure_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s348_mud_pulse_telemetry_surface_pressure_transducer_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Downhole telemetry jamming, false drilling direction
+    telemetry'

@@ -1,0 +1,45 @@
+sensor_id: s443_sub_cycle_mppt_perturbation_vector_probe
+name: Sub-Cycle MPPT Perturbation Vector Probe
+domain_id: 63
+domain_title: Advanced Photovoltaic Perovskite-Silicon Tandem Fab & Degradation Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15443
+interface: Digital Synchronous Sampling ADC
+description: 'Sub-Cycle MPPT Perturbation Vector Probe is a specialized Domain 63
+  (Advanced Photovoltaic Perovskite-Silicon Tandem Fab & Degradation Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Digital Synchronous Sampling ADC, it
+  is specifically engineered to mitigate and detect Inverter MPPT firmware oscillation
+  attack, solar string power clipping. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Inverter impedance perturbation: \frac{dI}{dV}
+  = -\frac{I}{V}; tracking oscillation frequency > 10\,Hz indicates controller instability
+  or spoofing.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Inverter MPPT firmware oscillation attack, solar string power clipping
+core_invariant: 'Inverter impedance perturbation: \frac{dI}{dV} = -\frac{I}{V}; tracking
+  oscillation frequency > 10\,Hz indicates controller instability or spoofing.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40171:
+      name: s443_sub_cycle_mppt_perturbation_vector_probe_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40173:
+      name: s443_sub_cycle_mppt_perturbation_vector_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s443_sub_cycle_mppt_perturbation_vector_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Inverter MPPT firmware oscillation attack, solar
+    string power clipping'

@@ -1,0 +1,45 @@
+sensor_id: s365_double_resilient_mount_vibration_velocity_sensor
+name: Double-Resilient Mount Vibration Velocity Sensor
+domain_id: 52
+domain_title: Naval Submarine Acoustic Stealth & Hull Integrity Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15365
+interface: Low-Frequency Seismic Accelerometer
+description: 'Double-Resilient Mount Vibration Velocity Sensor is a specialized Domain
+  52 (Naval Submarine Acoustic Stealth & Hull Integrity Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Low-Frequency Seismic Accelerometer, it is specifically
+  engineered to mitigate and detect Mechanical pump mount short-circuiting, acoustic
+  energy leak to sea. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Transmission ratio through rubber mount: T_R = \frac{v_{hull}}{v_{pump}}
+  <= -40\,dB; mechanical bridge (e.g. dropped bolt) flags acoustic leak.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Mechanical pump mount short-circuiting, acoustic energy leak to sea
+core_invariant: 'Transmission ratio through rubber mount: T_R = \frac{v_{hull}}{v_{pump}}
+  <= -40\,dB; mechanical bridge (e.g. dropped bolt) flags acoustic leak.'
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40481:
+      name: s365_double_resilient_mount_vibration_velocity_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40483:
+      name: s365_double_resilient_mount_vibration_velocity_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s365_double_resilient_mount_vibration_velocity_sensor_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Mechanical pump mount short-circuiting, acoustic
+    energy leak to sea'

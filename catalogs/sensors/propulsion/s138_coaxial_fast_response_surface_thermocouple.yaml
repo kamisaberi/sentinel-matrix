@@ -1,0 +1,45 @@
+sensor_id: s138_coaxial_fast_response_surface_thermocouple
+name: Coaxial Fast-Response Surface Thermocouple
+domain_id: 20
+domain_title: Combustion, Turbomachinery & Rocket Propulsion Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15138
+interface: Microsecond Junction Erosion Gauge
+description: 'Coaxial Fast-Response Surface Thermocouple is a specialized Domain 20
+  (Combustion, Turbomachinery & Rocket Propulsion Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Microsecond Junction Erosion Gauge, it is specifically
+  engineered to mitigate and detect Rocket combustion chamber regenerative cooling
+  channel burnout. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Heat flux q'''' = -k \frac{\partial T}{\partial x}; heat
+  flux exceeding 50\,MW/m^2 commands immediate oxidizer/fuel mixture ratio de-rate..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Rocket combustion chamber regenerative cooling channel burnout
+core_invariant: Heat flux q'' = -k \frac{\partial T}{\partial x}; heat flux exceeding
+  50\,MW/m^2 commands immediate oxidizer/fuel mixture ratio de-rate.
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40341:
+      name: s138_coaxial_fast_response_surface_thermocouple_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40343:
+      name: s138_coaxial_fast_response_surface_thermocouple_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s138_coaxial_fast_response_surface_thermocouple_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Rocket combustion chamber regenerative cooling channel
+    burnout'

@@ -1,0 +1,47 @@
+sensor_id: s323_optical_dipole_trap_odt_laser_power_monitor
+name: Optical Dipole Trap (ODT) Laser Power Monitor
+domain_id: 46
+domain_title: Quantum Gravimetry & Cold Atom Inertial Sensors
+category: QUANTUM
+target_protocol: MODBUS_TCP
+default_port: 15323
+interface: Low-Drift Thermopile Sensor
+description: "Optical Dipole Trap (ODT) Laser Power Monitor is a specialized Domain\
+  \ 46 (Quantum Gravimetry & Cold Atom Inertial Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Low-Drift Thermopile Sensor, it is specifically\
+  \ engineered to mitigate and detect Laser trap intensity manipulation, parametric\
+  \ heating atom loss. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Trap potential depth U_{dipole} = -\\frac{3\\pi c^2}{2\\\
+  omega_0^3}<=ft(\\frac{\\Gamma}{\\omega_0 - \\omega} + \\frac{\\Gamma}{\\omega_0\
+  \ + \\omega}\\right) I(\\mathbf{r}); power stability \\frac{\u0394 P}{P} <= 0.1\\\
+  %.. Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Laser trap intensity manipulation, parametric heating atom loss
+core_invariant: "Trap potential depth U_{dipole} = -\\frac{3\\pi c^2}{2\\omega_0^3}<=ft(\\\
+  frac{\\Gamma}{\\omega_0 - \\omega} + \\frac{\\Gamma}{\\omega_0 + \\omega}\\right)\
+  \ I(\\mathbf{r}); power stability \\frac{\u0394 P}{P} <= 0.1\\%."
+physics:
+  engine: quantum_squid
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mK
+registers:
+  holding_registers:
+    40071:
+      name: s323_optical_dipole_trap_odt_laser_power_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: mK
+    40073:
+      name: s323_optical_dipole_trap_odt_laser_power_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s323_optical_dipole_trap_odt_laser_power_monitor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Laser trap intensity manipulation, parametric heating
+    atom loss'

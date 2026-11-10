@@ -1,0 +1,47 @@
+sensor_id: s471_smes_persistent_current_switch_pcs_thermal_quench_sensor
+name: SMES Persistent Current Switch (PCS) Thermal Quench Sensor
+domain_id: 67
+domain_title: Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15471
+interface: Four-Wire Cryogenic Resistance Tap
+description: "SMES Persistent Current Switch (PCS) Thermal Quench Sensor is a specialized\
+  \ Domain 67 (Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Four-Wire Cryogenic\
+  \ Resistance Tap, it is specifically engineered to mitigate and detect Persistent\
+  \ switch thermal runaway, trapped gigajoule coil energy discharge. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Superconducting\
+  \ switch resistance: R_{PCS} == 0\\,\\Omega; transition to normal resistive state\
+  \ (R > 10\\,\xB5\\Omega) dumps coil energy to external dump resistor in < 5\\,\xB5\
+  s.. Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Persistent switch thermal runaway, trapped gigajoule coil energy discharge
+core_invariant: "Superconducting switch resistance: R_{PCS} == 0\\,\\Omega; transition\
+  \ to normal resistive state (R > 10\\,\xB5\\Omega) dumps coil energy to external\
+  \ dump resistor in < 5\\,\xB5s."
+physics:
+  engine: magnetic_flux
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: uT
+registers:
+  holding_registers:
+    40451:
+      name: s471_smes_persistent_current_switch_pcs_thermal_quench_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40453:
+      name: s471_smes_persistent_current_switch_pcs_thermal_quench_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s471_smes_persistent_current_switch_pcs_thermal_quench_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Persistent switch thermal runaway, trapped gigajoule
+    coil energy discharge'

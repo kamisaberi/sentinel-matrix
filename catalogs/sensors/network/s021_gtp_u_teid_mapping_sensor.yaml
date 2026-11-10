@@ -1,0 +1,41 @@
+sensor_id: s021_gtp_u_teid_mapping_sensor
+name: GTP-U TEID Mapping Sensor
+domain_id: 3
+domain_title: Wire-Speed Network & Protocol Telemetry Sensors
+category: NETWORK
+target_protocol: UDP_STREAM
+default_port: 15021
+interface: eBPF Dissector (Idea B)
+description: 'GTP-U TEID Mapping Sensor is a specialized Domain 03 (Wire-Speed Network
+  & Protocol Telemetry Sensors) cyber-physical monitoring sensor. Interfacing directly
+  via eBPF Dissector (Idea B), it is specifically engineered to mitigate and detect
+  5G slice-hopping attacks, IMSI/TEID spoofing. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Packet dropped if 32-bit TEID
+  accesses unmapped S-NSSAI slice ports.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: 5G slice-hopping attacks, IMSI/TEID spoofing
+core_invariant: Packet dropped if 32-bit TEID accesses unmapped S-NSSAI slice ports.
+physics:
+  engine: network_ebpf
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: packets
+registers:
+  holding_registers:
+    40201:
+      name: s021_gtp_u_teid_mapping_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: packets
+    40203:
+      name: s021_gtp_u_teid_mapping_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s021_gtp_u_teid_mapping_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: 5G slice-hopping attacks, IMSI/TEID spoofing'

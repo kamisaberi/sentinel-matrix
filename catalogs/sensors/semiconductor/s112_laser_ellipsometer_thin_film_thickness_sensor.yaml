@@ -1,0 +1,45 @@
+sensor_id: s112_laser_ellipsometer_thin_film_thickness_sensor
+name: Laser Ellipsometer Thin-Film Thickness Sensor
+domain_id: 16
+domain_title: Semiconductor Fab, Vacuum & Plasma Process Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15112
+interface: Polarized Laser + Rotating Analyzer
+description: "Laser Ellipsometer Thin-Film Thickness Sensor is a specialized Domain\
+  \ 16 (Semiconductor Fab, Vacuum & Plasma Process Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Polarized Laser + Rotating Analyzer, it is specifically\
+  \ engineered to mitigate and detect Gate oxide dielectric thickness falsification,\
+  \ transistor failure. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Measures amplitude ratio \\Psi and phase difference\
+  \ \u0394 of reflected light, resolving atomic layer thicknesses to within \xB1 0.01\\\
+  ,nm.. Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Gate oxide dielectric thickness falsification, transistor failure
+core_invariant: "Measures amplitude ratio \\Psi and phase difference \u0394 of reflected\
+  \ light, resolving atomic layer thicknesses to within \xB1 0.01\\,nm."
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40101:
+      name: s112_laser_ellipsometer_thin_film_thickness_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40103:
+      name: s112_laser_ellipsometer_thin_film_thickness_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s112_laser_ellipsometer_thin_film_thickness_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Gate oxide dielectric thickness falsification, transistor
+    failure'

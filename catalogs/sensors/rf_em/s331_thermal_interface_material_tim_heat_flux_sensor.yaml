@@ -1,0 +1,44 @@
+sensor_id: s331_thermal_interface_material_tim_heat_flux_sensor
+name: Thermal Interface Material (TIM) Heat Flux Sensor
+domain_id: 47
+domain_title: High-Performance Computing (HPC) & Liquid Cooling Thermal/Fluid Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15331
+interface: Thin-Film Thermopile Gauge
+description: "Thermal Interface Material (TIM) Heat Flux Sensor is a specialized Domain\
+  \ 47 (High-Performance Computing (HPC) & Liquid Cooling Thermal/Fluid Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Thin-Film Thermopile Gauge, it is\
+  \ specifically engineered to mitigate and detect TIM pump-out, silicon die delamination,\
+  \ thermal runaway. In the Aryorithm edge architecture, it continuously asserts the\
+  \ operational invariant: Measured heat flux q'' = -k_{TIM} \\frac{\u0394 T}{d} >=\
+  \ \\frac{P_{TDP}}{A_{die}}; thermal resistance rise > 0.1\\,^\\circC\\cdotcm^2/W\
+  \ throttles clocks.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: TIM pump-out, silicon die delamination, thermal runaway
+core_invariant: "Measured heat flux q'' = -k_{TIM} \\frac{\u0394 T}{d} >= \\frac{P_{TDP}}{A_{die}};\
+  \ thermal resistance rise > 0.1\\,^\\circC\\cdotcm^2/W throttles clocks."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40151:
+      name: s331_thermal_interface_material_tim_heat_flux_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40153:
+      name: s331_thermal_interface_material_tim_heat_flux_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s331_thermal_interface_material_tim_heat_flux_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: TIM pump-out, silicon die delamination, thermal runaway'

@@ -1,0 +1,45 @@
+sensor_id: s089_chemical_vapor_deposition_cvd_diamond_beam_loss_monitor
+name: Chemical Vapor Deposition (CVD) Diamond Beam Loss Monitor
+domain_id: 13
+domain_title: Nuclear, Radiological & Particle Detection Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15089
+interface: Sub-Nanosecond RF Stripline
+description: "Chemical Vapor Deposition (CVD) Diamond Beam Loss Monitor is a specialized\
+  \ Domain 13 (Nuclear, Radiological & Particle Detection Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Sub-Nanosecond RF Stripline, it is\
+  \ specifically engineered to mitigate and detect Particle collider relativistic\
+  \ beam loss, vacuum pipe puncture. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Radiation hardness up to 10^{16}\\,protons/cm^2;\
+  \ detects lost beam particles and triggers beam dump kickers in < 1.0\\,\xB5s..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Particle collider relativistic beam loss, vacuum pipe puncture
+core_invariant: "Radiation hardness up to 10^{16}\\,protons/cm^2; detects lost beam\
+  \ particles and triggers beam dump kickers in < 1.0\\,\xB5s."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40381:
+      name: s089_chemical_vapor_deposition_cvd_diamond_beam_loss_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40383:
+      name: s089_chemical_vapor_deposition_cvd_diamond_beam_loss_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s089_chemical_vapor_deposition_cvd_diamond_beam_loss_monitor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Particle collider relativistic beam loss, vacuum
+    pipe puncture'

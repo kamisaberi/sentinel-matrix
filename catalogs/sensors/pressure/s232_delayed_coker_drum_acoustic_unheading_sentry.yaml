@@ -1,0 +1,45 @@
+sensor_id: s232_delayed_coker_drum_acoustic_unheading_sentry
+name: Delayed Coker Drum Acoustic Unheading Sentry
+domain_id: 33
+domain_title: Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15232
+interface: High-Temperature Accelerometer (450^\circC)
+description: 'Delayed Coker Drum Acoustic Unheading Sentry is a specialized Domain
+  33 (Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Temperature Accelerometer (450^\circC),
+  it is specifically engineered to mitigate and detect Coker bottom head blow-out
+  during unheading, hot tar eruption. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Identifies acoustic boiling and structural stress
+  release during steam quenching; inhibits bottom flange opening until internal drum
+  pressure = 0\,bar.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Coker bottom head blow-out during unheading, hot tar eruption
+core_invariant: Identifies acoustic boiling and structural stress release during steam
+  quenching; inhibits bottom flange opening until internal drum pressure = 0\,bar.
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40221:
+      name: s232_delayed_coker_drum_acoustic_unheading_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40223:
+      name: s232_delayed_coker_drum_acoustic_unheading_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s232_delayed_coker_drum_acoustic_unheading_sentry_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Coker bottom head blow-out during unheading, hot
+    tar eruption'

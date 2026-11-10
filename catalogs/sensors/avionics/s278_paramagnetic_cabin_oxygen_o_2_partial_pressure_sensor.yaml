@@ -1,0 +1,45 @@
+sensor_id: s278_paramagnetic_cabin_oxygen_o_2_partial_pressure_sensor
+name: Paramagnetic Cabin Oxygen (O_2) Partial Pressure Sensor
+domain_id: 40
+domain_title: Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15278
+interface: Dual-Magnetic Field Flow Transducer
+description: "Paramagnetic Cabin Oxygen (O_2) Partial Pressure Sensor is a specialized\
+  \ Domain 40 (Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Dual-Magnetic Field Flow Transducer,\
+  \ it is specifically engineered to mitigate and detect Cabin hypoxia (O_2 < 19.5\\\
+  %) or hyperoxia fire hazard (O_2 > 23.5\\%). In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Paramagnetic susceptibility\
+  \ \\chi_m \u221D [O_2]; oxygen partial pressure must remain: P_{O_2} = 21.0\\,kPa\
+  \ \xB1 1.0\\,kPa.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Cabin hypoxia (O_2 < 19.5\%) or hyperoxia fire hazard (O_2 > 23.5\%)
+core_invariant: "Paramagnetic susceptibility \\chi_m \u221D [O_2]; oxygen partial\
+  \ pressure must remain: P_{O_2} = 21.0\\,kPa \xB1 1.0\\,kPa."
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40161:
+      name: s278_paramagnetic_cabin_oxygen_o_2_partial_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40163:
+      name: s278_paramagnetic_cabin_oxygen_o_2_partial_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s278_paramagnetic_cabin_oxygen_o_2_partial_pressure_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Cabin hypoxia (O_2 < 19.5\%) or hyperoxia fire hazard
+    (O_2 > 23.5\%)'

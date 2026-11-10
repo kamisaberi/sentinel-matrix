@@ -1,0 +1,45 @@
+sensor_id: s412_deck_water_curtain_fire_protection_manifold_pressure_sensor
+name: Deck Water Curtain Fire Protection Manifold Pressure Sensor
+domain_id: 58
+domain_title: Liquefied Natural Gas (LNG) Carrier Tank Sloshing & Boil-Off Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15412
+interface: Stainless Steel Bourdon Tube Transmitter
+description: 'Deck Water Curtain Fire Protection Manifold Pressure Sensor is a specialized
+  Domain 58 (Liquefied Natural Gas (LNG) Carrier Tank Sloshing & Boil-Off Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Stainless Steel Bourdon
+  Tube Transmitter, it is specifically engineered to mitigate and detect Deck fire
+  safety system pressure loss, thermal radiation hazard. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Water curtain delivery pressure:
+  P_{water} >= 8.0\,bar; pressure loss auto-starts auxiliary diesel firefighting pumps..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Deck fire safety system pressure loss, thermal radiation hazard
+core_invariant: 'Water curtain delivery pressure: P_{water} >= 8.0\,bar; pressure
+  loss auto-starts auxiliary diesel firefighting pumps.'
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40381:
+      name: s412_deck_water_curtain_fire_protection_manifold_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40383:
+      name: s412_deck_water_curtain_fire_protection_manifold_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s412_deck_water_curtain_fire_protection_manifold_pressure_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Deck fire safety system pressure loss, thermal radiation
+    hazard'

@@ -1,0 +1,45 @@
+sensor_id: s353_crawler_track_tension_hydraulic_nitrogen_piston_sensor
+name: Crawler Track Tension Hydraulic Nitrogen Piston Sensor
+domain_id: 50
+domain_title: Autonomous Heavy Earthmoving & Excavator Kinematic Sensors
+category: KINEMATIC
+target_protocol: MODBUS_TCP
+default_port: 15353
+interface: Sealed Hydraulic Pressure Transducer
+description: "Crawler Track Tension Hydraulic Nitrogen Piston Sensor is a specialized\
+  \ Domain 50 (Autonomous Heavy Earthmoving & Excavator Kinematic Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Sealed Hydraulic Pressure Transducer,\
+  \ it is specifically engineered to mitigate and detect Track de-tracking, excessive\
+  \ track chain tension leading to pin shear. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Track tension cylinder pressure:\
+  \ P_{tension} \u2208 [100, 180\\,bar]; pressure loss triggers track-grease cylinder\
+  \ top-up alert.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Track de-tracking, excessive track chain tension leading to pin shear
+core_invariant: "Track tension cylinder pressure: P_{tension} \u2208 [100, 180\\,bar];\
+  \ pressure loss triggers track-grease cylinder top-up alert."
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -180.0
+  max_value: 180.0
+  noise_sigma: 0.02
+  unit: mm
+registers:
+  holding_registers:
+    40361:
+      name: s353_crawler_track_tension_hydraulic_nitrogen_piston_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mm
+    40363:
+      name: s353_crawler_track_tension_hydraulic_nitrogen_piston_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s353_crawler_track_tension_hydraulic_nitrogen_piston_sensor_fault
+  action: step_increase
+  value: 45.0
+  description: 'Injects anomaly: Track de-tracking, excessive track chain tension
+    leading to pin shear'

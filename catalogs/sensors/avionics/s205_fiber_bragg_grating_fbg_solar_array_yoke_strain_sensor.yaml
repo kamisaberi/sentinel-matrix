@@ -1,0 +1,48 @@
+sensor_id: s205_fiber_bragg_grating_fbg_solar_array_yoke_strain_sensor
+name: Fiber Bragg Grating (FBG) Solar Array Yoke Strain Sensor
+domain_id: 29
+domain_title: Spacecraft Ionizing Radiation, Solar Wind & Magnetospheric Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15205
+interface: Wavelength Division Interrogator
+description: "Fiber Bragg Grating (FBG) Solar Array Yoke Strain Sensor is a specialized\
+  \ Domain 29 (Spacecraft Ionizing Radiation, Solar Wind & Magnetospheric Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Wavelength Division\
+  \ Interrogator, it is specifically engineered to mitigate and detect Solar array\
+  \ thermal snap during eclipse entry/exit, attitude slewing jitter. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Peak thermal\
+  \ transition strain \u0394 \\epsilon = \\frac{\u0394 \\lambda_B}{\\lambda_B(1-p_e)};\
+  \ feeds feedforward anti-jitter torque commands to reaction wheels.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Solar array thermal snap during eclipse entry/exit, attitude slewing
+  jitter
+core_invariant: "Peak thermal transition strain \u0394 \\epsilon = \\frac{\u0394 \\\
+  lambda_B}{\\lambda_B(1-p_e)}; feeds feedforward anti-jitter torque commands to reaction\
+  \ wheels."
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40471:
+      name: s205_fiber_bragg_grating_fbg_solar_array_yoke_strain_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40473:
+      name: s205_fiber_bragg_grating_fbg_solar_array_yoke_strain_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s205_fiber_bragg_grating_fbg_solar_array_yoke_strain_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Solar array thermal snap during eclipse entry/exit,
+    attitude slewing jitter'

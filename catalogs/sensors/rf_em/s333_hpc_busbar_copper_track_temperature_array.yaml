@@ -1,0 +1,45 @@
+sensor_id: s333_hpc_busbar_copper_track_temperature_array
+name: HPC Busbar Copper Track Temperature Array
+domain_id: 47
+domain_title: High-Performance Computing (HPC) & Liquid Cooling Thermal/Fluid Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15333
+interface: Negative Temperature Coefficient (NTC)
+description: 'HPC Busbar Copper Track Temperature Array is a specialized Domain 47
+  (High-Performance Computing (HPC) & Liquid Cooling Thermal/Fluid Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Negative Temperature Coefficient (NTC),
+  it is specifically engineered to mitigate and detect 48V/12V busbar high-resistance
+  joint, thermal fire hazard. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Joule heating: \dot{Q} = I^2 R; joint temperature
+  T_{busbar} <= 85^\circC; excessive thermal delta indicates loose bolts or contact
+  oxidation.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: 48V/12V busbar high-resistance joint, thermal fire hazard
+core_invariant: 'Joule heating: \dot{Q} = I^2 R; joint temperature T_{busbar} <= 85^\circC;
+  excessive thermal delta indicates loose bolts or contact oxidation.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40171:
+      name: s333_hpc_busbar_copper_track_temperature_array_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40173:
+      name: s333_hpc_busbar_copper_track_temperature_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s333_hpc_busbar_copper_track_temperature_array_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: 48V/12V busbar high-resistance joint, thermal fire
+    hazard'

@@ -1,0 +1,43 @@
+sensor_id: s001_instructions_per_cycle_ipc_monitor
+name: Instructions Per Cycle (IPC) Monitor
+domain_id: 1
+domain_title: Microarchitectural, CPU & Memory Sensors (Host Hardware Security)
+category: MICROARCH
+target_protocol: PMU_PERF
+default_port: 15001
+interface: Linux PMU (`perf_event_open`)
+description: 'Instructions Per Cycle (IPC) Monitor is a specialized Domain 01 (Microarchitectural,
+  CPU & Memory Sensors (Host Hardware Security)) cyber-physical monitoring sensor.
+  Interfacing directly via Linux PMU (`perf_event_open`), it is specifically engineered
+  to mitigate and detect Crypto-mining, ROP gadgets, CPU spinning DoS. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: IPC >= 1.0
+  under normal cryptographic processing; sudden collapse indicates microcode stall..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Crypto-mining, ROP gadgets, CPU spinning DoS
+core_invariant: IPC >= 1.0 under normal cryptographic processing; sudden collapse
+  indicates microcode stall.
+physics:
+  engine: pmu_microarch
+  baseline_value: 1.2
+  min_value: 0.1
+  max_value: 4.0
+  noise_sigma: 0.05
+  unit: IPC
+registers:
+  holding_registers:
+    40001:
+      name: s001_instructions_per_cycle_ipc_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: IPC
+    40003:
+      name: s001_instructions_per_cycle_ipc_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s001_instructions_per_cycle_ipc_monitor_fault
+  action: step_decrease
+  value: -0.8
+  description: 'Injects anomaly: Crypto-mining, ROP gadgets, CPU spinning DoS'

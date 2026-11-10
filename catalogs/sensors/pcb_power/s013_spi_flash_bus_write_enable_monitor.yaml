@@ -1,0 +1,43 @@
+sensor_id: s013_spi_flash_bus_write_enable_monitor
+name: SPI Flash Bus Write-Enable Monitor
+domain_id: 2
+domain_title: PCB, Power-Rail & Hardware Fault-Injection Sensors
+category: PCB_POWER
+target_protocol: MODBUS_TCP
+default_port: 15013
+interface: Hardware Logic Line on `/WP` Pin
+description: 'SPI Flash Bus Write-Enable Monitor is a specialized Domain 02 (PCB,
+  Power-Rail & Hardware Fault-Injection Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Hardware Logic Line on `/WP` Pin, it is specifically engineered
+  to mitigate and detect Malicious firmware overwrite (AcidRain, HermeticWiper). In
+  the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Hardware write-protect pin remains grounded; illegal write triggers bus disconnect..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Malicious firmware overwrite (AcidRain, HermeticWiper)
+core_invariant: Hardware write-protect pin remains grounded; illegal write triggers
+  bus disconnect.
+physics:
+  engine: pcb_power_glitch
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mV
+registers:
+  holding_registers:
+    40121:
+      name: s013_spi_flash_bus_write_enable_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: mV
+    40123:
+      name: s013_spi_flash_bus_write_enable_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s013_spi_flash_bus_write_enable_monitor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Malicious firmware overwrite (AcidRain, HermeticWiper)'

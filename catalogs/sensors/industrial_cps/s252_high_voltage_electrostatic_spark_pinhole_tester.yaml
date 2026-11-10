@@ -1,0 +1,45 @@
+sensor_id: s252_high_voltage_electrostatic_spark_pinhole_tester
+name: High-Voltage Electrostatic Spark Pinhole Tester
+domain_id: 36
+domain_title: Battery Gigafactory Roll-to-Roll & Electrode Calendering Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15252
+interface: Corona Discharge Roller Electrode (1--5 kV)
+description: "High-Voltage Electrostatic Spark Pinhole Tester is a specialized Domain\
+  \ 36 (Battery Gigafactory Roll-to-Roll & Electrode Calendering Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Corona Discharge Roller Electrode\
+  \ (1--5 kV), it is specifically engineered to mitigate and detect Microscopic pinholes\
+  \ in sub-10 micron polyethylene separator films. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Dielectric breakdown: air spark\
+  \ through pinhole produces current spike (I > 10\\,\xB5A); flags exact defect coordinates\
+  \ on battery roll map.. Any divergence between commanded network state and this\
+  \ physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Microscopic pinholes in sub-10 micron polyethylene separator films
+core_invariant: "Dielectric breakdown: air spark through pinhole produces current\
+  \ spike (I > 10\\,\xB5A); flags exact defect coordinates on battery roll map."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40421:
+      name: s252_high_voltage_electrostatic_spark_pinhole_tester_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40423:
+      name: s252_high_voltage_electrostatic_spark_pinhole_tester_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s252_high_voltage_electrostatic_spark_pinhole_tester_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Microscopic pinholes in sub-10 micron polyethylene
+    separator films'

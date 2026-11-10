@@ -1,0 +1,45 @@
+sensor_id: s495_transverse_deflecting_cavity_femtosecond_pulse_correlator
+name: Transverse Deflecting Cavity Femtosecond Pulse Correlator
+domain_id: 70
+domain_title: X-Ray Free-Electron Laser (XFEL) Beamline Optics Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15495
+interface: Microwave S-Band RF Pick-Up
+description: 'Transverse Deflecting Cavity Femtosecond Pulse Correlator is a specialized
+  Domain 70 (X-Ray Free-Electron Laser (XFEL) Beamline Optics Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Microwave S-Band RF Pick-Up, it is specifically
+  engineered to mitigate and detect Attosecond X-ray pulse width stretching, temporal
+  jitter. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Streak beam phase: y(t) = \frac{e V_{rf}}{p c} k_{rf} c \cdot t; temporal
+  pulse width must remain: \tau_{pulse} <= 25\,fs.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Attosecond X-ray pulse width stretching, temporal jitter
+core_invariant: 'Streak beam phase: y(t) = \frac{e V_{rf}}{p c} k_{rf} c \cdot t;
+  temporal pulse width must remain: \tau_{pulse} <= 25\,fs.'
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40191:
+      name: s495_transverse_deflecting_cavity_femtosecond_pulse_correlator_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40193:
+      name: s495_transverse_deflecting_cavity_femtosecond_pulse_correlator_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s495_transverse_deflecting_cavity_femtosecond_pulse_correlator_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Attosecond X-ray pulse width stretching, temporal
+    jitter'

@@ -1,0 +1,46 @@
+sensor_id: s525_sonar_dome_rubber_window_differential_pressure_sensor
+name: Sonar Dome Rubber Window Differential Pressure Sensor
+domain_id: 74
+domain_title: Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15525
+interface: Subsea Piezoresistive Gauge
+description: "Sonar Dome Rubber Window Differential Pressure Sensor is a specialized\
+  \ Domain 74 (Submarine Acoustic Warfare, Towed Sonar Arrays & Torpedo Decoy Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Subsea Piezoresistive\
+  \ Gauge, it is specifically engineered to mitigate and detect Dome pressurization\
+  \ failure, hydrodynamic collapse at high sprint depth. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Internal dome overpressure:\
+  \ \u0394 P = P_{internal} - P_{seawater} \u2208 [0.2, 0.5\\,bar]; pressure loss\
+  \ triggers water-fill pump injection.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Dome pressurization failure, hydrodynamic collapse at high sprint depth
+core_invariant: "Internal dome overpressure: \u0394 P = P_{internal} - P_{seawater}\
+  \ \u2208 [0.2, 0.5\\,bar]; pressure loss triggers water-fill pump injection."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40461:
+      name: s525_sonar_dome_rubber_window_differential_pressure_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40463:
+      name: s525_sonar_dome_rubber_window_differential_pressure_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s525_sonar_dome_rubber_window_differential_pressure_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Dome pressurization failure, hydrodynamic collapse
+    at high sprint depth'

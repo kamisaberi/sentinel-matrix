@@ -1,0 +1,45 @@
+sensor_id: s187_in_core_neutron_noise_subcooled_boiling_sensor
+name: In-Core Neutron Noise Subcooled Boiling Sensor
+domain_id: 27
+domain_title: Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15187
+interface: Miniature Fission Chamber (MFC)
+description: 'In-Core Neutron Noise Subcooled Boiling Sensor is a specialized Domain
+  27 (Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Miniature Fission Chamber (MFC), it
+  is specifically engineered to mitigate and detect Fuel assembly channel blockage,
+  subcooled boiling thermal instability. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Root-Mean-Square (RMS) neutron noise spectral
+  density in 1--10\,Hz band; noise power spike indicates steam void creation along
+  fuel pins.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Fuel assembly channel blockage, subcooled boiling thermal instability
+core_invariant: Root-Mean-Square (RMS) neutron noise spectral density in 1--10\,Hz
+  band; noise power spike indicates steam void creation along fuel pins.
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40311:
+      name: s187_in_core_neutron_noise_subcooled_boiling_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40313:
+      name: s187_in_core_neutron_noise_subcooled_boiling_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s187_in_core_neutron_noise_subcooled_boiling_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Fuel assembly channel blockage, subcooled boiling
+    thermal instability'

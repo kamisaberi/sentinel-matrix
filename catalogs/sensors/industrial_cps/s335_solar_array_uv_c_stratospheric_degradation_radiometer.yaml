@@ -1,0 +1,45 @@
+sensor_id: s335_solar_array_uv_c_stratospheric_degradation_radiometer
+name: Solar Array UV-C Stratospheric Degradation Radiometer
+domain_id: 48
+domain_title: High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15335
+interface: Silicon Carbide (SiC) UV Sensor
+description: 'Solar Array UV-C Stratospheric Degradation Radiometer is a specialized
+  Domain 48 (High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Silicon Carbide (SiC)
+  UV Sensor, it is specifically engineered to mitigate and detect Accelerated photovoltaic
+  degradation, solar array delamination. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Solar irradiance in UV-C band (200--280\,nm);
+  verifies photovoltaic output degradation curve against solar flux models.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Accelerated photovoltaic degradation, solar array delamination
+core_invariant: Solar irradiance in UV-C band (200--280\,nm); verifies photovoltaic
+  output degradation curve against solar flux models.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40191:
+      name: s335_solar_array_uv_c_stratospheric_degradation_radiometer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40193:
+      name: s335_solar_array_uv_c_stratospheric_degradation_radiometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s335_solar_array_uv_c_stratospheric_degradation_radiometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Accelerated photovoltaic degradation, solar array
+    delamination'

@@ -1,0 +1,45 @@
+sensor_id: s137_capacitive_blade_tip_timing_btt_sensor
+name: Capacitive Blade Tip-Timing (BTT) Sensor
+domain_id: 20
+domain_title: Combustion, Turbomachinery & Rocket Propulsion Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15137
+interface: High-Frequency RF Probe (10 MHz)
+description: "Capacitive Blade Tip-Timing (BTT) Sensor is a specialized Domain 20\
+  \ (Combustion, Turbomachinery & Rocket Propulsion Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via High-Frequency RF Probe (10 MHz), it is specifically\
+  \ engineered to mitigate and detect Turbine blade flutter, blade-tip rub against\
+  \ casing, fatigue fracture. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Measures blade arrival time t_{arrival}; mechanical\
+  \ blade deflection y = v_{rotor} \\cdot \u0394 t; deflection > 1.5\\,mm throttles\
+  \ turbine fuel.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Turbine blade flutter, blade-tip rub against casing, fatigue fracture
+core_invariant: "Measures blade arrival time t_{arrival}; mechanical blade deflection\
+  \ y = v_{rotor} \\cdot \u0394 t; deflection > 1.5\\,mm throttles turbine fuel."
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40331:
+      name: s137_capacitive_blade_tip_timing_btt_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40333:
+      name: s137_capacitive_blade_tip_timing_btt_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s137_capacitive_blade_tip_timing_btt_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Turbine blade flutter, blade-tip rub against casing,
+    fatigue fracture'

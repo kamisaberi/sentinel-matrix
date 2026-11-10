@@ -1,0 +1,45 @@
+sensor_id: s340_stratospheric_ozone_o_3_electrochemical_probe
+name: Stratospheric Ozone (O_3) Electrochemical Probe
+domain_id: 48
+domain_title: High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15340
+interface: Solid-Polymer Electrolyte Cell
+description: 'Stratospheric Ozone (O_3) Electrochemical Probe is a specialized Domain
+  48 (High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Solid-Polymer Electrolyte Cell, it is
+  specifically engineered to mitigate and detect Envelope material oxidation cracking,
+  atmospheric altitude correlation. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Ambient ozone concentration [O_3]; high ozone
+  levels cross-correlated with GNSS altitude to verify atmospheric flight level (20\,km)..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Envelope material oxidation cracking, atmospheric altitude correlation
+core_invariant: Ambient ozone concentration [O_3]; high ozone levels cross-correlated
+  with GNSS altitude to verify atmospheric flight level (20\,km).
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40241:
+      name: s340_stratospheric_ozone_o_3_electrochemical_probe_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40243:
+      name: s340_stratospheric_ozone_o_3_electrochemical_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s340_stratospheric_ozone_o_3_electrochemical_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Envelope material oxidation cracking, atmospheric
+    altitude correlation'

@@ -1,0 +1,43 @@
+sensor_id: s010_chassis_light_photodiode_intrusion_sensor
+name: Chassis Light / Photodiode Intrusion Sensor
+domain_id: 2
+domain_title: PCB, Power-Rail & Hardware Fault-Injection Sensors
+category: PCB_POWER
+target_protocol: MODBUS_TCP
+default_port: 15010
+interface: Ambient Light Sensor (I2C / GPIO)
+description: 'Chassis Light / Photodiode Intrusion Sensor is a specialized Domain
+  02 (PCB, Power-Rail & Hardware Fault-Injection Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Ambient Light Sensor (I2C / GPIO), it is specifically
+  engineered to mitigate and detect Physical enclosure opening in data centers or
+  substations. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Any photon detection inside a sealed chassis triggers instant TPM PCR
+  invalidation.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Physical enclosure opening in data centers or substations
+core_invariant: Any photon detection inside a sealed chassis triggers instant TPM
+  PCR invalidation.
+physics:
+  engine: pcb_power_glitch
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mV
+registers:
+  holding_registers:
+    40091:
+      name: s010_chassis_light_photodiode_intrusion_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mV
+    40093:
+      name: s010_chassis_light_photodiode_intrusion_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s010_chassis_light_photodiode_intrusion_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Physical enclosure opening in data centers or substations'

@@ -1,0 +1,44 @@
+sensor_id: s102_acoustic_release_command_transponder
+name: Acoustic Release Command Transponder
+domain_id: 15
+domain_title: Deep Marine, Subsea & Oceanographic Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15102
+interface: Subsea Acoustic FSK Hydrophone
+description: 'Acoustic Release Command Transponder is a specialized Domain 15 (Deep
+  Marine, Subsea & Oceanographic Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Subsea Acoustic FSK Hydrophone, it is specifically engineered to mitigate
+  and detect Illicit acoustic triggering of seafloor instrument moorings. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Requires cryptographically
+  signed dual-frequency interrogation codes before releasing mechanical drop-weights..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Illicit acoustic triggering of seafloor instrument moorings
+core_invariant: Requires cryptographically signed dual-frequency interrogation codes
+  before releasing mechanical drop-weights.
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40001:
+      name: s102_acoustic_release_command_transponder_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40003:
+      name: s102_acoustic_release_command_transponder_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s102_acoustic_release_command_transponder_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Illicit acoustic triggering of seafloor instrument
+    moorings'

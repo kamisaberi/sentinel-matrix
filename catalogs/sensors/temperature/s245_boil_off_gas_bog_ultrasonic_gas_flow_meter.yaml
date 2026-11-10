@@ -1,0 +1,44 @@
+sensor_id: s245_boil_off_gas_bog_ultrasonic_gas_flow_meter
+name: Boil-Off Gas (BOG) Ultrasonic Gas Flow Meter
+domain_id: 35
+domain_title: Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15245
+interface: Dual-Path Cryogenic Acoustic Transducer
+description: 'Boil-Off Gas (BOG) Ultrasonic Gas Flow Meter is a specialized Domain
+  35 (Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Dual-Path Cryogenic Acoustic Transducer, it is
+  specifically engineered to mitigate and detect Covert hydrogen venting theft, compressor
+  starvation. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Acoustic transit time: v = \frac{L}{2\cos\theta}<=ft(\frac{1}{t_{down}}
+  - \frac{1}{t_{up}}\right); gas flow must match thermodynamic heat ingress calculations..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Covert hydrogen venting theft, compressor starvation
+core_invariant: 'Acoustic transit time: v = \frac{L}{2\cos\theta}<=ft(\frac{1}{t_{down}}
+  - \frac{1}{t_{up}}\right); gas flow must match thermodynamic heat ingress calculations.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40351:
+      name: s245_boil_off_gas_bog_ultrasonic_gas_flow_meter_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40353:
+      name: s245_boil_off_gas_bog_ultrasonic_gas_flow_meter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s245_boil_off_gas_bog_ultrasonic_gas_flow_meter_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Covert hydrogen venting theft, compressor starvation'

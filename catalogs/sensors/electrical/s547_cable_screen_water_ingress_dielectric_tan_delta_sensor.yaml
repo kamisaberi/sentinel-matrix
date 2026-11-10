@@ -1,0 +1,45 @@
+sensor_id: s547_cable_screen_water_ingress_dielectric_tan_delta_sensor
+name: Cable Screen Water Ingress Dielectric (\tan\delta) Sensor
+domain_id: 77
+domain_title: High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15547
+interface: High-Voltage Schering Bridge Link
+description: "Cable Screen Water Ingress Dielectric (\\tan\\delta) Sensor is a specialized\
+  \ Domain 77 (High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Voltage Schering Bridge Link,\
+  \ it is specifically engineered to mitigate and detect Water ingress into outer\
+  \ metallic screen, electrochemical corrosion. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Dielectric loss angle: \\tan\\\
+  delta <= 1.0 \xD7 10^{-3}; loss factor increase indicates water penetration through\
+  \ polyethylene outer sheath.. Any divergence between commanded network state and\
+  \ this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Water ingress into outer metallic screen, electrochemical corrosion
+core_invariant: "Dielectric loss angle: \\tan\\delta <= 1.0 \xD7 10^{-3}; loss factor\
+  \ increase indicates water penetration through polyethylene outer sheath."
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40151:
+      name: s547_cable_screen_water_ingress_dielectric_tan_delta_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40153:
+      name: s547_cable_screen_water_ingress_dielectric_tan_delta_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s547_cable_screen_water_ingress_dielectric_tan_delta_sensor_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Water ingress into outer metallic screen, electrochemical
+    corrosion'

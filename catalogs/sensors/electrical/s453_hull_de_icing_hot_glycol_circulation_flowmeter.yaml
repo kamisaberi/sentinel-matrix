@@ -1,0 +1,45 @@
+sensor_id: s453_hull_de_icing_hot_glycol_circulation_flowmeter
+name: Hull De-Icing Hot Glycol Circulation Flowmeter
+domain_id: 64
+domain_title: Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15453
+interface: Coriolis Mass Flow Meter
+description: 'Hull De-Icing Hot Glycol Circulation Flowmeter is a specialized Domain
+  64 (Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Coriolis Mass Flow Meter, it is specifically
+  engineered to mitigate and detect Top-heavy superstructure ice accumulation, vessel
+  capsizing risk. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Thermal heat flux: q''''_{de-ice} >= 350\,W/m^2; glycol flow
+  loss triggers electric backup heating to prevent listing.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Top-heavy superstructure ice accumulation, vessel capsizing risk
+core_invariant: 'Thermal heat flux: q''''_{de-ice} >= 350\,W/m^2; glycol flow loss
+  triggers electric backup heating to prevent listing.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40271:
+      name: s453_hull_de_icing_hot_glycol_circulation_flowmeter_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40273:
+      name: s453_hull_de_icing_hot_glycol_circulation_flowmeter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s453_hull_de_icing_hot_glycol_circulation_flowmeter_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Top-heavy superstructure ice accumulation, vessel
+    capsizing risk'

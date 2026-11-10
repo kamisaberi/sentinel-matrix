@@ -1,0 +1,46 @@
+sensor_id: s367_torpedo_tube_interlocking_muzzle_door_proximity_sensor
+name: Torpedo Tube Interlocking Muzzle Door Proximity Sensor
+domain_id: 52
+domain_title: Naval Submarine Acoustic Stealth & Hull Integrity Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15367
+interface: Dual Magnetically-Coded Hermetic Switch
+description: 'Torpedo Tube Interlocking Muzzle Door Proximity Sensor is a specialized
+  Domain 52 (Naval Submarine Acoustic Stealth & Hull Integrity Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Dual Magnetically-Coded Hermetic Switch,
+  it is specifically engineered to mitigate and detect Inadvertent muzzle door opening
+  while breech door is unlocked (torpedo room flooding). In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Mechanical interlock invariant:
+  Door_{muzzle} Open \implies Door_{breech} Locked Closed; dual-sensor agreement required..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Inadvertent muzzle door opening while breech door is unlocked (torpedo
+  room flooding)
+core_invariant: 'Mechanical interlock invariant: Door_{muzzle} Open \implies Door_{breech}
+  Locked Closed; dual-sensor agreement required.'
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40001:
+      name: s367_torpedo_tube_interlocking_muzzle_door_proximity_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40003:
+      name: s367_torpedo_tube_interlocking_muzzle_door_proximity_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s367_torpedo_tube_interlocking_muzzle_door_proximity_sensor_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Inadvertent muzzle door opening while breech door
+    is unlocked (torpedo room flooding)'

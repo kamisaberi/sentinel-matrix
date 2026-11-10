@@ -1,0 +1,41 @@
+sensor_id: s054_subsea_annular_pressure_buildup_apb_sensor
+name: Subsea Annular Pressure Buildup (APB) Sensor
+domain_id: 9
+domain_title: Fluid, Pressure & Hydrodynamic Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15054
+interface: Subsea MUX Umbilical Protocol
+description: 'Subsea Annular Pressure Buildup (APB) Sensor is a specialized Domain
+  09 (Fluid, Pressure & Hydrodynamic Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Subsea MUX Umbilical Protocol, it is specifically engineered to mitigate
+  and detect Deepwater casing burst / collapse explosions. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Annular pressure must stay below
+  casing yield envelope (< 12{,}000\,psi).. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Deepwater casing burst / collapse explosions
+core_invariant: Annular pressure must stay below casing yield envelope (< 12{,}000\,psi).
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40031:
+      name: s054_subsea_annular_pressure_buildup_apb_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40033:
+      name: s054_subsea_annular_pressure_buildup_apb_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s054_subsea_annular_pressure_buildup_apb_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Deepwater casing burst / collapse explosions'

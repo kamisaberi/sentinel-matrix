@@ -1,0 +1,46 @@
+sensor_id: s220_build_platform_thermal_expansion_strain_sensor_array
+name: Build Platform Thermal Expansion Strain Sensor Array
+domain_id: 31
+domain_title: Metal Additive Manufacturing (3D Printing) Melt-Pool Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15220
+interface: Embedded Thin-Film Piezo-Sensors
+description: "Build Platform Thermal Expansion Strain Sensor Array is a specialized\
+  \ Domain 31 (Metal Additive Manufacturing (3D Printing) Melt-Pool Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Embedded Thin-Film Piezo-Sensors,\
+  \ it is specifically engineered to mitigate and detect Residual stress accumulation,\
+  \ build plate delamination / curling. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Cumulative thermal contraction force: \\sigma_{residual}\
+  \ = E \\cdot \\alpha \\cdot \u0394 T; excessive stress alerts operator before part\
+  \ tears off build plate.. Any divergence between commanded network state and this\
+  \ physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Residual stress accumulation, build plate delamination / curling
+core_invariant: "Cumulative thermal contraction force: \\sigma_{residual} = E \\cdot\
+  \ \\alpha \\cdot \u0394 T; excessive stress alerts operator before part tears off\
+  \ build plate."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40101:
+      name: s220_build_platform_thermal_expansion_strain_sensor_array_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40103:
+      name: s220_build_platform_thermal_expansion_strain_sensor_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s220_build_platform_thermal_expansion_strain_sensor_array_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Residual stress accumulation, build plate delamination
+    / curling'

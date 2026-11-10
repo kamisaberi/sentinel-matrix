@@ -1,0 +1,45 @@
+sensor_id: s142_deep_borehole_triaxial_force_balanced_geophone
+name: Deep Borehole Triaxial Force-Balanced Geophone
+domain_id: 21
+domain_title: Extreme Geological, Seismic & Borehole Telemetry Sensors
+category: GEOLOGICAL
+target_protocol: MODBUS_TCP
+default_port: 15142
+interface: Low-Noise Seismic Digitizer (24-bit)
+description: 'Deep Borehole Triaxial Force-Balanced Geophone is a specialized Domain
+  21 (Extreme Geological, Seismic & Borehole Telemetry Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Low-Noise Seismic Digitizer (24-bit), it is specifically
+  engineered to mitigate and detect Subsurface hydro-fracture containment breach,
+  underground explosion. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Measures particle velocity \mathbf{v}(t); seismic event
+  magnitude M_L <= 0.5; induced micro-seismic event clusters halt hydraulic pumping..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Subsurface hydro-fracture containment breach, underground explosion
+core_invariant: Measures particle velocity \mathbf{v}(t); seismic event magnitude
+  M_L <= 0.5; induced micro-seismic event clusters halt hydraulic pumping.
+physics:
+  engine: seismic_geophone
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mm/s
+registers:
+  holding_registers:
+    40381:
+      name: s142_deep_borehole_triaxial_force_balanced_geophone_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40383:
+      name: s142_deep_borehole_triaxial_force_balanced_geophone_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s142_deep_borehole_triaxial_force_balanced_geophone_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Subsurface hydro-fracture containment breach, underground
+    explosion'

@@ -1,0 +1,45 @@
+sensor_id: s386_freeze_plug_emergency_dump_safety_seal_thermocouple_array
+name: Freeze-Plug Emergency Dump Safety Seal Thermocouple Array
+domain_id: 55
+domain_title: Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15386
+interface: Type N Thermocouple Tree in Drain Pipe
+description: 'Freeze-Plug Emergency Dump Safety Seal Thermocouple Array is a specialized
+  Domain 55 (Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Type N Thermocouple Tree in Drain Pipe,
+  it is specifically engineered to mitigate and detect Freeze-plug failure, core drain
+  line blockage under station blackout. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Temperature profile across frozen salt plug:
+  T_{plug} <= 450^\circC; loss of active cooling allows natural decay heat to melt
+  plug in < 5\,minutes.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Freeze-plug failure, core drain line blockage under station blackout
+core_invariant: 'Temperature profile across frozen salt plug: T_{plug} <= 450^\circC;
+  loss of active cooling allows natural decay heat to melt plug in < 5\,minutes.'
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40131:
+      name: s386_freeze_plug_emergency_dump_safety_seal_thermocouple_array_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40133:
+      name: s386_freeze_plug_emergency_dump_safety_seal_thermocouple_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s386_freeze_plug_emergency_dump_safety_seal_thermocouple_array_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Freeze-plug failure, core drain line blockage under
+    station blackout'

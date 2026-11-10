@@ -1,0 +1,45 @@
+sensor_id: s190_boron_concentration_meter_b_10_neutron_absorption
+name: Boron Concentration Meter (B-10 Neutron Absorption)
+domain_id: 27
+domain_title: Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15190
+interface: Am-Be Neutron Source + ^3He Detector
+description: 'Boron Concentration Meter (B-10 Neutron Absorption) is a specialized
+  Domain 27 (Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Am-Be Neutron Source + ^3He Detector,
+  it is specifically engineered to mitigate and detect Inadvertent reactivity dilution
+  accident, chemical reactivity sabotage. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Thermal neutron attenuation: I = I_0 e^{-\Sigma_a(C_B)
+  L}; soluble boron concentration must match critical safety shutdown margin (C_B
+  >= 2{,}200\,ppm).. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Inadvertent reactivity dilution accident, chemical reactivity sabotage
+core_invariant: 'Thermal neutron attenuation: I = I_0 e^{-\Sigma_a(C_B) L}; soluble
+  boron concentration must match critical safety shutdown margin (C_B >= 2{,}200\,ppm).'
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40341:
+      name: s190_boron_concentration_meter_b_10_neutron_absorption_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40343:
+      name: s190_boron_concentration_meter_b_10_neutron_absorption_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s190_boron_concentration_meter_b_10_neutron_absorption_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Inadvertent reactivity dilution accident, chemical
+    reactivity sabotage'

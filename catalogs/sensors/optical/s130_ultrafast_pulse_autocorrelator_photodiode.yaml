@@ -1,0 +1,45 @@
+sensor_id: s130_ultrafast_pulse_autocorrelator_photodiode
+name: Ultrafast Pulse Autocorrelator Photodiode
+domain_id: 19
+domain_title: High-Energy Laser, Directed Energy & Optoelectronic Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15130
+interface: Non-Linear SHG Crystal + PMT
+description: "Ultrafast Pulse Autocorrelator Photodiode is a specialized Domain 19\
+  \ (High-Energy Laser, Directed Energy & Optoelectronic Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Non-Linear SHG Crystal + PMT, it is specifically\
+  \ engineered to mitigate and detect Femtosecond pulse width compression runaway,\
+  \ laser filamentation. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Second-harmonic pulse overlap integral I_{SHG}(\\tau)\
+  \ \u221D \u2208t I(t) I(t-\\tau) dt; pulse shortening below 100\\,fs trips safety\
+  \ beam dump.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Femtosecond pulse width compression runaway, laser filamentation
+core_invariant: "Second-harmonic pulse overlap integral I_{SHG}(\\tau) \u221D \u2208\
+  t I(t) I(t-\\tau) dt; pulse shortening below 100\\,fs trips safety beam dump."
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40261:
+      name: s130_ultrafast_pulse_autocorrelator_photodiode_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40263:
+      name: s130_ultrafast_pulse_autocorrelator_photodiode_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s130_ultrafast_pulse_autocorrelator_photodiode_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Femtosecond pulse width compression runaway, laser
+    filamentation'

@@ -1,0 +1,45 @@
+sensor_id: s338_airship_helium_envelope_differential_pressure_diaphragm
+name: Airship Helium Envelope Differential Pressure Diaphragm
+domain_id: 48
+domain_title: High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15338
+interface: Ultra-Sensitive Differential Transmitter
+description: "Airship Helium Envelope Differential Pressure Diaphragm is a specialized\
+  \ Domain 48 (High-Altitude Pseudo-Satellite (HAPS) & Stratospheric Airship Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Ultra-Sensitive Differential\
+  \ Transmitter, it is specifically engineered to mitigate and detect Stratospheric\
+  \ airship envelope overpressure rupture, gas leak. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Envelope differential pressure:\
+  \ \u0394 P_{hull} = P_{helium} - P_{ambient} \u2208 [200, 600\\,Pa]; overpressure\
+  \ vents helium to save the hull.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Stratospheric airship envelope overpressure rupture, gas leak
+core_invariant: "Envelope differential pressure: \u0394 P_{hull} = P_{helium} - P_{ambient}\
+  \ \u2208 [200, 600\\,Pa]; overpressure vents helium to save the hull."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40221:
+      name: s338_airship_helium_envelope_differential_pressure_diaphragm_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40223:
+      name: s338_airship_helium_envelope_differential_pressure_diaphragm_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s338_airship_helium_envelope_differential_pressure_diaphragm_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Stratospheric airship envelope overpressure rupture,
+    gas leak'

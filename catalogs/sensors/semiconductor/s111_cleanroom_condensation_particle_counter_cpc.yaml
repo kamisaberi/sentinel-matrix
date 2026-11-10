@@ -1,0 +1,44 @@
+sensor_id: s111_cleanroom_condensation_particle_counter_cpc
+name: Cleanroom Condensation Particle Counter (CPC)
+domain_id: 16
+domain_title: Semiconductor Fab, Vacuum & Plasma Process Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15111
+interface: Alcohol Condensation Laser Scattering
+description: 'Cleanroom Condensation Particle Counter (CPC) is a specialized Domain
+  16 (Semiconductor Fab, Vacuum & Plasma Process Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Alcohol Condensation Laser Scattering, it is specifically
+  engineered to mitigate and detect HEPA/ULPA filter failure, saboteur cleanroom seal
+  breach. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Detects airborne nanoparticles down to 4\,nm; counts must strictly comply
+  with ISO 14644-1 Class 1 cleanroom limits.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: HEPA/ULPA filter failure, saboteur cleanroom seal breach
+core_invariant: Detects airborne nanoparticles down to 4\,nm; counts must strictly
+  comply with ISO 14644-1 Class 1 cleanroom limits.
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40091:
+      name: s111_cleanroom_condensation_particle_counter_cpc_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40093:
+      name: s111_cleanroom_condensation_particle_counter_cpc_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s111_cleanroom_condensation_particle_counter_cpc_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: HEPA/ULPA filter failure, saboteur cleanroom seal
+    breach'

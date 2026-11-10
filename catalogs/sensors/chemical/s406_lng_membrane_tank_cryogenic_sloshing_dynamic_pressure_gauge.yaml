@@ -1,0 +1,45 @@
+sensor_id: s406_lng_membrane_tank_cryogenic_sloshing_dynamic_pressure_gauge
+name: LNG Membrane Tank Cryogenic Sloshing Dynamic Pressure Gauge
+domain_id: 58
+domain_title: Liquefied Natural Gas (LNG) Carrier Tank Sloshing & Boil-Off Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15406
+interface: Flush Piezoresistive Transducer (-163^\circC)
+description: 'LNG Membrane Tank Cryogenic Sloshing Dynamic Pressure Gauge is a specialized
+  Domain 58 (Liquefied Natural Gas (LNG) Carrier Tank Sloshing & Boil-Off Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Flush Piezoresistive
+  Transducer (-163^\circC), it is specifically engineered to mitigate and detect Liquid
+  sloshing impact pressure, membrane corrugated corner rupture. In the Aryorithm edge
+  architecture, it continuously asserts the operational invariant: Peak hydrodynamic
+  impact pressure: P_{slosh} <= P_{design\_allowable}; extreme sloshing commands ship
+  course/speed alteration.. Any divergence between commanded network state and this
+  physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Liquid sloshing impact pressure, membrane corrugated corner rupture
+core_invariant: 'Peak hydrodynamic impact pressure: P_{slosh} <= P_{design\_allowable};
+  extreme sloshing commands ship course/speed alteration.'
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40321:
+      name: s406_lng_membrane_tank_cryogenic_sloshing_dynamic_pressure_gauge_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40323:
+      name: s406_lng_membrane_tank_cryogenic_sloshing_dynamic_pressure_gauge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s406_lng_membrane_tank_cryogenic_sloshing_dynamic_pressure_gauge_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Liquid sloshing impact pressure, membrane corrugated
+    corner rupture'

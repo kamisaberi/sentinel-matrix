@@ -1,0 +1,45 @@
+sensor_id: s510_chromium_volatilization_icp_oes_condensate_vapor_monitor
+name: Chromium Volatilization ICP-OES Condensate Vapor Monitor
+domain_id: 72
+domain_title: High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15510
+interface: In-Situ Aerosol Chemical Extraction Cell
+description: 'Chromium Volatilization ICP-OES Condensate Vapor Monitor is a specialized
+  Domain 72 (High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via In-Situ Aerosol Chemical
+  Extraction Cell, it is specifically engineered to mitigate and detect Metallic interconnect
+  chromium poisoning, air-electrode shutdown. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Volatile chromium concentration:
+  [CrO_2(OH)_2] <= 1.0\,ppb; chromium spike flags interconnect protective coating
+  breakdown.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Metallic interconnect chromium poisoning, air-electrode shutdown
+core_invariant: 'Volatile chromium concentration: [CrO_2(OH)_2] <= 1.0\,ppb; chromium
+  spike flags interconnect protective coating breakdown.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40331:
+      name: s510_chromium_volatilization_icp_oes_condensate_vapor_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40333:
+      name: s510_chromium_volatilization_icp_oes_condensate_vapor_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s510_chromium_volatilization_icp_oes_condensate_vapor_monitor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Metallic interconnect chromium poisoning, air-electrode
+    shutdown'

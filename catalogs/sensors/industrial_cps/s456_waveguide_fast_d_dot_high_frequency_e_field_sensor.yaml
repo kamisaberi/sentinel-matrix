@@ -1,0 +1,45 @@
+sensor_id: s456_waveguide_fast_d_dot_high_frequency_e_field_sensor
+name: Waveguide Fast D-Dot High-Frequency E-Field Sensor
+domain_id: 65
+domain_title: Directed-Energy Counter-Electronics (HPEM/HPM) Waveguide Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15456
+interface: Sub-Nanosecond Asymmetric Dipole Sensor
+description: 'Waveguide Fast D-Dot High-Frequency E-Field Sensor is a specialized
+  Domain 65 (Directed-Energy Counter-Electronics (HPEM/HPM) Waveguide Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Sub-Nanosecond Asymmetric Dipole Sensor,
+  it is specifically engineered to mitigate and detect Front-door High-Power Microwave
+  (HPM) weapon pulse ingress. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Electric field derivative: \frac{dE}{dt} >= 10^{14}\,V/(m\cdots);
+  triggers gas-plasma limiter ionization in < 1.0\,ns.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Front-door High-Power Microwave (HPM) weapon pulse ingress
+core_invariant: 'Electric field derivative: \frac{dE}{dt} >= 10^{14}\,V/(m\cdots);
+  triggers gas-plasma limiter ionization in < 1.0\,ns.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40301:
+      name: s456_waveguide_fast_d_dot_high_frequency_e_field_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40303:
+      name: s456_waveguide_fast_d_dot_high_frequency_e_field_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s456_waveguide_fast_d_dot_high_frequency_e_field_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Front-door High-Power Microwave (HPM) weapon pulse
+    ingress'

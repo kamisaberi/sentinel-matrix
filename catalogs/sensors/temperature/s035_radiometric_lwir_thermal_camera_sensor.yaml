@@ -1,0 +1,43 @@
+sensor_id: s035_radiometric_lwir_thermal_camera_sensor
+name: Radiometric LWIR Thermal Camera Sensor
+domain_id: 6
+domain_title: Thermal, Infrared & Cryogenic Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15035
+interface: USB3 / GigE Vision / MIPI-CSI2
+description: "Radiometric LWIR Thermal Camera Sensor is a specialized Domain 06 (Thermal,\
+  \ Infrared & Cryogenic Sensors) cyber-physical monitoring sensor. Interfacing directly\
+  \ via USB3 / GigE Vision / MIPI-CSI2, it is specifically engineered to mitigate\
+  \ and detect Battery cell thermal runaway, transformer hot-spots. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Core temperature\
+  \ delta \u0394 T = T_{core} - T_{ambient} > 15^\\circC triggers physical interlock..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Battery cell thermal runaway, transformer hot-spots
+core_invariant: "Core temperature delta \u0394 T = T_{core} - T_{ambient} > 15^\\\
+  circC triggers physical interlock."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40341:
+      name: s035_radiometric_lwir_thermal_camera_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40343:
+      name: s035_radiometric_lwir_thermal_camera_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s035_radiometric_lwir_thermal_camera_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Battery cell thermal runaway, transformer hot-spots'

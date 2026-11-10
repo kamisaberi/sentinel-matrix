@@ -1,0 +1,43 @@
+sensor_id: s058_electrochemical_toxic_gas_sensor_nh_3_co_cl_2
+name: Electrochemical Toxic Gas Sensor (NH_3 / CO / Cl_2)
+domain_id: 10
+domain_title: Chemical, Gas & Dielectric Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15058
+interface: 4-20mA / Modbus Sensor
+description: 'Electrochemical Toxic Gas Sensor (NH_3 / CO / Cl_2) is a specialized
+  Domain 10 (Chemical, Gas & Dielectric Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via 4-20mA / Modbus Sensor, it is specifically engineered to
+  mitigate and detect Cold-chain ammonia leaks, water plant chlorine release. In the
+  Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Concentration > IDLH limits (NH_3 > 300\,ppm) activates emergency exhaust scrubbers..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Cold-chain ammonia leaks, water plant chlorine release
+core_invariant: Concentration > IDLH limits (NH_3 > 300\,ppm) activates emergency
+  exhaust scrubbers.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40071:
+      name: s058_electrochemical_toxic_gas_sensor_nh_3_co_cl_2_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40073:
+      name: s058_electrochemical_toxic_gas_sensor_nh_3_co_cl_2_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s058_electrochemical_toxic_gas_sensor_nh_3_co_cl_2_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Cold-chain ammonia leaks, water plant chlorine release'

@@ -1,0 +1,45 @@
+sensor_id: s290_3d_time_of_flight_pallet_pocket_alignment_sensor
+name: 3D Time-of-Flight Pallet Pocket Alignment Sensor
+domain_id: 41
+domain_title: Autonomous Mobile Robot (AMR) & AGV Drivetrain Safety Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15290
+interface: 3D Infrared Depth Camera
+description: '3D Time-of-Flight Pallet Pocket Alignment Sensor is a specialized Domain
+  41 (Autonomous Mobile Robot (AMR) & AGV Drivetrain Safety Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via 3D Infrared Depth Camera, it is specifically
+  engineered to mitigate and detect Fork tines misaligned with pallet stringers, racking
+  collapse hazard. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Fork-to-pocket insertion clearance: d_{clearance} >= 25\,mm;
+  alignment error > 5^\circ inhibits hydraulic forward lift carriage.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Fork tines misaligned with pallet stringers, racking collapse hazard
+core_invariant: 'Fork-to-pocket insertion clearance: d_{clearance} >= 25\,mm; alignment
+  error > 5^\circ inhibits hydraulic forward lift carriage.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40261:
+      name: s290_3d_time_of_flight_pallet_pocket_alignment_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40263:
+      name: s290_3d_time_of_flight_pallet_pocket_alignment_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s290_3d_time_of_flight_pallet_pocket_alignment_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Fork tines misaligned with pallet stringers, racking
+    collapse hazard'

@@ -1,0 +1,46 @@
+sensor_id: s473_blumlein_line_pulse_forming_network_voltage_divider
+name: Blumlein Line Pulse Forming Network Voltage Divider
+domain_id: 67
+domain_title: Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15473
+interface: Copper-Sulfate Liquid Resistive Divider
+description: "Blumlein Line Pulse Forming Network Voltage Divider is a specialized\
+  \ Domain 67 (Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Copper-Sulfate Liquid\
+  \ Resistive Divider, it is specifically engineered to mitigate and detect Line reflection\
+  \ flashover, flat-top voltage pulse distortion. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Square-wave pulse flatness:\
+  \ \\frac{\u0394 V(t)}{V_{plateau}} <= 1.0\\% across t_{pulse} = 100\\,ns; pulse\
+  \ tail reflections trigger fast crowbar gaps.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Line reflection flashover, flat-top voltage pulse distortion
+core_invariant: "Square-wave pulse flatness: \\frac{\u0394 V(t)}{V_{plateau}} <= 1.0\\\
+  % across t_{pulse} = 100\\,ns; pulse tail reflections trigger fast crowbar gaps."
+physics:
+  engine: magnetic_flux
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: uT
+registers:
+  holding_registers:
+    40471:
+      name: s473_blumlein_line_pulse_forming_network_voltage_divider_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40473:
+      name: s473_blumlein_line_pulse_forming_network_voltage_divider_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s473_blumlein_line_pulse_forming_network_voltage_divider_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Line reflection flashover, flat-top voltage pulse
+    distortion'

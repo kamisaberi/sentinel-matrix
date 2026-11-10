@@ -1,0 +1,41 @@
+sensor_id: s019_s7comm_cotp_tpkt_protocol_sensor
+name: S7Comm COTP TPKT Protocol Sensor
+domain_id: 3
+domain_title: Wire-Speed Network & Protocol Telemetry Sensors
+category: NETWORK
+target_protocol: UDP_STREAM
+default_port: 15019
+interface: eBPF Dissector
+description: 'S7Comm COTP TPKT Protocol Sensor is a specialized Domain 03 (Wire-Speed
+  Network & Protocol Telemetry Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via eBPF Dissector, it is specifically engineered to mitigate and detect
+  S7 CPU STOP command injection (`0x29`), ladder wipe. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Blocks rogue S7 control packets
+  targeting port 102.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: S7 CPU STOP command injection (`0x29`), ladder wipe
+core_invariant: Blocks rogue S7 control packets targeting port 102.
+physics:
+  engine: network_ebpf
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: packets
+registers:
+  holding_registers:
+    40181:
+      name: s019_s7comm_cotp_tpkt_protocol_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: packets
+    40183:
+      name: s019_s7comm_cotp_tpkt_protocol_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s019_s7comm_cotp_tpkt_protocol_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: S7 CPU STOP command injection (`0x29`), ladder wipe'

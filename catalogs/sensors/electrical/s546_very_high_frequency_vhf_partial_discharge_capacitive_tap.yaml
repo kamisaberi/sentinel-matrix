@@ -1,0 +1,45 @@
+sensor_id: s546_very_high_frequency_vhf_partial_discharge_capacitive_tap
+name: Very High Frequency (VHF) Partial Discharge Capacitive Tap
+domain_id: 77
+domain_title: High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15546
+interface: Non-Invasive Armored Joint Sensor (300 MHz)
+description: 'Very High Frequency (VHF) Partial Discharge Capacitive Tap is a specialized
+  Domain 77 (High-Voltage Underground HVDC Light & Extruded VSC Cable Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Non-Invasive Armored Joint Sensor (300
+  MHz), it is specifically engineered to mitigate and detect Cable joint electrical
+  treeing, impending insulation puncture. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Phase-Resolved Partial Discharge (PRPD) pattern;
+  discharge magnitude q <= 5\,pC; progressive discharge growth flags planned joint
+  replacement.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Cable joint electrical treeing, impending insulation puncture
+core_invariant: Phase-Resolved Partial Discharge (PRPD) pattern; discharge magnitude
+  q <= 5\,pC; progressive discharge growth flags planned joint replacement.
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40141:
+      name: s546_very_high_frequency_vhf_partial_discharge_capacitive_tap_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40143:
+      name: s546_very_high_frequency_vhf_partial_discharge_capacitive_tap_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s546_very_high_frequency_vhf_partial_discharge_capacitive_tap_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Cable joint electrical treeing, impending insulation
+    puncture'

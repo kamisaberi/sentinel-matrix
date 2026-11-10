@@ -1,0 +1,45 @@
+sensor_id: s129_quadrant_photodiode_qpd_beam_centroid_sensor
+name: Quadrant Photodiode (QPD) Beam Centroid Sensor
+domain_id: 19
+domain_title: High-Energy Laser, Directed Energy & Optoelectronic Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15129
+interface: 4-Channel Analog Differential ADC
+description: "Quadrant Photodiode (QPD) Beam Centroid Sensor is a specialized Domain\
+  \ 19 (High-Energy Laser, Directed Energy & Optoelectronic Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via 4-Channel Analog Differential ADC,\
+  \ it is specifically engineered to mitigate and detect Free-space laser communication\
+  \ jitter, mechanical steering sabotage. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Normalized beam position x = \\frac{(A+D)-(B+C)}{A+B+C+D};\
+  \ centroid drift > 5\\,\xB5m decouples laser pump in < 5\\,\xB5s.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Free-space laser communication jitter, mechanical steering sabotage
+core_invariant: "Normalized beam position x = \\frac{(A+D)-(B+C)}{A+B+C+D}; centroid\
+  \ drift > 5\\,\xB5m decouples laser pump in < 5\\,\xB5s."
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40251:
+      name: s129_quadrant_photodiode_qpd_beam_centroid_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40253:
+      name: s129_quadrant_photodiode_qpd_beam_centroid_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s129_quadrant_photodiode_qpd_beam_centroid_sensor_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Free-space laser communication jitter, mechanical
+    steering sabotage'

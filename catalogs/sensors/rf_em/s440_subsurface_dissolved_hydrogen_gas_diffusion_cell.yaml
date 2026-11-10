@@ -1,0 +1,45 @@
+sensor_id: s440_subsurface_dissolved_hydrogen_gas_diffusion_cell
+name: Subsurface Dissolved Hydrogen Gas Diffusion Cell
+domain_id: 62
+domain_title: Deep Underground Geological Radioactive Waste Repository (DGR) Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15440
+interface: Solid-State Palladium Membrane Sensor
+description: 'Subsurface Dissolved Hydrogen Gas Diffusion Cell is a specialized Domain
+  62 (Deep Underground Geological Radioactive Waste Repository (DGR) Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Solid-State Palladium Membrane Sensor,
+  it is specifically engineered to mitigate and detect Canister radiolytic water breakdown,
+  anaerobic corrosion gas pressure. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Hydrogen generation flux: J_{H_2} <= 10^{-5}\,mol/(m^2\cdotyear);
+  excessive H_2 flags canister containment compromise.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Canister radiolytic water breakdown, anaerobic corrosion gas pressure
+core_invariant: 'Hydrogen generation flux: J_{H_2} <= 10^{-5}\,mol/(m^2\cdotyear);
+  excessive H_2 flags canister containment compromise.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40141:
+      name: s440_subsurface_dissolved_hydrogen_gas_diffusion_cell_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40143:
+      name: s440_subsurface_dissolved_hydrogen_gas_diffusion_cell_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s440_subsurface_dissolved_hydrogen_gas_diffusion_cell_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Canister radiolytic water breakdown, anaerobic corrosion
+    gas pressure'

@@ -1,0 +1,45 @@
+sensor_id: s098_laser_altimeter_lidar_rangefinder
+name: Laser Altimeter / Lidar Rangefinder
+domain_id: 14
+domain_title: Aerospace, Avionics & Spacecraft Physical Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15098
+interface: Spacecraft Time-of-Flight Receiver
+description: "Laser Altimeter / Lidar Rangefinder is a specialized Domain 14 (Aerospace,\
+  \ Avionics & Spacecraft Physical Sensors) cyber-physical monitoring sensor. Interfacing\
+  \ directly via Spacecraft Time-of-Flight Receiver, it is specifically engineered\
+  \ to mitigate and detect Autonomous lunar/planetary landing terrain elevation spoofing.\
+  \ In the Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Pulse flight time \u0394 t = \\frac{2h}{c}; altitude must correlate with inertial\
+  \ navigation integration (h(t) \u2248 h_0 - \u2208t v_z dt).. Any divergence between\
+  \ commanded network state and this physical reading triggers sub-microsecond in-kernel\
+  \ eBPF packet mitigation."
+target_threat: Autonomous lunar/planetary landing terrain elevation spoofing
+core_invariant: "Pulse flight time \u0394 t = \\frac{2h}{c}; altitude must correlate\
+  \ with inertial navigation integration (h(t) \u2248 h_0 - \u2208t v_z dt)."
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40461:
+      name: s098_laser_altimeter_lidar_rangefinder_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40463:
+      name: s098_laser_altimeter_lidar_rangefinder_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s098_laser_altimeter_lidar_rangefinder_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Autonomous lunar/planetary landing terrain elevation
+    spoofing'

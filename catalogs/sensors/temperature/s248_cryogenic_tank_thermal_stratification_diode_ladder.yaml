@@ -1,0 +1,45 @@
+sensor_id: s248_cryogenic_tank_thermal_stratification_diode_ladder
+name: Cryogenic Tank Thermal Stratification Diode Ladder
+domain_id: 35
+domain_title: Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15248
+interface: Silicon Diode Cryo-Thermometer Tree
+description: 'Cryogenic Tank Thermal Stratification Diode Ladder is a specialized
+  Domain 35 (Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Silicon Diode Cryo-Thermometer Tree,
+  it is specifically engineered to mitigate and detect Rollover boil-off surge: sudden
+  turnover of stratified cryogenic liquid. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Temperature gradient across tank
+  depth: \frac{dT}{dz} <= 0.5\,K/m; stratification triggers automated bottom-mixer
+  circulation pumps.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: 'Rollover boil-off surge: sudden turnover of stratified cryogenic liquid'
+core_invariant: 'Temperature gradient across tank depth: \frac{dT}{dz} <= 0.5\,K/m;
+  stratification triggers automated bottom-mixer circulation pumps.'
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40381:
+      name: s248_cryogenic_tank_thermal_stratification_diode_ladder_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40383:
+      name: s248_cryogenic_tank_thermal_stratification_diode_ladder_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s248_cryogenic_tank_thermal_stratification_diode_ladder_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Rollover boil-off surge: sudden turnover of stratified
+    cryogenic liquid'

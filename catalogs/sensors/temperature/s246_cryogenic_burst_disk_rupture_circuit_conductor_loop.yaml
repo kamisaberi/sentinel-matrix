@@ -1,0 +1,44 @@
+sensor_id: s246_cryogenic_burst_disk_rupture_circuit_conductor_loop
+name: Cryogenic Burst Disk Rupture Circuit Conductor Loop
+domain_id: 35
+domain_title: Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15246
+interface: Intrinsically Safe Digital Sensing Loop
+description: "Cryogenic Burst Disk Rupture Circuit Conductor Loop is a specialized\
+  \ Domain 35 (Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Intrinsically Safe Digital Sensing\
+  \ Loop, it is specifically engineered to mitigate and detect Overpressure rupture,\
+  \ cryogenic vent stack backfire. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Continuous electrical continuity; disk rupture\
+  \ snaps conductor trace in < 1\\,\xB5s, opening secondary flare header bypass lines..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Overpressure rupture, cryogenic vent stack backfire
+core_invariant: "Continuous electrical continuity; disk rupture snaps conductor trace\
+  \ in < 1\\,\xB5s, opening secondary flare header bypass lines."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40361:
+      name: s246_cryogenic_burst_disk_rupture_circuit_conductor_loop_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40363:
+      name: s246_cryogenic_burst_disk_rupture_circuit_conductor_loop_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s246_cryogenic_burst_disk_rupture_circuit_conductor_loop_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Overpressure rupture, cryogenic vent stack backfire'

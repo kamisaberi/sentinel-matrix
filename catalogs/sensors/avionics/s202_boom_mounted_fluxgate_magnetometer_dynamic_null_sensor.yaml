@@ -1,0 +1,46 @@
+sensor_id: s202_boom_mounted_fluxgate_magnetometer_dynamic_null_sensor
+name: Boom-Mounted Fluxgate Magnetometer Dynamic Null Sensor
+domain_id: 29
+domain_title: Spacecraft Ionizing Radiation, Solar Wind & Magnetospheric Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15202
+interface: Non-Magnetic Dual-Core Probe
+description: 'Boom-Mounted Fluxgate Magnetometer Dynamic Null Sensor is a specialized
+  Domain 29 (Spacecraft Ionizing Radiation, Solar Wind & Magnetospheric Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Non-Magnetic Dual-Core Probe, it is
+  specifically engineered to mitigate and detect Spacecraft internal magnetic cleanliness
+  failure, thruster coil stray fields. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Spacecraft residual magnetic dipole moment \mathbf{M}_{sc}
+  <= 0.1\,A\cdotm^2; internal stray field subtraction ensures scientific magnetometer
+  accuracy.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Spacecraft internal magnetic cleanliness failure, thruster coil stray
+  fields
+core_invariant: Spacecraft residual magnetic dipole moment \mathbf{M}_{sc} <= 0.1\,A\cdotm^2;
+  internal stray field subtraction ensures scientific magnetometer accuracy.
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40441:
+      name: s202_boom_mounted_fluxgate_magnetometer_dynamic_null_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40443:
+      name: s202_boom_mounted_fluxgate_magnetometer_dynamic_null_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s202_boom_mounted_fluxgate_magnetometer_dynamic_null_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Spacecraft internal magnetic cleanliness failure,
+    thruster coil stray fields'

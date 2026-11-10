@@ -1,0 +1,45 @@
+sensor_id: s462_pulse_forming_network_pfn_spark_gap_voltage_probe
+name: Pulse-Forming Network (PFN) Spark-Gap Voltage Probe
+domain_id: 65
+domain_title: Directed-Energy Counter-Electronics (HPEM/HPM) Waveguide Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15462
+interface: High-Voltage Resistive-Capacitive Divider
+description: "Pulse-Forming Network (PFN) Spark-Gap Voltage Probe is a specialized\
+  \ Domain 65 (Directed-Energy Counter-Electronics (HPEM/HPM) Waveguide Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Voltage Resistive-Capacitive\
+  \ Divider, it is specifically engineered to mitigate and detect High-voltage spark-gap\
+  \ pre-firing, pulse distortion in microwave source. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: PFN charging voltage: V_{PFN}\
+  \ = V_{charge} \xB1 1.0\\%; pre-fire voltage transient inhibits master trigger generator..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: High-voltage spark-gap pre-firing, pulse distortion in microwave source
+core_invariant: "PFN charging voltage: V_{PFN} = V_{charge} \xB1 1.0\\%; pre-fire\
+  \ voltage transient inhibits master trigger generator."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40361:
+      name: s462_pulse_forming_network_pfn_spark_gap_voltage_probe_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40363:
+      name: s462_pulse_forming_network_pfn_spark_gap_voltage_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s462_pulse_forming_network_pfn_spark_gap_voltage_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: High-voltage spark-gap pre-firing, pulse distortion
+    in microwave source'

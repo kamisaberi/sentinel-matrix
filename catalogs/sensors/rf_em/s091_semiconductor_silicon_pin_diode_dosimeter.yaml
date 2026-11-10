@@ -1,0 +1,44 @@
+sensor_id: s091_semiconductor_silicon_pin_diode_dosimeter
+name: Semiconductor Silicon PIN Diode Dosimeter
+domain_id: 13
+domain_title: Nuclear, Radiological & Particle Detection Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15091
+interface: Direct Microcontroller ADC
+description: 'Semiconductor Silicon PIN Diode Dosimeter is a specialized Domain 13
+  (Nuclear, Radiological & Particle Detection Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Direct Microcontroller ADC, it is specifically engineered
+  to mitigate and detect Covert radiation exposure of personnel, facility shielding
+  breach. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Cumulative ionizing radiation dose integration; triggers physical personnel
+  evacuation alarms when limit is reached.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Covert radiation exposure of personnel, facility shielding breach
+core_invariant: Cumulative ionizing radiation dose integration; triggers physical
+  personnel evacuation alarms when limit is reached.
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40401:
+      name: s091_semiconductor_silicon_pin_diode_dosimeter_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40403:
+      name: s091_semiconductor_silicon_pin_diode_dosimeter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s091_semiconductor_silicon_pin_diode_dosimeter_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Covert radiation exposure of personnel, facility
+    shielding breach'

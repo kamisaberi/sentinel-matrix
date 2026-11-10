@@ -1,0 +1,46 @@
+sensor_id: s327_optical_molasses_acousto_optic_modulator_aom_rf_sensor
+name: Optical Molasses Acousto-Optic Modulator (AOM) RF Sensor
+domain_id: 46
+domain_title: Quantum Gravimetry & Cold Atom Inertial Sensors
+category: QUANTUM
+target_protocol: MODBUS_TCP
+default_port: 15327
+interface: Directional RF Power Coupler
+description: "Optical Molasses Acousto-Optic Modulator (AOM) RF Sensor is a specialized\
+  \ Domain 46 (Quantum Gravimetry & Cold Atom Inertial Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Directional RF Power Coupler, it is specifically\
+  \ engineered to mitigate and detect Laser detuning attack, Doppler cooling failure,\
+  \ thermal expansion of atoms. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Laser cooling detuning \\delta = \\omega_L\
+  \ - \\omega_0 \u2248 -\\Gamma/2; RF carrier frequency shift > 100\\,kHz trips fail-safe\
+  \ laser shutter.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Laser detuning attack, Doppler cooling failure, thermal expansion of
+  atoms
+core_invariant: "Laser cooling detuning \\delta = \\omega_L - \\omega_0 \u2248 -\\\
+  Gamma/2; RF carrier frequency shift > 100\\,kHz trips fail-safe laser shutter."
+physics:
+  engine: quantum_squid
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mK
+registers:
+  holding_registers:
+    40111:
+      name: s327_optical_molasses_acousto_optic_modulator_aom_rf_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mK
+    40113:
+      name: s327_optical_molasses_acousto_optic_modulator_aom_rf_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s327_optical_molasses_acousto_optic_modulator_aom_rf_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Laser detuning attack, Doppler cooling failure, thermal
+    expansion of atoms'

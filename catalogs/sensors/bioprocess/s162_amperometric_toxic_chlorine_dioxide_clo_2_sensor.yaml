@@ -1,0 +1,45 @@
+sensor_id: s162_amperometric_toxic_chlorine_dioxide_clo_2_sensor
+name: Amperometric Toxic Chlorine Dioxide (ClO_2) Sensor
+domain_id: 23
+domain_title: Environmental Biosecurity, Pathogen & CBRN Defense Sensors
+category: BIOPROCESS
+target_protocol: MODBUS_TCP
+default_port: 15162
+interface: 3-Electrode Membrane Galvanic Cell
+description: "Amperometric Toxic Chlorine Dioxide (ClO_2) Sensor is a specialized\
+  \ Domain 23 (Environmental Biosecurity, Pathogen & CBRN Defense Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via 3-Electrode Membrane Galvanic Cell,\
+  \ it is specifically engineered to mitigate and detect Drinking water disinfection\
+  \ overdosing / chlorination attack. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Direct electrochemical reduction current: I\
+  \ \u221D [ClO_2]; concentration > 0.8\\,mg/L (EPA maximum) trips dosing pump power\
+  \ relays.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Drinking water disinfection overdosing / chlorination attack
+core_invariant: "Direct electrochemical reduction current: I \u221D [ClO_2]; concentration\
+  \ > 0.8\\,mg/L (EPA maximum) trips dosing pump power relays."
+physics:
+  engine: bioprocess_cell
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: pH
+registers:
+  holding_registers:
+    40071:
+      name: s162_amperometric_toxic_chlorine_dioxide_clo_2_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: pH
+    40073:
+      name: s162_amperometric_toxic_chlorine_dioxide_clo_2_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s162_amperometric_toxic_chlorine_dioxide_clo_2_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Drinking water disinfection overdosing / chlorination
+    attack'

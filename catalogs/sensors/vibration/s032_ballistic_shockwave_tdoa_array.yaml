@@ -1,0 +1,44 @@
+sensor_id: s032_ballistic_shockwave_tdoa_array
+name: Ballistic Shockwave TDOA Array
+domain_id: 5
+domain_title: Acoustic, Ultrasonic & Vibration Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15032
+interface: 4-Channel Synchronized ADC (Idea 20)
+description: 'Ballistic Shockwave TDOA Array is a specialized Domain 05 (Acoustic,
+  Ultrasonic & Vibration Sensors) cyber-physical monitoring sensor. Interfacing directly
+  via 4-Channel Synchronized ADC (Idea 20), it is specifically engineered to mitigate
+  and detect Sniper attacks on electrical substations (Metcalf incident). In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Hyperbolic
+  Time-Difference-of-Arrival locates shooter azimuth in < 15\,ms.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Sniper attacks on electrical substations (Metcalf incident)
+core_invariant: Hyperbolic Time-Difference-of-Arrival locates shooter azimuth in <
+  15\,ms.
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40311:
+      name: s032_ballistic_shockwave_tdoa_array_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40313:
+      name: s032_ballistic_shockwave_tdoa_array_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s032_ballistic_shockwave_tdoa_array_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Sniper attacks on electrical substations (Metcalf
+    incident)'

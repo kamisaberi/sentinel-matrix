@@ -1,0 +1,43 @@
+sensor_id: s036_substation_busbar_optical_pyrometer
+name: Substation Busbar Optical Pyrometer
+domain_id: 6
+domain_title: Thermal, Infrared & Cryogenic Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15036
+interface: Non-Contact Infrared Sensor
+description: 'Substation Busbar Optical Pyrometer is a specialized Domain 06 (Thermal,
+  Infrared & Cryogenic Sensors) cyber-physical monitoring sensor. Interfacing directly
+  via Non-Contact Infrared Sensor, it is specifically engineered to mitigate and detect
+  Electrical switchgear arc-flash, loose high-resistance lug. In the Aryorithm edge
+  architecture, it continuously asserts the operational invariant: Contact temperature
+  > 90^\circC forces breaker trip before fire ignition.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Electrical switchgear arc-flash, loose high-resistance lug
+core_invariant: Contact temperature > 90^\circC forces breaker trip before fire ignition.
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40351:
+      name: s036_substation_busbar_optical_pyrometer_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40353:
+      name: s036_substation_busbar_optical_pyrometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s036_substation_busbar_optical_pyrometer_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Electrical switchgear arc-flash, loose high-resistance
+    lug'

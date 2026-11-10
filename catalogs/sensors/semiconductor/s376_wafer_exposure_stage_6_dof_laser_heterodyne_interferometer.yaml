@@ -1,0 +1,46 @@
+sensor_id: s376_wafer_exposure_stage_6_dof_laser_heterodyne_interferometer
+name: Wafer Exposure Stage 6-DOF Laser Heterodyne Interferometer
+domain_id: 53
+domain_title: Extreme Ultraviolet (EUV) Lithography Optics & Sn-Plasma Sensors
+category: SEMICONDUCTOR
+target_protocol: MODBUS_TCP
+default_port: 15376
+interface: 12-Axis Dual-Frequency Optical Interferometer
+description: "Wafer Exposure Stage 6-DOF Laser Heterodyne Interferometer is a specialized\
+  \ Domain 53 (Extreme Ultraviolet (EUV) Lithography Optics & Sn-Plasma Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via 12-Axis Dual-Frequency Optical Interferometer,\
+  \ it is specifically engineered to mitigate and detect Stage overlay positioning\
+  \ spoofing, nanoscale transistor pattern distortion. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Stage positioning accuracy:\
+  \ \u0394 x, \u0394 y <= 0.3\\,nm; phase tracking jitter > 20\\,picoseconds drops\
+  \ stage drive current in < 1.0\\,\xB5s.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Stage overlay positioning spoofing, nanoscale transistor pattern distortion
+core_invariant: "Stage positioning accuracy: \u0394 x, \u0394 y <= 0.3\\,nm; phase\
+  \ tracking jitter > 20\\,picoseconds drops stage drive current in < 1.0\\,\xB5s."
+physics:
+  engine: vacuum_plasma
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mbar
+registers:
+  holding_registers:
+    40071:
+      name: s376_wafer_exposure_stage_6_dof_laser_heterodyne_interferometer_pv
+      type: float32
+      scale: 1.0
+      unit: mbar
+    40073:
+      name: s376_wafer_exposure_stage_6_dof_laser_heterodyne_interferometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s376_wafer_exposure_stage_6_dof_laser_heterodyne_interferometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Stage overlay positioning spoofing, nanoscale transistor
+    pattern distortion'

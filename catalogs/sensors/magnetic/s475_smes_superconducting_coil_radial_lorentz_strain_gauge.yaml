@@ -1,0 +1,46 @@
+sensor_id: s475_smes_superconducting_coil_radial_lorentz_strain_gauge
+name: SMES Superconducting Coil Radial Lorentz Strain Gauge
+domain_id: 67
+domain_title: Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15475
+interface: Non-Inductive Optical FBG Strain Gauge
+description: 'SMES Superconducting Coil Radial Lorentz Strain Gauge is a specialized
+  Domain 67 (Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Non-Inductive Optical
+  FBG Strain Gauge, it is specifically engineered to mitigate and detect Hoop stress
+  mechanical delamination, magnetic coil burst failure. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Radial magnetic body force: F_r
+  = J_\theta \cdot B_z; structural hoop strain \epsilon_\theta <= 0.25\%; strain limit
+  breach trips energy extraction converter.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hoop stress mechanical delamination, magnetic coil burst failure
+core_invariant: 'Radial magnetic body force: F_r = J_\theta \cdot B_z; structural
+  hoop strain \epsilon_\theta <= 0.25\%; strain limit breach trips energy extraction
+  converter.'
+physics:
+  engine: magnetic_flux
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: uT
+registers:
+  holding_registers:
+    40491:
+      name: s475_smes_superconducting_coil_radial_lorentz_strain_gauge_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40493:
+      name: s475_smes_superconducting_coil_radial_lorentz_strain_gauge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s475_smes_superconducting_coil_radial_lorentz_strain_gauge_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Hoop stress mechanical delamination, magnetic coil
+    burst failure'

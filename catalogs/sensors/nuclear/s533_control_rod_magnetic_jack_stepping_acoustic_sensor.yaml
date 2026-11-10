@@ -1,0 +1,47 @@
+sensor_id: s533_control_rod_magnetic_jack_stepping_acoustic_sensor
+name: Control Rod Magnetic Jack Stepping Acoustic Sensor
+domain_id: 75
+domain_title: Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety
+  Sensors
+category: NUCLEAR
+target_protocol: MODBUS_TCP
+default_port: 15533
+interface: Accelerometer Clamped to Drive Housing
+description: "Control Rod Magnetic Jack Stepping Acoustic Sensor is a specialized\
+  \ Domain 75 (Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety\
+  \ Sensors) cyber-physical monitoring sensor. Interfacing directly via Accelerometer\
+  \ Clamped to Drive Housing, it is specifically engineered to mitigate and detect\
+  \ Control rod drive mechanism (CRDM) stepping hesitation, rod drop jam. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Acoustic\
+  \ impact signature confirms mechanical gripper latching: t_{step} = 100\\,ms \xB1\
+  \ 5\\,ms; missing click halts stepping sequence to prevent rod drop.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Control rod drive mechanism (CRDM) stepping hesitation, rod drop jam
+core_invariant: "Acoustic impact signature confirms mechanical gripper latching: t_{step}\
+  \ = 100\\,ms \xB1 5\\,ms; missing click halts stepping sequence to prevent rod drop."
+physics:
+  engine: nuclear_decay
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: uSv/h
+registers:
+  holding_registers:
+    40031:
+      name: s533_control_rod_magnetic_jack_stepping_acoustic_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: uSv/h
+    40033:
+      name: s533_control_rod_magnetic_jack_stepping_acoustic_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s533_control_rod_magnetic_jack_stepping_acoustic_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Control rod drive mechanism (CRDM) stepping hesitation,
+    rod drop jam'

@@ -1,0 +1,47 @@
+sensor_id: s513_titanium_grid_fin_electro_mechanical_actuator_ema_resolver
+name: Titanium Grid Fin Electro-Mechanical Actuator (EMA) Resolver
+domain_id: 73
+domain_title: Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15513
+interface: Dual High-Accuracy Brushless Resolver
+description: "Titanium Grid Fin Electro-Mechanical Actuator (EMA) Resolver is a specialized\
+  \ Domain 73 (Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Dual High-Accuracy\
+  \ Brushless Resolver, it is specifically engineered to mitigate and detect Grid\
+  \ fin control lock, hypersonic roll/pitch control authority loss. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Fin deflection\
+  \ angle: \\delta_{fin} = \\delta_{cmd} \xB1 0.15^\\circ; position mismatch transfers\
+  \ actuation to redundant motor windings in < 2\\,ms.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Grid fin control lock, hypersonic roll/pitch control authority loss
+core_invariant: "Fin deflection angle: \\delta_{fin} = \\delta_{cmd} \xB1 0.15^\\\
+  circ; position mismatch transfers actuation to redundant motor windings in < 2\\\
+  ,ms."
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40361:
+      name: s513_titanium_grid_fin_electro_mechanical_actuator_ema_resolver_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40363:
+      name: s513_titanium_grid_fin_electro_mechanical_actuator_ema_resolver_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s513_titanium_grid_fin_electro_mechanical_actuator_ema_resolver_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Grid fin control lock, hypersonic roll/pitch control
+    authority loss'

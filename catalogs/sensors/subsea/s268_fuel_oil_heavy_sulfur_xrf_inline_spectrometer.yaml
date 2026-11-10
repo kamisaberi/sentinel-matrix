@@ -1,0 +1,45 @@
+sensor_id: s268_fuel_oil_heavy_sulfur_xrf_inline_spectrometer
+name: Fuel Oil Heavy Sulfur XRF Inline Spectrometer
+domain_id: 38
+domain_title: Autonomous Marine Vessel Propulsion & Ballast Biosecurity Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15268
+interface: Energy-Dispersive X-Ray Fluorescence
+description: 'Fuel Oil Heavy Sulfur XRF Inline Spectrometer is a specialized Domain
+  38 (Autonomous Marine Vessel Propulsion & Ballast Biosecurity Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Energy-Dispersive X-Ray Fluorescence,
+  it is specifically engineered to mitigate and detect Illegal burning of high-sulfur
+  heavy fuel oil (IMO 2020 MARPOL breach). In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Characteristic sulfur K-alpha X-ray
+  emission (2.307\,keV); sulfur mass fraction: S_{mass} <= 0.50\% m/m in non-ECA waters
+  (0.10\% in ECAs).. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Illegal burning of high-sulfur heavy fuel oil (IMO 2020 MARPOL breach)
+core_invariant: 'Characteristic sulfur K-alpha X-ray emission (2.307\,keV); sulfur
+  mass fraction: S_{mass} <= 0.50\% m/m in non-ECA waters (0.10\% in ECAs).'
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40081:
+      name: s268_fuel_oil_heavy_sulfur_xrf_inline_spectrometer_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40083:
+      name: s268_fuel_oil_heavy_sulfur_xrf_inline_spectrometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s268_fuel_oil_heavy_sulfur_xrf_inline_spectrometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Illegal burning of high-sulfur heavy fuel oil (IMO
+    2020 MARPOL breach)'

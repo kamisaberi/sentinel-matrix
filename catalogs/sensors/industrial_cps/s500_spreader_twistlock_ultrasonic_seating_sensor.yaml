@@ -1,0 +1,45 @@
+sensor_id: s500_spreader_twistlock_ultrasonic_seating_sensor
+name: Spreader Twistlock Ultrasonic Seating Sensor
+domain_id: 71
+domain_title: Autonomous Port Container Straddle Carrier & AGV Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15500
+interface: High-Frequency Ultrasonic Echo Probe
+description: 'Spreader Twistlock Ultrasonic Seating Sensor is a specialized Domain
+  71 (Autonomous Port Container Straddle Carrier & AGV Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via High-Frequency Ultrasonic Echo Probe, it is specifically
+  engineered to mitigate and detect Partial twistlock engagement, container drop from
+  15 meters height. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Acoustic round-trip echo confirms all 4 twistlocks are fully
+  inserted into corner-castings before mechanical rotation: d_{gap} <= 2.0\,mm.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Partial twistlock engagement, container drop from 15 meters height
+core_invariant: 'Acoustic round-trip echo confirms all 4 twistlocks are fully inserted
+  into corner-castings before mechanical rotation: d_{gap} <= 2.0\,mm.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40231:
+      name: s500_spreader_twistlock_ultrasonic_seating_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40233:
+      name: s500_spreader_twistlock_ultrasonic_seating_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s500_spreader_twistlock_ultrasonic_seating_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Partial twistlock engagement, container drop from
+    15 meters height'

@@ -1,0 +1,45 @@
+sensor_id: s075_search_coil_induction_magnetometer
+name: Search Coil (Induction Magnetometer)
+domain_id: 11
+domain_title: Magnetic, Fluxgate & Magnetohydrodynamic (MHD) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15075
+interface: Wideband High-Gain Pre-Amp
+description: 'Search Coil (Induction Magnetometer) is a specialized Domain 11 (Magnetic,
+  Fluxgate & Magnetohydrodynamic (MHD) Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Wideband High-Gain Pre-Amp, it is specifically engineered
+  to mitigate and detect Intentional Electromagnetic Interference (IEMI), EMP pulse
+  detection. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Detects rapid magnetic field transients \frac{d\mathbf{B}}{dt} > 10^6\,T/s,
+  triggering ultra-fast hardware decoupling crowbars.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Intentional Electromagnetic Interference (IEMI), EMP pulse detection
+core_invariant: Detects rapid magnetic field transients \frac{d\mathbf{B}}{dt} > 10^6\,T/s,
+  triggering ultra-fast hardware decoupling crowbars.
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40241:
+      name: s075_search_coil_induction_magnetometer_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40243:
+      name: s075_search_coil_induction_magnetometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s075_search_coil_induction_magnetometer_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Intentional Electromagnetic Interference (IEMI),
+    EMP pulse detection'

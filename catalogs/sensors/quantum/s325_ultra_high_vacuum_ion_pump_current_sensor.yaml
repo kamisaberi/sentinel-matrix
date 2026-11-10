@@ -1,0 +1,45 @@
+sensor_id: s325_ultra_high_vacuum_ion_pump_current_sensor
+name: Ultra-High Vacuum Ion Pump Current Sensor
+domain_id: 46
+domain_title: Quantum Gravimetry & Cold Atom Inertial Sensors
+category: QUANTUM
+target_protocol: MODBUS_TCP
+default_port: 15325
+interface: Microampere Electrometer
+description: "Ultra-High Vacuum Ion Pump Current Sensor is a specialized Domain 46\
+  \ (Quantum Gravimetry & Cold Atom Inertial Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via Microampere Electrometer, it is specifically engineered\
+  \ to mitigate and detect Vacuum chamber micro-leakage, background gas collision\
+  \ decoherence. In the Aryorithm edge architecture, it continuously asserts the operational\
+  \ invariant: Chamber pressure P \u221D I_{pump}; vacuum level P <= 10^{-10}\\,mbar\
+  \ required to maintain atom interferometer coherence time > 1.0\\,s.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Vacuum chamber micro-leakage, background gas collision decoherence
+core_invariant: "Chamber pressure P \u221D I_{pump}; vacuum level P <= 10^{-10}\\\
+  ,mbar required to maintain atom interferometer coherence time > 1.0\\,s."
+physics:
+  engine: quantum_squid
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mK
+registers:
+  holding_registers:
+    40091:
+      name: s325_ultra_high_vacuum_ion_pump_current_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: mK
+    40093:
+      name: s325_ultra_high_vacuum_ion_pump_current_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s325_ultra_high_vacuum_ion_pump_current_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Vacuum chamber micro-leakage, background gas collision
+    decoherence'

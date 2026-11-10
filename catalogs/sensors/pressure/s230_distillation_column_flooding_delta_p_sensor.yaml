@@ -1,0 +1,45 @@
+sensor_id: s230_distillation_column_flooding_delta_p_sensor
+name: Distillation Column Flooding Delta-P Sensor
+domain_id: 33
+domain_title: Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15230
+interface: Multi-Point Diaphragm Transmitter
+description: "Distillation Column Flooding Delta-P Sensor is a specialized Domain\
+  \ 33 (Petrochemical Refining & Fluid Catalytic Cracking (FCC) Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Multi-Point Diaphragm Transmitter,\
+  \ it is specifically engineered to mitigate and detect Fractionation column liquid\
+  \ flooding, tray collapse. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Pressure drop across tray pack: \u0394 P_{tray} <=\
+  \ \u0394 P_{flood\\_limit}; excessive \u0394 P indicates liquid entrainment; throttles\
+  \ reboiler steam in < 1\\,second.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Fractionation column liquid flooding, tray collapse
+core_invariant: "Pressure drop across tray pack: \u0394 P_{tray} <= \u0394 P_{flood\\\
+  _limit}; excessive \u0394 P indicates liquid entrainment; throttles reboiler steam\
+  \ in < 1\\,second."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40201:
+      name: s230_distillation_column_flooding_delta_p_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40203:
+      name: s230_distillation_column_flooding_delta_p_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s230_distillation_column_flooding_delta_p_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Fractionation column liquid flooding, tray collapse'

@@ -1,0 +1,46 @@
+sensor_id: s262_seafloor_riser_flexible_joint_angle_inclinometer
+name: Seafloor Riser Flexible Joint Angle Inclinometer
+domain_id: 37
+domain_title: Subsea Well Intervention, Choke & Hydrate Management Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15262
+interface: "Dual-Axis Subsea Inclinometer (\xB1 10^\\circ)"
+description: "Seafloor Riser Flexible Joint Angle Inclinometer is a specialized Domain\
+  \ 37 (Subsea Well Intervention, Choke & Hydrate Management Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Dual-Axis Subsea Inclinometer (\xB1\
+  \ 10^\\circ), it is specifically engineered to mitigate and detect Extreme ocean\
+  \ current displacement, riser flex-joint fatigue failure. In the Aryorithm edge\
+  \ architecture, it continuously asserts the operational invariant: Riser angle:\
+  \ \\theta_{joint} <= 4.5^\\circ; angle exceeding boundary commands dynamic-positioning\
+  \ (DP) drilling vessel offset re-positioning.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Extreme ocean current displacement, riser flex-joint fatigue failure
+core_invariant: 'Riser angle: \theta_{joint} <= 4.5^\circ; angle exceeding boundary
+  commands dynamic-positioning (DP) drilling vessel offset re-positioning.'
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40021:
+      name: s262_seafloor_riser_flexible_joint_angle_inclinometer_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40023:
+      name: s262_seafloor_riser_flexible_joint_angle_inclinometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s262_seafloor_riser_flexible_joint_angle_inclinometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Extreme ocean current displacement, riser flex-joint
+    fatigue failure'

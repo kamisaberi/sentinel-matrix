@@ -1,0 +1,46 @@
+sensor_id: s349_hydraulic_excavator_joint_rotary_resolver_boom_stick_bucket
+name: Hydraulic Excavator Joint Rotary Resolver (Boom, Stick, Bucket)
+domain_id: 50
+domain_title: Autonomous Heavy Earthmoving & Excavator Kinematic Sensors
+category: KINEMATIC
+target_protocol: MODBUS_TCP
+default_port: 15349
+interface: Heavy-Duty Brushless Resolver
+description: 'Hydraulic Excavator Joint Rotary Resolver (Boom, Stick, Bucket) is a
+  specialized Domain 50 (Autonomous Heavy Earthmoving & Excavator Kinematic Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Heavy-Duty Brushless
+  Resolver, it is specifically engineered to mitigate and detect Bucket kinematic
+  position error, underground high-voltage utility strike. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Forward kinematics: \mathbf{p}_{bucket}
+  = \mathbf{T}_1(\theta_1)\mathbf{T}_2(\theta_2)\mathbf{T}_3(\theta_3)\mathbf{p}_0;
+  prevents bucket entry into forbidden excavation zone.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Bucket kinematic position error, underground high-voltage utility strike
+core_invariant: 'Forward kinematics: \mathbf{p}_{bucket} = \mathbf{T}_1(\theta_1)\mathbf{T}_2(\theta_2)\mathbf{T}_3(\theta_3)\mathbf{p}_0;
+  prevents bucket entry into forbidden excavation zone.'
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -180.0
+  max_value: 180.0
+  noise_sigma: 0.02
+  unit: mm
+registers:
+  holding_registers:
+    40331:
+      name: s349_hydraulic_excavator_joint_rotary_resolver_boom_stick_bucket_pv
+      type: float32
+      scale: 1.0
+      unit: mm
+    40333:
+      name: s349_hydraulic_excavator_joint_rotary_resolver_boom_stick_bucket_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s349_hydraulic_excavator_joint_rotary_resolver_boom_stick_bucket_fault
+  action: step_increase
+  value: 45.0
+  description: 'Injects anomaly: Bucket kinematic position error, underground high-voltage
+    utility strike'

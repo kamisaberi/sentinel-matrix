@@ -1,0 +1,45 @@
+sensor_id: s366_condenser_seawater_scoop_cavitation_hydrophone
+name: Condenser Seawater Scoop Cavitation Hydrophone
+domain_id: 52
+domain_title: Naval Submarine Acoustic Stealth & Hull Integrity Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15366
+interface: Hydrodynamic Flush Hydrophone Array
+description: 'Condenser Seawater Scoop Cavitation Hydrophone is a specialized Domain
+  52 (Naval Submarine Acoustic Stealth & Hull Integrity Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Hydrodynamic Flush Hydrophone Array, it is specifically
+  engineered to mitigate and detect Main condenser seawater scoop cavitation during
+  high-speed sprint. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Ultrasonic noise level (10--50\,kHz); cavitation inception
+  detection throttles submarine speed to restore acoustic stealth.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Main condenser seawater scoop cavitation during high-speed sprint
+core_invariant: Ultrasonic noise level (10--50\,kHz); cavitation inception detection
+  throttles submarine speed to restore acoustic stealth.
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40491:
+      name: s366_condenser_seawater_scoop_cavitation_hydrophone_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40493:
+      name: s366_condenser_seawater_scoop_cavitation_hydrophone_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s366_condenser_seawater_scoop_cavitation_hydrophone_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Main condenser seawater scoop cavitation during high-speed
+    sprint'

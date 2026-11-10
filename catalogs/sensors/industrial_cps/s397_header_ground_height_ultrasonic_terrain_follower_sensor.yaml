@@ -1,0 +1,45 @@
+sensor_id: s397_header_ground_height_ultrasonic_terrain_follower_sensor
+name: Header Ground Height Ultrasonic Terrain Follower Sensor
+domain_id: 56
+domain_title: Autonomous Agricultural Combine Harvester & Grain Loss Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15397
+interface: Dual Ultrasonic Transducers on Wing Tips
+description: "Header Ground Height Ultrasonic Terrain Follower Sensor is a specialized\
+  \ Domain 56 (Autonomous Agricultural Combine Harvester & Grain Loss Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Dual Ultrasonic Transducers on Wing\
+  \ Tips, it is specifically engineered to mitigate and detect Header ground strike,\
+  \ cutter bar knife destruction on uneven terrain. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Header ground clearance: h_{header}\
+  \ = h_{setpoint} \xB1 20\\,mm; dynamic hydraulic tilt cylinders adjust header roll\
+  \ in < 100\\,ms.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Header ground strike, cutter bar knife destruction on uneven terrain
+core_invariant: "Header ground clearance: h_{header} = h_{setpoint} \xB1 20\\,mm;\
+  \ dynamic hydraulic tilt cylinders adjust header roll in < 100\\,ms."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40241:
+      name: s397_header_ground_height_ultrasonic_terrain_follower_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40243:
+      name: s397_header_ground_height_ultrasonic_terrain_follower_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s397_header_ground_height_ultrasonic_terrain_follower_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Header ground strike, cutter bar knife destruction
+    on uneven terrain'

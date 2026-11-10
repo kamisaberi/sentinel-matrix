@@ -1,0 +1,45 @@
+sensor_id: s410_cargo_loading_manifold_emergency_release_coupler_erc_sensor
+name: Cargo Loading Manifold Emergency Release Coupler (ERC) Sensor
+domain_id: 58
+domain_title: Liquefied Natural Gas (LNG) Carrier Tank Sloshing & Boil-Off Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15410
+interface: Hydraulic Interlock Proximity Switch
+description: 'Cargo Loading Manifold Emergency Release Coupler (ERC) Sensor is a specialized
+  Domain 58 (Liquefied Natural Gas (LNG) Carrier Tank Sloshing & Boil-Off Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Hydraulic Interlock Proximity
+  Switch, it is specifically engineered to mitigate and detect Ship drift-off during
+  loading, cryogenic LNG hose rupture. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Breakaway coupler status: Hydraulic interlock
+  confirms dual ball valves are fully closed before dry-break bolts fire in < 2.0\,seconds..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Ship drift-off during loading, cryogenic LNG hose rupture
+core_invariant: 'Breakaway coupler status: Hydraulic interlock confirms dual ball
+  valves are fully closed before dry-break bolts fire in < 2.0\,seconds.'
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40361:
+      name: s410_cargo_loading_manifold_emergency_release_coupler_erc_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40363:
+      name: s410_cargo_loading_manifold_emergency_release_coupler_erc_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s410_cargo_loading_manifold_emergency_release_coupler_erc_sensor_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Ship drift-off during loading, cryogenic LNG hose
+    rupture'

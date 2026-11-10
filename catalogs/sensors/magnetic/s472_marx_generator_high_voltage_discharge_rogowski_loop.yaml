@@ -1,0 +1,46 @@
+sensor_id: s472_marx_generator_high_voltage_discharge_rogowski_loop
+name: Marx Generator High-Voltage Discharge Rogowski Loop
+domain_id: 67
+domain_title: Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors
+category: MAGNETIC
+target_protocol: MODBUS_TCP
+default_port: 15472
+interface: Sub-Nanosecond Self-Integrating Coil
+description: 'Marx Generator High-Voltage Discharge Rogowski Loop is a specialized
+  Domain 67 (Superconducting Magnetic Energy Storage (SMES) & Pulsed Power Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Sub-Nanosecond Self-Integrating
+  Coil, it is specifically engineered to mitigate and detect Asymmetric stage erection,
+  capacitor reverse polarity breakdown. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Current rise time: \frac{dI}{dt} >= 10^{12}\,A/s;
+  peak current must match stage erect voltage: I_{peak} = \frac{n \cdot V_0}{Z_{system}};
+  misfire halts charging.. Any divergence between commanded network state and this
+  physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Asymmetric stage erection, capacitor reverse polarity breakdown
+core_invariant: 'Current rise time: \frac{dI}{dt} >= 10^{12}\,A/s; peak current must
+  match stage erect voltage: I_{peak} = \frac{n \cdot V_0}{Z_{system}}; misfire halts
+  charging.'
+physics:
+  engine: magnetic_flux
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: uT
+registers:
+  holding_registers:
+    40461:
+      name: s472_marx_generator_high_voltage_discharge_rogowski_loop_pv
+      type: float32
+      scale: 1.0
+      unit: uT
+    40463:
+      name: s472_marx_generator_high_voltage_discharge_rogowski_loop_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s472_marx_generator_high_voltage_discharge_rogowski_loop_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Asymmetric stage erection, capacitor reverse polarity
+    breakdown'

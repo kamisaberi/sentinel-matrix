@@ -1,0 +1,44 @@
+sensor_id: s094_total_air_temperature_tat_rosemount_probe
+name: Total Air Temperature (TAT) Rosemount Probe
+domain_id: 14
+domain_title: Aerospace, Avionics & Spacecraft Physical Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15094
+interface: Platinum RTD (ARINC 429)
+description: 'Total Air Temperature (TAT) Rosemount Probe is a specialized Domain
+  14 (Aerospace, Avionics & Spacecraft Physical Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Platinum RTD (ARINC 429), it is specifically engineered
+  to mitigate and detect Jet engine compressor face icing, false Mach number calculation.
+  In the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Stagnation temperature T_{total} = T_{static}<=ft(1 + \frac{\gamma - 1}{2} M^2\right);
+  mismatch detects heater failure or icing.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Jet engine compressor face icing, false Mach number calculation
+core_invariant: Stagnation temperature T_{total} = T_{static}<=ft(1 + \frac{\gamma
+  - 1}{2} M^2\right); mismatch detects heater failure or icing.
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40421:
+      name: s094_total_air_temperature_tat_rosemount_probe_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40423:
+      name: s094_total_air_temperature_tat_rosemount_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s094_total_air_temperature_tat_rosemount_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Jet engine compressor face icing, false Mach number
+    calculation'

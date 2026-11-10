@@ -1,0 +1,44 @@
+sensor_id: s212_sub_cycle_rate_of_change_of_frequency_rocof_probe
+name: Sub-Cycle Rate of Change of Frequency (ROCOF) Probe
+domain_id: 30
+domain_title: Electrical Grid Frequency, Power Quality & High-Harmonic Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15212
+interface: Sliding-Window Phasor Estimator
+description: 'Sub-Cycle Rate of Change of Frequency (ROCOF) Probe is a specialized
+  Domain 30 (Electrical Grid Frequency, Power Quality & High-Harmonic Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Sliding-Window Phasor Estimator, it
+  is specifically engineered to mitigate and detect Microgrid inverter cascading trip,
+  inertia loss blackout. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Frequency rate of change: \frac{df}{dt} <= 1.0\,Hz/s;
+  breach triggers immediate Fast Frequency Response (FFR) battery injection in < 5\,ms..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Microgrid inverter cascading trip, inertia loss blackout
+core_invariant: 'Frequency rate of change: \frac{df}{dt} <= 1.0\,Hz/s; breach triggers
+  immediate Fast Frequency Response (FFR) battery injection in < 5\,ms.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40031:
+      name: s212_sub_cycle_rate_of_change_of_frequency_rocof_probe_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40033:
+      name: s212_sub_cycle_rate_of_change_of_frequency_rocof_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s212_sub_cycle_rate_of_change_of_frequency_rocof_probe_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Microgrid inverter cascading trip, inertia loss blackout'

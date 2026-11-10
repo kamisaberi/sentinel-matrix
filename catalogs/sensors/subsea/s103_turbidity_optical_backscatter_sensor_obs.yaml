@@ -1,0 +1,44 @@
+sensor_id: s103_turbidity_optical_backscatter_sensor_obs
+name: Turbidity Optical Backscatter Sensor (OBS)
+domain_id: 15
+domain_title: Deep Marine, Subsea & Oceanographic Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15103
+interface: Infrared Scattering Diode (850 nm)
+description: 'Turbidity Optical Backscatter Sensor (OBS) is a specialized Domain 15
+  (Deep Marine, Subsea & Oceanographic Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Infrared Scattering Diode (850 nm), it is specifically
+  engineered to mitigate and detect Illegal seabed dredging, covert submarine trenching
+  near cables. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Backscatter nephelometric turbidity units (NTU); sudden plume spike flags
+  physical excavation near subsea fiber lines.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Illegal seabed dredging, covert submarine trenching near cables
+core_invariant: Backscatter nephelometric turbidity units (NTU); sudden plume spike
+  flags physical excavation near subsea fiber lines.
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40011:
+      name: s103_turbidity_optical_backscatter_sensor_obs_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40013:
+      name: s103_turbidity_optical_backscatter_sensor_obs_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s103_turbidity_optical_backscatter_sensor_obs_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Illegal seabed dredging, covert submarine trenching
+    near cables'

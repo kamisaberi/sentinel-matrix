@@ -1,0 +1,46 @@
+sensor_id: s191_control_rod_drive_crdm_latch_coil_current_sensor
+name: Control Rod Drive (CRDM) Latch Coil Current Sensor
+domain_id: 27
+domain_title: Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15191
+interface: Hall-Effect Current Shunt on Magnet Coils
+description: 'Control Rod Drive (CRDM) Latch Coil Current Sensor is a specialized
+  Domain 27 (Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Hall-Effect Current Shunt on Magnet
+  Coils, it is specifically engineered to mitigate and detect Control rod drop hesitation,
+  electromagnetic gripper sabotage. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Coil de-energization current decay curve: I(t)
+  = I_0 e^{-t/\tau}; decay time constant \tau > 15\,ms indicates inductive jamming
+  or mechanical latch seizure.. Any divergence between commanded network state and
+  this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Control rod drop hesitation, electromagnetic gripper sabotage
+core_invariant: 'Coil de-energization current decay curve: I(t) = I_0 e^{-t/\tau};
+  decay time constant \tau > 15\,ms indicates inductive jamming or mechanical latch
+  seizure.'
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40351:
+      name: s191_control_rod_drive_crdm_latch_coil_current_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40353:
+      name: s191_control_rod_drive_crdm_latch_coil_current_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s191_control_rod_drive_crdm_latch_coil_current_sensor_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Control rod drop hesitation, electromagnetic gripper
+    sabotage'

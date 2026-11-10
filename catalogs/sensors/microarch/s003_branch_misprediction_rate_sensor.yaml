@@ -1,0 +1,42 @@
+sensor_id: s003_branch_misprediction_rate_sensor
+name: Branch Misprediction Rate Sensor
+domain_id: 1
+domain_title: Microarchitectural, CPU & Memory Sensors (Host Hardware Security)
+category: MICROARCH
+target_protocol: PMU_PERF
+default_port: 15003
+interface: Hardware PMU Counter
+description: 'Branch Misprediction Rate Sensor is a specialized Domain 01 (Microarchitectural,
+  CPU & Memory Sensors (Host Hardware Security)) cyber-physical monitoring sensor.
+  Interfacing directly via Hardware PMU Counter, it is specifically engineered to
+  mitigate and detect Branch Target Injection, Spectre-V2, fuzzing. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Misprediction
+  ratio > 12\% indicates speculative execution exploitation.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Branch Target Injection, Spectre-V2, fuzzing
+core_invariant: Misprediction ratio > 12\% indicates speculative execution exploitation.
+physics:
+  engine: pmu_microarch
+  baseline_value: 1.2
+  min_value: 0.1
+  max_value: 4.0
+  noise_sigma: 0.05
+  unit: IPC
+registers:
+  holding_registers:
+    40021:
+      name: s003_branch_misprediction_rate_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: IPC
+    40023:
+      name: s003_branch_misprediction_rate_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s003_branch_misprediction_rate_sensor_fault
+  action: step_decrease
+  value: -0.8
+  description: 'Injects anomaly: Branch Target Injection, Spectre-V2, fuzzing'

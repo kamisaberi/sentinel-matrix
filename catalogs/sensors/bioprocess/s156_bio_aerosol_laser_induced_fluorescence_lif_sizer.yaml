@@ -1,0 +1,45 @@
+sensor_id: s156_bio_aerosol_laser_induced_fluorescence_lif_sizer
+name: Bio-Aerosol Laser-Induced Fluorescence (LIF) Sizer
+domain_id: 23
+domain_title: Environmental Biosecurity, Pathogen & CBRN Defense Sensors
+category: BIOPROCESS
+target_protocol: MODBUS_TCP
+default_port: 15156
+interface: 355 nm / 405 nm UV Laser Scatter
+description: 'Bio-Aerosol Laser-Induced Fluorescence (LIF) Sizer is a specialized
+  Domain 23 (Environmental Biosecurity, Pathogen & CBRN Defense Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via 355 nm / 405 nm UV Laser Scatter, it
+  is specifically engineered to mitigate and detect Airborne biological warfare attack
+  (anthrax, plague, ricin aerosol). In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Ratio of autofluorescence intensity (NADH / Riboflavin)
+  to particle aerodynamic size; biological aerosol signature locks HVAC dampers..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Airborne biological warfare attack (anthrax, plague, ricin aerosol)
+core_invariant: Ratio of autofluorescence intensity (NADH / Riboflavin) to particle
+  aerodynamic size; biological aerosol signature locks HVAC dampers.
+physics:
+  engine: bioprocess_cell
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: pH
+registers:
+  holding_registers:
+    40011:
+      name: s156_bio_aerosol_laser_induced_fluorescence_lif_sizer_pv
+      type: float32
+      scale: 1.0
+      unit: pH
+    40013:
+      name: s156_bio_aerosol_laser_induced_fluorescence_lif_sizer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s156_bio_aerosol_laser_induced_fluorescence_lif_sizer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Airborne biological warfare attack (anthrax, plague,
+    ricin aerosol)'

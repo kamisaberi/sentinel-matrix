@@ -1,0 +1,44 @@
+sensor_id: s381_reinforced_cockpit_door_armored_deadbolt_sensor_loop
+name: Reinforced Cockpit Door Armored Deadbolt Sensor Loop
+domain_id: 54
+domain_title: Commercial Aviation Cockpit Ingress & Flight Surface Fly-by-Wire Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15381
+interface: Coded Magnetic Tamper-Proof Sensor
+description: 'Reinforced Cockpit Door Armored Deadbolt Sensor Loop is a specialized
+  Domain 54 (Commercial Aviation Cockpit Ingress & Flight Surface Fly-by-Wire Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Coded Magnetic Tamper-Proof
+  Sensor, it is specifically engineered to mitigate and detect Cockpit hijacking,
+  forced cabin door intrusion. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Electronic deadbolt verification: Door must remain
+  mechanically locked: S_{deadbolt} == LOCKED; keypad bypass without pilot confirmation
+  denied.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Cockpit hijacking, forced cabin door intrusion
+core_invariant: 'Electronic deadbolt verification: Door must remain mechanically locked:
+  S_{deadbolt} == LOCKED; keypad bypass without pilot confirmation denied.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40091:
+      name: s381_reinforced_cockpit_door_armored_deadbolt_sensor_loop_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40093:
+      name: s381_reinforced_cockpit_door_armored_deadbolt_sensor_loop_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s381_reinforced_cockpit_door_armored_deadbolt_sensor_loop_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Cockpit hijacking, forced cabin door intrusion'

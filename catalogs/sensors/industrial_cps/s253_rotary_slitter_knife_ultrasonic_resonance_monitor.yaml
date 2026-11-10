@@ -1,0 +1,45 @@
+sensor_id: s253_rotary_slitter_knife_ultrasonic_resonance_monitor
+name: Rotary Slitter Knife Ultrasonic Resonance Monitor
+domain_id: 36
+domain_title: Battery Gigafactory Roll-to-Roll & Electrode Calendering Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15253
+interface: High-Frequency Piezoelectric Transducer
+description: "Rotary Slitter Knife Ultrasonic Resonance Monitor is a specialized Domain\
+  \ 36 (Battery Gigafactory Roll-to-Roll & Electrode Calendering Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Frequency Piezoelectric Transducer,\
+  \ it is specifically engineered to mitigate and detect Slitter blade burr formation,\
+  \ metal sliver intrusion into battery cells. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Acoustic resonance shift flags\
+  \ dull or chipped slitting knives; burr height > 5\\,\xB5m halts winding machine\
+  \ before cell short-circuits occur.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Slitter blade burr formation, metal sliver intrusion into battery cells
+core_invariant: "Acoustic resonance shift flags dull or chipped slitting knives; burr\
+  \ height > 5\\,\xB5m halts winding machine before cell short-circuits occur."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40431:
+      name: s253_rotary_slitter_knife_ultrasonic_resonance_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40433:
+      name: s253_rotary_slitter_knife_ultrasonic_resonance_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s253_rotary_slitter_knife_ultrasonic_resonance_monitor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Slitter blade burr formation, metal sliver intrusion
+    into battery cells'

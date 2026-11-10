@@ -1,0 +1,45 @@
+sensor_id: s451_icebreaker_stem_bow_impact_piezoelectric_accelerometer
+name: Icebreaker Stem Bow Impact Piezoelectric Accelerometer
+domain_id: 64
+domain_title: Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15451
+interface: High-G Shock Sensor (10 kHz)
+description: 'Icebreaker Stem Bow Impact Piezoelectric Accelerometer is a specialized
+  Domain 64 (Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-G Shock Sensor (10 kHz), it is
+  specifically engineered to mitigate and detect Ramming impact deceleration shock,
+  structural bow framing fracture. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Longitudinal impact deceleration: a_{longitudinal}
+  <= 2.5g; deceleration limit breach reverses propeller thrust in < 200\,ms.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Ramming impact deceleration shock, structural bow framing fracture
+core_invariant: 'Longitudinal impact deceleration: a_{longitudinal} <= 2.5g; deceleration
+  limit breach reverses propeller thrust in < 200\,ms.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40251:
+      name: s451_icebreaker_stem_bow_impact_piezoelectric_accelerometer_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40253:
+      name: s451_icebreaker_stem_bow_impact_piezoelectric_accelerometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s451_icebreaker_stem_bow_impact_piezoelectric_accelerometer_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Ramming impact deceleration shock, structural bow
+    framing fracture'

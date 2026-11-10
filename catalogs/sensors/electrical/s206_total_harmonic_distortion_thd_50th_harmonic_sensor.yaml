@@ -1,0 +1,45 @@
+sensor_id: s206_total_harmonic_distortion_thd_50th_harmonic_sensor
+name: Total Harmonic Distortion (THD) 50th-Harmonic Sensor
+domain_id: 30
+domain_title: Electrical Grid Frequency, Power Quality & High-Harmonic Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15206
+interface: Fast Fourier Transform (FFT) DSP
+description: 'Total Harmonic Distortion (THD) 50th-Harmonic Sensor is a specialized
+  Domain 30 (Electrical Grid Frequency, Power Quality & High-Harmonic Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Fast Fourier Transform (FFT) DSP, it
+  is specifically engineered to mitigate and detect Inverter switching cyber-resonance,
+  power factor capacitor bank destruction. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Voltage distortion: THD_V = \frac{\sqrt{\sum_{n=2}^{50}
+  V_n^2}}{V_1} <= 5.0\% (IEEE 519 limit); harmonic injection trip occurs in < 1.5\,cycles..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Inverter switching cyber-resonance, power factor capacitor bank destruction
+core_invariant: 'Voltage distortion: THD_V = \frac{\sqrt{\sum_{n=2}^{50} V_n^2}}{V_1}
+  <= 5.0\% (IEEE 519 limit); harmonic injection trip occurs in < 1.5\,cycles.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40481:
+      name: s206_total_harmonic_distortion_thd_50th_harmonic_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40483:
+      name: s206_total_harmonic_distortion_thd_50th_harmonic_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s206_total_harmonic_distortion_thd_50th_harmonic_sensor_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Inverter switching cyber-resonance, power factor
+    capacitor bank destruction'

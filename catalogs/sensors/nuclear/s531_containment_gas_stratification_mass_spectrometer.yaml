@@ -1,0 +1,46 @@
+sensor_id: s531_containment_gas_stratification_mass_spectrometer
+name: Containment Gas Stratification Mass Spectrometer
+domain_id: 75
+domain_title: Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety
+  Sensors
+category: NUCLEAR
+target_protocol: MODBUS_TCP
+default_port: 15531
+interface: Multi-Capillary Quadrupole Sniffer
+description: 'Containment Gas Stratification Mass Spectrometer is a specialized Domain
+  75 (Advanced Nuclear Fission Small Modular Reactor (SMR) Passive Safety Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Multi-Capillary Quadrupole
+  Sniffer, it is specifically engineered to mitigate and detect Hydrogen stratification
+  in containment upper head, explosive deflagration. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Local hydrogen concentration:
+  [H_2] <= 4.0\%; stratification flags passive autocatalytic recombiner (PAR) starvation,
+  actuating helium stir jets.. Any divergence between commanded network state and
+  this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hydrogen stratification in containment upper head, explosive deflagration
+core_invariant: 'Local hydrogen concentration: [H_2] <= 4.0\%; stratification flags
+  passive autocatalytic recombiner (PAR) starvation, actuating helium stir jets.'
+physics:
+  engine: nuclear_decay
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: uSv/h
+registers:
+  holding_registers:
+    40011:
+      name: s531_containment_gas_stratification_mass_spectrometer_pv
+      type: float32
+      scale: 1.0
+      unit: uSv/h
+    40013:
+      name: s531_containment_gas_stratification_mass_spectrometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s531_containment_gas_stratification_mass_spectrometer_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Hydrogen stratification in containment upper head,
+    explosive deflagration'

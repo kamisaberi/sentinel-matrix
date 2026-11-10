@@ -1,0 +1,45 @@
+sensor_id: s541_cooperative_beacon_cryptographic_auth_transceiver
+name: Cooperative Beacon Cryptographic Auth Transceiver
+domain_id: 76
+domain_title: Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15541
+interface: Ed25519 Hardware Micro-Engine
+description: 'Cooperative Beacon Cryptographic Auth Transceiver is a specialized Domain
+  76 (Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Ed25519 Hardware Micro-Engine, it is
+  specifically engineered to mitigate and detect Drone identity injection (adversary
+  drone joining swarm covertly). In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Challenge-response authentication broadcast every
+  500\,ms; unauthenticated beacon is classified as hostile target and engaged.. Any
+  divergence between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Drone identity injection (adversary drone joining swarm covertly)
+core_invariant: Challenge-response authentication broadcast every 500\,ms; unauthenticated
+  beacon is classified as hostile target and engaged.
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40091:
+      name: s541_cooperative_beacon_cryptographic_auth_transceiver_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40093:
+      name: s541_cooperative_beacon_cryptographic_auth_transceiver_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s541_cooperative_beacon_cryptographic_auth_transceiver_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Drone identity injection (adversary drone joining
+    swarm covertly)'

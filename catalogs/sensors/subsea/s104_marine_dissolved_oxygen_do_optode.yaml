@@ -1,0 +1,45 @@
+sensor_id: s104_marine_dissolved_oxygen_do_optode
+name: Marine Dissolved Oxygen (DO) Optode
+domain_id: 15
+domain_title: Deep Marine, Subsea & Oceanographic Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15104
+interface: Luminescence Quenching Sensor
+description: "Marine Dissolved Oxygen (DO) Optode is a specialized Domain 15 (Deep\
+  \ Marine, Subsea & Oceanographic Sensors) cyber-physical monitoring sensor. Interfacing\
+  \ directly via Luminescence Quenching Sensor, it is specifically engineered to mitigate\
+  \ and detect Nuclear power plant cooling water intake biological blockage. In the\
+  \ Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Oxygen concentration must follow Henry\u2019s law solubility; sudden drop indicates\
+  \ massive jellyfish/algae ingress at water intakes.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Nuclear power plant cooling water intake biological blockage
+core_invariant: "Oxygen concentration must follow Henry\u2019s law solubility; sudden\
+  \ drop indicates massive jellyfish/algae ingress at water intakes."
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40021:
+      name: s104_marine_dissolved_oxygen_do_optode_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40023:
+      name: s104_marine_dissolved_oxygen_do_optode_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s104_marine_dissolved_oxygen_do_optode_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Nuclear power plant cooling water intake biological
+    blockage'

@@ -1,0 +1,44 @@
+sensor_id: s436_copper_canister_galvanic_corrosion_potential_sensor
+name: Copper Canister Galvanic Corrosion Potential Sensor
+domain_id: 62
+domain_title: Deep Underground Geological Radioactive Waste Repository (DGR) Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15436
+interface: High-Purity Reference Electrode (Ag/AgCl)
+description: 'Copper Canister Galvanic Corrosion Potential Sensor is a specialized
+  Domain 62 (Deep Underground Geological Radioactive Waste Repository (DGR) Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via High-Purity Reference
+  Electrode (Ag/AgCl), it is specifically engineered to mitigate and detect Anaerobic
+  sulfide corrosion of nuclear waste canisters. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Corrosion potential: E_{corr}
+  <= -300\,mV; sulfide concentration [S^{2-}] <= 10^{-6}\,M; alerts to localized pitting
+  corrosion.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Anaerobic sulfide corrosion of nuclear waste canisters
+core_invariant: 'Corrosion potential: E_{corr} <= -300\,mV; sulfide concentration
+  [S^{2-}] <= 10^{-6}\,M; alerts to localized pitting corrosion.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40101:
+      name: s436_copper_canister_galvanic_corrosion_potential_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40103:
+      name: s436_copper_canister_galvanic_corrosion_potential_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s436_copper_canister_galvanic_corrosion_potential_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Anaerobic sulfide corrosion of nuclear waste canisters'

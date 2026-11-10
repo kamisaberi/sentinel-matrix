@@ -1,0 +1,45 @@
+sensor_id: s076_atomic_spin_exchange_relaxation_free_serf_magnetometer
+name: Atomic Spin-Exchange Relaxation-Free (SERF) Magnetometer
+domain_id: 11
+domain_title: Magnetic, Fluxgate & Magnetohydrodynamic (MHD) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15076
+interface: Rubidium Vapor Optical Cell
+description: 'Atomic Spin-Exchange Relaxation-Free (SERF) Magnetometer is a specialized
+  Domain 11 (Magnetic, Fluxgate & Magnetohydrodynamic (MHD) Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Rubidium Vapor Optical Cell, it is specifically
+  engineered to mitigate and detect Quantum-level side-channel snooping, covert magnetic
+  key extraction. In the Aryorithm edge architecture, it continuously asserts the
+  operational invariant: Femtotesla sensitivity (< 1\,fT/\sqrt{Hz}); detects microscopic
+  magnetic fields radiated by CPU cryptographic operations.. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Quantum-level side-channel snooping, covert magnetic key extraction
+core_invariant: Femtotesla sensitivity (< 1\,fT/\sqrt{Hz}); detects microscopic magnetic
+  fields radiated by CPU cryptographic operations.
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40251:
+      name: s076_atomic_spin_exchange_relaxation_free_serf_magnetometer_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40253:
+      name: s076_atomic_spin_exchange_relaxation_free_serf_magnetometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s076_atomic_spin_exchange_relaxation_free_serf_magnetometer_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Quantum-level side-channel snooping, covert magnetic
+    key extraction'

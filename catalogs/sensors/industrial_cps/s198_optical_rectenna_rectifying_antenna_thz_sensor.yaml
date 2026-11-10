@@ -1,0 +1,45 @@
+sensor_id: s198_optical_rectenna_rectifying_antenna_thz_sensor
+name: Optical Rectenna (Rectifying Antenna) THz Sensor
+domain_id: 28
+domain_title: Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15198
+interface: Metal-Insulator-Metal (MIM) Nanodiode
+description: 'Optical Rectenna (Rectifying Antenna) THz Sensor is a specialized Domain
+  28 (Terahertz (THz) & Millimeter-Wave Concealed Threat Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Metal-Insulator-Metal (MIM) Nanodiode, it is specifically
+  engineered to mitigate and detect Parasitic wireless electronic eavesdropping bugs,
+  zero-power transmitters. In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Converts incident ambient THz/IR electromagnetic waves
+  into DC voltage without battery power, alerting to nearby covert listening implants..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Parasitic wireless electronic eavesdropping bugs, zero-power transmitters
+core_invariant: Converts incident ambient THz/IR electromagnetic waves into DC voltage
+  without battery power, alerting to nearby covert listening implants.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40411:
+      name: s198_optical_rectenna_rectifying_antenna_thz_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40413:
+      name: s198_optical_rectenna_rectifying_antenna_thz_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s198_optical_rectenna_rectifying_antenna_thz_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Parasitic wireless electronic eavesdropping bugs,
+    zero-power transmitters'

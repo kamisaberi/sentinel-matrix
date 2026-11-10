@@ -1,0 +1,47 @@
+sensor_id: s347_drillstring_torsional_stick_slip_angular_velocity_sensor
+name: Drillstring Torsional Stick-Slip Angular Velocity Sensor
+domain_id: 49
+domain_title: Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15347
+interface: High-Rate Gyro on MWD/LWD Sub
+description: "Drillstring Torsional Stick-Slip Angular Velocity Sensor is a specialized\
+  \ Domain 49 (Enhanced Geothermal Systems (EGS) & Hydraulic Fracture Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Rate Gyro on MWD/LWD Sub, it\
+  \ is specifically engineered to mitigate and detect Drill bit stall, catastrophic\
+  \ drillstring torsional fatigue failure. In the Aryorithm edge architecture, it\
+  \ continuously asserts the operational invariant: Rotational velocity fluctuation:\
+  \ \u0394 \\omega = \\omega_{max} - \\omega_{min} <= 0.5 \\cdot \\omega_{nominal};\
+  \ stick-slip oscillations auto-throttle top-drive RPM.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Drill bit stall, catastrophic drillstring torsional fatigue failure
+core_invariant: "Rotational velocity fluctuation: \u0394 \\omega = \\omega_{max} -\
+  \ \\omega_{min} <= 0.5 \\cdot \\omega_{nominal}; stick-slip oscillations auto-throttle\
+  \ top-drive RPM."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40311:
+      name: s347_drillstring_torsional_stick_slip_angular_velocity_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40313:
+      name: s347_drillstring_torsional_stick_slip_angular_velocity_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s347_drillstring_torsional_stick_slip_angular_velocity_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Drill bit stall, catastrophic drillstring torsional
+    fatigue failure'

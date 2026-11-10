@@ -1,0 +1,44 @@
+sensor_id: s286_pressure_sensitive_safety_bumper_strip
+name: Pressure-Sensitive Safety Bumper Strip
+domain_id: 41
+domain_title: Autonomous Mobile Robot (AMR) & AGV Drivetrain Safety Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15286
+interface: Fail-Safe Conductive Rubber Loop
+description: 'Pressure-Sensitive Safety Bumper Strip is a specialized Domain 41 (Autonomous
+  Mobile Robot (AMR) & AGV Drivetrain Safety Sensors) cyber-physical monitoring sensor.
+  Interfacing directly via Fail-Safe Conductive Rubber Loop, it is specifically engineered
+  to mitigate and detect Mechanical human crushing, blind-spot low-clearance obstacle
+  collision. In the Aryorithm edge architecture, it continuously asserts the operational
+  invariant: Mechanical impact opens internal resistor loop; resistance shift drops
+  robot drive contactor in < 15\,ms.. Any divergence between commanded network state
+  and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Mechanical human crushing, blind-spot low-clearance obstacle collision
+core_invariant: Mechanical impact opens internal resistor loop; resistance shift drops
+  robot drive contactor in < 15\,ms.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40241:
+      name: s286_pressure_sensitive_safety_bumper_strip_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40243:
+      name: s286_pressure_sensitive_safety_bumper_strip_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s286_pressure_sensitive_safety_bumper_strip_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Mechanical human crushing, blind-spot low-clearance
+    obstacle collision'

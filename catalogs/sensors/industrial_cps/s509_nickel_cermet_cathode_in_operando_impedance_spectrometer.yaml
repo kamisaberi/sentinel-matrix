@@ -1,0 +1,47 @@
+sensor_id: s509_nickel_cermet_cathode_in_operando_impedance_spectrometer
+name: Nickel Cermet Cathode In-Operando Impedance Spectrometer
+domain_id: 72
+domain_title: High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15509
+interface: Fast Multisine AC Frequency Response (0.1Hz--100kHz)
+description: "Nickel Cermet Cathode In-Operando Impedance Spectrometer is a specialized\
+  \ Domain 72 (High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors)\
+  \ cyber-physical monitoring sensor. Interfacing directly via Fast Multisine AC Frequency\
+  \ Response (0.1Hz--100kHz), it is specifically engineered to mitigate and detect\
+  \ Carbon coking, sulfur poisoning of hydrogen-producing active sites. In the Aryorithm\
+  \ edge architecture, it continuously asserts the operational invariant: Polarization\
+  \ resistance: R_p = Z'(\\omega \\to 0) - Z'(\\omega \\to \u2208fty) <= R_{spec};\
+  \ resistance rise triggers automated steam regeneration flush.. Any divergence between\
+  \ commanded network state and this physical reading triggers sub-microsecond in-kernel\
+  \ eBPF packet mitigation."
+target_threat: Carbon coking, sulfur poisoning of hydrogen-producing active sites
+core_invariant: "Polarization resistance: R_p = Z'(\\omega \\to 0) - Z'(\\omega \\\
+  to \u2208fty) <= R_{spec}; resistance rise triggers automated steam regeneration\
+  \ flush."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40321:
+      name: s509_nickel_cermet_cathode_in_operando_impedance_spectrometer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40323:
+      name: s509_nickel_cermet_cathode_in_operando_impedance_spectrometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s509_nickel_cermet_cathode_in_operando_impedance_spectrometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Carbon coking, sulfur poisoning of hydrogen-producing
+    active sites'

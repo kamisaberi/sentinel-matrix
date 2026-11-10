@@ -1,0 +1,45 @@
+sensor_id: s281_trace_contaminant_gas_chromatograph_mass_spectrometer
+name: Trace Contaminant Gas Chromatograph-Mass Spectrometer
+domain_id: 40
+domain_title: Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors
+category: AVIONICS
+target_protocol: MODBUS_TCP
+default_port: 15281
+interface: Micro-Capillary Column + Quadrupole MS
+description: 'Trace Contaminant Gas Chromatograph-Mass Spectrometer is a specialized
+  Domain 40 (Spacecraft Life Support (ECLSS) & Cabin Ecology Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Micro-Capillary Column + Quadrupole
+  MS, it is specifically engineered to mitigate and detect Hydrazine RCS thruster
+  leak into cabin air, toxic refrigerant ingress. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Resolves chemical mass-to-charge
+  ratios down to 1\,ppb; detects monomethylhydrazine (MMH) vapors before crew inhalation
+  toxicity.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hydrazine RCS thruster leak into cabin air, toxic refrigerant ingress
+core_invariant: Resolves chemical mass-to-charge ratios down to 1\,ppb; detects monomethylhydrazine
+  (MMH) vapors before crew inhalation toxicity.
+physics:
+  engine: avionics_pitot
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: knots
+registers:
+  holding_registers:
+    40191:
+      name: s281_trace_contaminant_gas_chromatograph_mass_spectrometer_pv
+      type: float32
+      scale: 1.0
+      unit: knots
+    40193:
+      name: s281_trace_contaminant_gas_chromatograph_mass_spectrometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s281_trace_contaminant_gas_chromatograph_mass_spectrometer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Hydrazine RCS thruster leak into cabin air, toxic
+    refrigerant ingress'

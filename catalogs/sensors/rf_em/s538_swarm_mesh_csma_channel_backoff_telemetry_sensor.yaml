@@ -1,0 +1,45 @@
+sensor_id: s538_swarm_mesh_csma_channel_backoff_telemetry_sensor
+name: Swarm Mesh CSMA Channel Backoff Telemetry Sensor
+domain_id: 76
+domain_title: Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15538
+interface: Tactical Ad-Hoc Transceiver Baseband
+description: 'Swarm Mesh CSMA Channel Backoff Telemetry Sensor is a specialized Domain
+  76 (Autonomous Military Swarm Drone Inter-UAV RF Ranging & Collision Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Tactical Ad-Hoc Transceiver Baseband,
+  it is specifically engineered to mitigate and detect Rogue drone RF jamming, denial-of-service
+  in swarm mesh communications. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Clear Channel Assessment (CCA): Channel busy
+  ratio CBR <= 70\%; saturated channel shifts swarm consensus to directional optical
+  communication.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Rogue drone RF jamming, denial-of-service in swarm mesh communications
+core_invariant: 'Clear Channel Assessment (CCA): Channel busy ratio CBR <= 70\%; saturated
+  channel shifts swarm consensus to directional optical communication.'
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40071:
+      name: s538_swarm_mesh_csma_channel_backoff_telemetry_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40073:
+      name: s538_swarm_mesh_csma_channel_backoff_telemetry_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s538_swarm_mesh_csma_channel_backoff_telemetry_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Rogue drone RF jamming, denial-of-service in swarm
+    mesh communications'

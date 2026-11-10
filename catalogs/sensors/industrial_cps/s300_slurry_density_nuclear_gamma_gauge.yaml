@@ -1,0 +1,45 @@
+sensor_id: s300_slurry_density_nuclear_gamma_gauge
+name: Slurry Density Nuclear Gamma Gauge
+domain_id: 43
+domain_title: Mining Flotation & Mineral Beneficiation Process Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15300
+interface: Caesium-137 (Cs-137) Source + Scintillator
+description: "Slurry Density Nuclear Gamma Gauge is a specialized Domain 43 (Mining\
+  \ Flotation & Mineral Beneficiation Process Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via Caesium-137 (Cs-137) Source + Scintillator, it is specifically\
+  \ engineered to mitigate and detect Slurry pipeline pipe settling, sanding out,\
+  \ mill feed dilution fraud. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Gamma ray attenuation: \\rho_{slurry} = -\\\
+  frac{1}{\xB5 D} \\ln(I/I_0); density drop flags water flooding or illegal ore dilution..\
+  \ Any divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Slurry pipeline pipe settling, sanding out, mill feed dilution fraud
+core_invariant: "Gamma ray attenuation: \\rho_{slurry} = -\\frac{1}{\xB5 D} \\ln(I/I_0);\
+  \ density drop flags water flooding or illegal ore dilution."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40361:
+      name: s300_slurry_density_nuclear_gamma_gauge_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40363:
+      name: s300_slurry_density_nuclear_gamma_gauge_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s300_slurry_density_nuclear_gamma_gauge_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Slurry pipeline pipe settling, sanding out, mill
+    feed dilution fraud'

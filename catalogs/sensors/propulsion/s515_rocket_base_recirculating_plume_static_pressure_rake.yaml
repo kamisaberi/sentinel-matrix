@@ -1,0 +1,45 @@
+sensor_id: s515_rocket_base_recirculating_plume_static_pressure_rake
+name: Rocket Base Recirculating Plume Static Pressure Rake
+domain_id: 73
+domain_title: Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15515
+interface: High-Frequency Piezoelectric Port Array
+description: 'Rocket Base Recirculating Plume Static Pressure Rake is a specialized
+  Domain 73 (Reusable Rocket Booster Aerogrid Fins & Landing Mechanics Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via High-Frequency Piezoelectric Port Array,
+  it is specifically engineered to mitigate and detect Base heating fireball ingestion,
+  engine compartment structural fire. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Base static pressure: P_{base} >= 0.85 \cdot
+  P_{ambient}; pressure drop below threshold indicates recirculating hot plume flame-front
+  entry.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Base heating fireball ingestion, engine compartment structural fire
+core_invariant: 'Base static pressure: P_{base} >= 0.85 \cdot P_{ambient}; pressure
+  drop below threshold indicates recirculating hot plume flame-front entry.'
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40381:
+      name: s515_rocket_base_recirculating_plume_static_pressure_rake_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40383:
+      name: s515_rocket_base_recirculating_plume_static_pressure_rake_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s515_rocket_base_recirculating_plume_static_pressure_rake_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Base heating fireball ingestion, engine compartment
+    structural fire'

@@ -1,0 +1,45 @@
+sensor_id: s415_scramjet_variable_geometry_inlet_cowl_actuator_resolver
+name: Scramjet Variable-Geometry Inlet Cowl Actuator Resolver
+domain_id: 59
+domain_title: Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15415
+interface: High-Temperature Brushless Resolver
+description: "Scramjet Variable-Geometry Inlet Cowl Actuator Resolver is a specialized\
+  \ Domain 59 (Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Temperature Brushless Resolver,\
+  \ it is specifically engineered to mitigate and detect Cowl actuation mismatch,\
+  \ oblique shockwave boundary layer separation. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Cowl angle \\theta_{cowl} matches\
+  \ flight Mach number: \\theta_{cowl} = f(M_\u2208fty, \\alpha); angle deviation\
+  \ commands hydraulic backup servo.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Cowl actuation mismatch, oblique shockwave boundary layer separation
+core_invariant: "Cowl angle \\theta_{cowl} matches flight Mach number: \\theta_{cowl}\
+  \ = f(M_\u2208fty, \\alpha); angle deviation commands hydraulic backup servo."
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40411:
+      name: s415_scramjet_variable_geometry_inlet_cowl_actuator_resolver_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40413:
+      name: s415_scramjet_variable_geometry_inlet_cowl_actuator_resolver_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s415_scramjet_variable_geometry_inlet_cowl_actuator_resolver_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Cowl actuation mismatch, oblique shockwave boundary
+    layer separation'

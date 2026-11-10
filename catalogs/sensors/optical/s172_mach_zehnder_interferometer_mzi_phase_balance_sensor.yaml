@@ -1,0 +1,48 @@
+sensor_id: s172_mach_zehnder_interferometer_mzi_phase_balance_sensor
+name: Mach-Zehnder Interferometer (MZI) Phase Balance Sensor
+domain_id: 25
+domain_title: Photonic Integrated Circuit (PIC) & Optical Computing Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15172
+interface: On-Chip Differential Photodiode Tap
+description: "Mach-Zehnder Interferometer (MZI) Phase Balance Sensor is a specialized\
+  \ Domain 25 (Photonic Integrated Circuit (PIC) & Optical Computing Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via On-Chip Differential Photodiode Tap,\
+  \ it is specifically engineered to mitigate and detect Optical matrix multiplier\
+  \ matrix poisoning, phase-shift side-channel leaks. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Power transfer ratio: P_{out}\
+  \ = P_{in} \\cos^2(\u0394 \\phi / 2); phase drift \u0394 \\phi across electro-optic\
+  \ phase shifters must strictly match programmed weight matrices.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Optical matrix multiplier matrix poisoning, phase-shift side-channel
+  leaks
+core_invariant: "Power transfer ratio: P_{out} = P_{in} \\cos^2(\u0394 \\phi / 2);\
+  \ phase drift \u0394 \\phi across electro-optic phase shifters must strictly match\
+  \ programmed weight matrices."
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40171:
+      name: s172_mach_zehnder_interferometer_mzi_phase_balance_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40173:
+      name: s172_mach_zehnder_interferometer_mzi_phase_balance_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s172_mach_zehnder_interferometer_mzi_phase_balance_sensor_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Optical matrix multiplier matrix poisoning, phase-shift
+    side-channel leaks'

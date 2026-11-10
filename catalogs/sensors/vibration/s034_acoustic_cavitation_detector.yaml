@@ -1,0 +1,43 @@
+sensor_id: s034_acoustic_cavitation_detector
+name: Acoustic Cavitation Detector
+domain_id: 5
+domain_title: Acoustic, Ultrasonic & Vibration Sensors
+category: VIBRATION
+target_protocol: MODBUS_TCP
+default_port: 15034
+interface: High-Frequency Clamp-On Transducer
+description: 'Acoustic Cavitation Detector is a specialized Domain 05 (Acoustic, Ultrasonic
+  & Vibration Sensors) cyber-physical monitoring sensor. Interfacing directly via
+  High-Frequency Clamp-On Transducer, it is specifically engineered to mitigate and
+  detect Water-hammer valve attacks, pipeline cavitation collapse. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Flags ultrasonic
+  broad-band acoustic energy spikes caused by imploding vapor bubbles.. Any divergence
+  between commanded network state and this physical reading triggers sub-microsecond
+  in-kernel eBPF packet mitigation.'
+target_threat: Water-hammer valve attacks, pipeline cavitation collapse
+core_invariant: Flags ultrasonic broad-band acoustic energy spikes caused by imploding
+  vapor bubbles.
+physics:
+  engine: rk4_mechanical_vibe
+  baseline_value: 1.2
+  min_value: 0.0
+  max_value: 50.0
+  noise_sigma: 0.05
+  unit: mm/s
+registers:
+  holding_registers:
+    40331:
+      name: s034_acoustic_cavitation_detector_pv
+      type: float32
+      scale: 1.0
+      unit: mm/s
+    40333:
+      name: s034_acoustic_cavitation_detector_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s034_acoustic_cavitation_detector_fault
+  action: harmonic_multiplier
+  value: 6.5
+  description: 'Injects anomaly: Water-hammer valve attacks, pipeline cavitation collapse'

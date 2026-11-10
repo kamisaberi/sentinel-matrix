@@ -1,0 +1,45 @@
+sensor_id: s186_heated_junction_thermocouple_hjtc_probe
+name: Heated Junction Thermocouple (HJTC) Probe
+domain_id: 27
+domain_title: Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15186
+interface: Dual Differential Thermocouple Column
+description: "Heated Junction Thermocouple (HJTC) Probe is a specialized Domain 27\
+  \ (Nuclear Reactor Core Hydrodynamics & Two-Phase Voiding Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Dual Differential Thermocouple Column,\
+  \ it is specifically engineered to mitigate and detect Reactor Pressure Vessel (RPV)\
+  \ loss of water inventory, uncovery precursor. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Measures temperature delta\
+  \ between heated and unheated thermocouple junctions; \u0394 T > 50^\\circC indicates\
+  \ steam exposure (water level drop).. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Reactor Pressure Vessel (RPV) loss of water inventory, uncovery precursor
+core_invariant: "Measures temperature delta between heated and unheated thermocouple\
+  \ junctions; \u0394 T > 50^\\circC indicates steam exposure (water level drop)."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40301:
+      name: s186_heated_junction_thermocouple_hjtc_probe_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40303:
+      name: s186_heated_junction_thermocouple_hjtc_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s186_heated_junction_thermocouple_hjtc_probe_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Reactor Pressure Vessel (RPV) loss of water inventory,
+    uncovery precursor'

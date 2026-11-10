@@ -1,0 +1,45 @@
+sensor_id: s464_clean_in_place_cip_rinse_conductivity_transmitter
+name: Clean-in-Place (CIP) Rinse Conductivity Transmitter
+domain_id: 66
+domain_title: Pharmaceutical Sterile Aseptic Isolator & CIP Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15464
+interface: Toroidal Inductive Conductivity Cell
+description: "Clean-in-Place (CIP) Rinse Conductivity Transmitter is a specialized\
+  \ Domain 66 (Pharmaceutical Sterile Aseptic Isolator & CIP Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Toroidal Inductive Conductivity Cell,\
+  \ it is specifically engineered to mitigate and detect Caustic/acid cleaning chemical\
+  \ carryover into injectable medicine. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Final rinse water conductivity: \\kappa <=\
+  \ 1.3\\,\xB5S/cm (matching pure WFI); high conductivity blocks pharmaceutical filling\
+  \ valve.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Caustic/acid cleaning chemical carryover into injectable medicine
+core_invariant: "Final rinse water conductivity: \\kappa <= 1.3\\,\xB5S/cm (matching\
+  \ pure WFI); high conductivity blocks pharmaceutical filling valve."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40381:
+      name: s464_clean_in_place_cip_rinse_conductivity_transmitter_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40383:
+      name: s464_clean_in_place_cip_rinse_conductivity_transmitter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s464_clean_in_place_cip_rinse_conductivity_transmitter_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Caustic/acid cleaning chemical carryover into injectable
+    medicine'

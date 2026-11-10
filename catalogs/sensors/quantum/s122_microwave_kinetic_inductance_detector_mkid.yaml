@@ -1,0 +1,45 @@
+sensor_id: s122_microwave_kinetic_inductance_detector_mkid
+name: Microwave Kinetic Inductance Detector (MKID)
+domain_id: 18
+domain_title: Quantum Metrology, Superconducting & Qubit Sensors
+category: QUANTUM
+target_protocol: MODBUS_TCP
+default_port: 15122
+interface: Cryogenic LC Resonator (< 100 mK)
+description: "Microwave Kinetic Inductance Detector (MKID) is a specialized Domain\
+  \ 18 (Quantum Metrology, Superconducting & Qubit Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Cryogenic LC Resonator (< 100 mK), it is specifically\
+  \ engineered to mitigate and detect Sub-THz quantum eavesdropping, single-photon\
+  \ pulse theft. In the Aryorithm edge architecture, it continuously asserts the operational\
+  \ invariant: Cooper pair breaking shifts kinetic inductance L_k; frequency shift\
+  \ \u0394 f_0 resolves single incoming photons.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: Sub-THz quantum eavesdropping, single-photon pulse theft
+core_invariant: "Cooper pair breaking shifts kinetic inductance L_k; frequency shift\
+  \ \u0394 f_0 resolves single incoming photons."
+physics:
+  engine: quantum_squid
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: mK
+registers:
+  holding_registers:
+    40181:
+      name: s122_microwave_kinetic_inductance_detector_mkid_pv
+      type: float32
+      scale: 1.0
+      unit: mK
+    40183:
+      name: s122_microwave_kinetic_inductance_detector_mkid_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s122_microwave_kinetic_inductance_detector_mkid_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Sub-THz quantum eavesdropping, single-photon pulse
+    theft'

@@ -1,0 +1,47 @@
+sensor_id: s329_immersion_cooling_dielectric_constant_probe
+name: Immersion Cooling Dielectric Constant Probe
+domain_id: 47
+domain_title: High-Performance Computing (HPC) & Liquid Cooling Thermal/Fluid Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15329
+interface: Capacitive Immersion Cell
+description: "Immersion Cooling Dielectric Constant Probe is a specialized Domain\
+  \ 47 (High-Performance Computing (HPC) & Liquid Cooling Thermal/Fluid Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Capacitive Immersion Cell, it is specifically\
+  \ engineered to mitigate and detect Fluorochemical fluid moisture contamination,\
+  \ electrical short-circuit arc. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Dielectric constant \\epsilon_r \u2248 1.8--2.1;\
+  \ water ingress (\\epsilon_r \u2248 80) spikes dielectric constant, tripping high-voltage\
+  \ busbars in < 5\\,ms.. Any divergence between commanded network state and this\
+  \ physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Fluorochemical fluid moisture contamination, electrical short-circuit
+  arc
+core_invariant: "Dielectric constant \\epsilon_r \u2248 1.8--2.1; water ingress (\\\
+  epsilon_r \u2248 80) spikes dielectric constant, tripping high-voltage busbars in\
+  \ < 5\\,ms."
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40131:
+      name: s329_immersion_cooling_dielectric_constant_probe_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40133:
+      name: s329_immersion_cooling_dielectric_constant_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s329_immersion_cooling_dielectric_constant_probe_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Fluorochemical fluid moisture contamination, electrical
+    short-circuit arc'

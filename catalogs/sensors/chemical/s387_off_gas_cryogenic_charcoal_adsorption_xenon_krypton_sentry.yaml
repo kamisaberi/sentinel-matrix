@@ -1,0 +1,45 @@
+sensor_id: s387_off_gas_cryogenic_charcoal_adsorption_xenon_krypton_sentry
+name: Off-Gas Cryogenic Charcoal Adsorption Xenon/Krypton Sentry
+domain_id: 55
+domain_title: Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15387
+interface: Beta/Gamma Scintillation Radiation Probe
+description: 'Off-Gas Cryogenic Charcoal Adsorption Xenon/Krypton Sentry is a specialized
+  Domain 55 (Molten Salt Reactor (MSR) Chemical Reprocessing & Actinide Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Beta/Gamma Scintillation Radiation Probe,
+  it is specifically engineered to mitigate and detect Fission gas breakthrough, release
+  of radioxenon (^{133}Xe) to stack. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Charcoal bed activity: A(t) <= A_{discharge\_legal};
+  activity spike indicates noble gas breakthrough, switching flow to parallel backup
+  decay beds.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Fission gas breakthrough, release of radioxenon (^{133}Xe) to stack
+core_invariant: 'Charcoal bed activity: A(t) <= A_{discharge\_legal}; activity spike
+  indicates noble gas breakthrough, switching flow to parallel backup decay beds.'
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40141:
+      name: s387_off_gas_cryogenic_charcoal_adsorption_xenon_krypton_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40143:
+      name: s387_off_gas_cryogenic_charcoal_adsorption_xenon_krypton_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s387_off_gas_cryogenic_charcoal_adsorption_xenon_krypton_sentry_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Fission gas breakthrough, release of radioxenon (^{133}Xe)
+    to stack'

@@ -1,0 +1,44 @@
+sensor_id: s071_triaxial_fluxgate_magnetometer
+name: Triaxial Fluxgate Magnetometer
+domain_id: 11
+domain_title: Magnetic, Fluxgate & Magnetohydrodynamic (MHD) Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15071
+interface: Low-Noise Analog ADC / SPI
+description: "Triaxial Fluxgate Magnetometer is a specialized Domain 11 (Magnetic,\
+  \ Fluxgate & Magnetohydrodynamic (MHD) Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via Low-Noise Analog ADC / SPI, it is specifically engineered\
+  \ to mitigate and detect Naval hull degaussing tampering, magnetic mine activation.\
+  \ In the Aryorithm edge architecture, it continuously asserts the operational invariant:\
+  \ Evaluates multipole expansion: \\mathbf{B}(\\mathbf{r}) \u2248 0; magnetic anomaly\
+  \ signature must remain below naval mine sensitivity limits.. Any divergence between\
+  \ commanded network state and this physical reading triggers sub-microsecond in-kernel\
+  \ eBPF packet mitigation."
+target_threat: Naval hull degaussing tampering, magnetic mine activation
+core_invariant: "Evaluates multipole expansion: \\mathbf{B}(\\mathbf{r}) \u2248 0;\
+  \ magnetic anomaly signature must remain below naval mine sensitivity limits."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40201:
+      name: s071_triaxial_fluxgate_magnetometer_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40203:
+      name: s071_triaxial_fluxgate_magnetometer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s071_triaxial_fluxgate_magnetometer_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Naval hull degaussing tampering, magnetic mine activation'

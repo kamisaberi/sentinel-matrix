@@ -1,0 +1,46 @@
+sensor_id: s271_stripline_beam_position_monitor_bpm
+name: Stripline Beam Position Monitor (BPM)
+domain_id: 39
+domain_title: Particle Accelerator & Synchrotron Light Source Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15271
+interface: 4-Button Sub-Picosecond RF Receiver
+description: "Stripline Beam Position Monitor (BPM) is a specialized Domain 39 (Particle\
+  \ Accelerator & Synchrotron Light Source Sensors) cyber-physical monitoring sensor.\
+  \ Interfacing directly via 4-Button Sub-Picosecond RF Receiver, it is specifically\
+  \ engineered to mitigate and detect Relativistic electron beam trajectory drift,\
+  \ vacuum chamber wall puncture. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Transverse beam position: x = K_x \\frac{(V_A\
+  \ + V_D) - (V_B + V_C)}{V_A + V_B + V_C + V_D}; orbit displacement > 100\\,\xB5\
+  m aborts beam in < 1.0\\,\xB5s.. Any divergence between commanded network state\
+  \ and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Relativistic electron beam trajectory drift, vacuum chamber wall puncture
+core_invariant: "Transverse beam position: x = K_x \\frac{(V_A + V_D) - (V_B + V_C)}{V_A\
+  \ + V_B + V_C + V_D}; orbit displacement > 100\\,\xB5m aborts beam in < 1.0\\,\xB5\
+  s."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40111:
+      name: s271_stripline_beam_position_monitor_bpm_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40113:
+      name: s271_stripline_beam_position_monitor_bpm_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s271_stripline_beam_position_monitor_bpm_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Relativistic electron beam trajectory drift, vacuum
+    chamber wall puncture'

@@ -1,0 +1,44 @@
+sensor_id: s088_self_powered_neutron_detector_spnd
+name: Self-Powered Neutron Detector (SPND)
+domain_id: 13
+domain_title: Nuclear, Radiological & Particle Detection Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15088
+interface: Rhodium/Vanadium Emitter Cable
+description: 'Self-Powered Neutron Detector (SPND) is a specialized Domain 13 (Nuclear,
+  Radiological & Particle Detection Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Rhodium/Vanadium Emitter Cable, it is specifically engineered to mitigate
+  and detect Core localized neutron flux tilting, xenon oscillation hot-spots. In
+  the Aryorithm edge architecture, it continuously asserts the operational invariant:
+  Real-time in-core neutron flux mapping; prevents localized fuel pin thermal melting
+  in nuclear reactors.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Core localized neutron flux tilting, xenon oscillation hot-spots
+core_invariant: Real-time in-core neutron flux mapping; prevents localized fuel pin
+  thermal melting in nuclear reactors.
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40371:
+      name: s088_self_powered_neutron_detector_spnd_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40373:
+      name: s088_self_powered_neutron_detector_spnd_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s088_self_powered_neutron_detector_spnd_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Core localized neutron flux tilting, xenon oscillation
+    hot-spots'

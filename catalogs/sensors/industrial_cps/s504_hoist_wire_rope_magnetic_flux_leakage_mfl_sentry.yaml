@@ -1,0 +1,45 @@
+sensor_id: s504_hoist_wire_rope_magnetic_flux_leakage_mfl_sentry
+name: Hoist Wire Rope Magnetic Flux Leakage (MFL) Sentry
+domain_id: 71
+domain_title: Autonomous Port Container Straddle Carrier & AGV Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15504
+interface: Encircling Hall-Effect MFL Sensor Head
+description: 'Hoist Wire Rope Magnetic Flux Leakage (MFL) Sentry is a specialized
+  Domain 71 (Autonomous Port Container Straddle Carrier & AGV Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Encircling Hall-Effect MFL Sensor Head,
+  it is specifically engineered to mitigate and detect Broken internal steel wire
+  strands, catastrophic hoist rope snap. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Magnetic flux leakage jump indicates severed
+  internal wire strands; flags rope retirement before load-carrying capacity drops
+  < 90\%.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Broken internal steel wire strands, catastrophic hoist rope snap
+core_invariant: Magnetic flux leakage jump indicates severed internal wire strands;
+  flags rope retirement before load-carrying capacity drops < 90\%.
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40271:
+      name: s504_hoist_wire_rope_magnetic_flux_leakage_mfl_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40273:
+      name: s504_hoist_wire_rope_magnetic_flux_leakage_mfl_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s504_hoist_wire_rope_magnetic_flux_leakage_mfl_sentry_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Broken internal steel wire strands, catastrophic
+    hoist rope snap'

@@ -1,0 +1,47 @@
+sensor_id: s222_hypersonic_boundary_plasma_sheath_attenuation_sensor
+name: Hypersonic Boundary Plasma Sheath Attenuation Sensor
+domain_id: 32
+domain_title: Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS)
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15222
+interface: RF Transceiver / Diagnostic Loop
+description: "Hypersonic Boundary Plasma Sheath Attenuation Sensor is a specialized\
+  \ Domain 32 (Spacecraft Re-entry & Hypersonic Thermal Protection Systems (TPS))\
+  \ cyber-physical monitoring sensor. Interfacing directly via RF Transceiver / Diagnostic\
+  \ Loop, it is specifically engineered to mitigate and detect RF blackout manipulation,\
+  \ false reentry trajectory spoofing. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Plasma electron density: n_e \u2248 \\frac{\\\
+  epsilon_0 m_e \\omega_p^2}{e^2}; plasma cut-off frequency \\omega_p > \\omega_{comm}\
+  \ explains telemetry loss vs cyber tampering.. Any divergence between commanded\
+  \ network state and this physical reading triggers sub-microsecond in-kernel eBPF\
+  \ packet mitigation."
+target_threat: RF blackout manipulation, false reentry trajectory spoofing
+core_invariant: "Plasma electron density: n_e \u2248 \\frac{\\epsilon_0 m_e \\omega_p^2}{e^2};\
+  \ plasma cut-off frequency \\omega_p > \\omega_{comm} explains telemetry loss vs\
+  \ cyber tampering."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40121:
+      name: s222_hypersonic_boundary_plasma_sheath_attenuation_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40123:
+      name: s222_hypersonic_boundary_plasma_sheath_attenuation_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s222_hypersonic_boundary_plasma_sheath_attenuation_sensor_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: RF blackout manipulation, false reentry trajectory
+    spoofing'

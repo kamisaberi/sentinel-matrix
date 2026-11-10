@@ -1,0 +1,47 @@
+sensor_id: s428_sic_mosfet_on_state_resistance_r_ds_on_temperature_sensor
+name: SiC MOSFET On-State Resistance (R_{DS(on)}) Temperature Sensor
+domain_id: 61
+domain_title: High-Speed Electric Vehicle (EV) Powertrain & Silicon Carbide (SiC)
+  Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15428
+interface: Gate-Driver Desaturation Sense Pin
+description: 'SiC MOSFET On-State Resistance (R_{DS(on)}) Temperature Sensor is a
+  specialized Domain 61 (High-Speed Electric Vehicle (EV) Powertrain & Silicon Carbide
+  (SiC) Sensors) cyber-physical monitoring sensor. Interfacing directly via Gate-Driver
+  Desaturation Sense Pin, it is specifically engineered to mitigate and detect Bond-wire
+  lift-off, localized junction thermal runaway in 800\,V inverter. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: Voltage drop:
+  V_{DS(on)} = I_D \cdot R_{DS(on)}(T_j); junction temperature T_j <= 175^\circC;
+  resistance drift > 20\% flags bond-wire failure.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Bond-wire lift-off, localized junction thermal runaway in 800\,V inverter
+core_invariant: 'Voltage drop: V_{DS(on)} = I_D \cdot R_{DS(on)}(T_j); junction temperature
+  T_j <= 175^\circC; resistance drift > 20\% flags bond-wire failure.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40031:
+      name: s428_sic_mosfet_on_state_resistance_r_ds_on_temperature_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40033:
+      name: s428_sic_mosfet_on_state_resistance_r_ds_on_temperature_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s428_sic_mosfet_on_state_resistance_r_ds_on_temperature_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Bond-wire lift-off, localized junction thermal runaway
+    in 800\,V inverter'

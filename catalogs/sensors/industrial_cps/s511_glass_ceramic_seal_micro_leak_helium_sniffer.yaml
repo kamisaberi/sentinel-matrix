@@ -1,0 +1,45 @@
+sensor_id: s511_glass_ceramic_seal_micro_leak_helium_sniffer
+name: Glass-Ceramic Seal Micro-Leak Helium Sniffer
+domain_id: 72
+domain_title: High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15511
+interface: Mass Spectrometer Helium Tracer Probe
+description: 'Glass-Ceramic Seal Micro-Leak Helium Sniffer is a specialized Domain
+  72 (High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Mass Spectrometer Helium Tracer Probe,
+  it is specifically engineered to mitigate and detect High-temperature glass seal
+  fracture, flammable hydrogen leak to air. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Helium tracer leak rate: Q_{leak}
+  <= 10^{-6}\,mbar\cdotL/s; seal breach trips stack power and floods nitrogen purge..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: High-temperature glass seal fracture, flammable hydrogen leak to air
+core_invariant: 'Helium tracer leak rate: Q_{leak} <= 10^{-6}\,mbar\cdotL/s; seal
+  breach trips stack power and floods nitrogen purge.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40341:
+      name: s511_glass_ceramic_seal_micro_leak_helium_sniffer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40343:
+      name: s511_glass_ceramic_seal_micro_leak_helium_sniffer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s511_glass_ceramic_seal_micro_leak_helium_sniffer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: High-temperature glass seal fracture, flammable hydrogen
+    leak to air'

@@ -1,0 +1,47 @@
+sensor_id: s183_electrowetting_on_dielectric_ewod_actuation_voltage_sentry
+name: Electrowetting-on-Dielectric (EWOD) Actuation Voltage Sentry
+domain_id: 26
+domain_title: Microfluidic, Lab-on-a-Chip & DNA Synthesis Biosecurity Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15183
+interface: High-Voltage AC Switching Sense Bus
+description: "Electrowetting-on-Dielectric (EWOD) Actuation Voltage Sentry is a specialized\
+  \ Domain 26 (Microfluidic, Lab-on-a-Chip & DNA Synthesis Biosecurity Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via High-Voltage AC Switching Sense Bus,\
+  \ it is specifically engineered to mitigate and detect Digital microfluidic droplet\
+  \ routing hijacking, droplet collision sabotage. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Contact angle modulation: \\\
+  cos\\theta(V) = \\cos\\theta_0 + \\frac{\\epsilon_0 \\epsilon_d}{2\\gamma d} V^2;\
+  \ voltage spikes exceeding dielectric breakdown (> 120\\,V) cut electrode power\
+  \ in < 1\\,\xB5s.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Digital microfluidic droplet routing hijacking, droplet collision sabotage
+core_invariant: "Contact angle modulation: \\cos\\theta(V) = \\cos\\theta_0 + \\frac{\\\
+  epsilon_0 \\epsilon_d}{2\\gamma d} V^2; voltage spikes exceeding dielectric breakdown\
+  \ (> 120\\,V) cut electrode power in < 1\\,\xB5s."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40271:
+      name: s183_electrowetting_on_dielectric_ewod_actuation_voltage_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40273:
+      name: s183_electrowetting_on_dielectric_ewod_actuation_voltage_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s183_electrowetting_on_dielectric_ewod_actuation_voltage_sentry_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Digital microfluidic droplet routing hijacking, droplet
+    collision sabotage'

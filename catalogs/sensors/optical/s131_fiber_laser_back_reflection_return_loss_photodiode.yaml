@@ -1,0 +1,45 @@
+sensor_id: s131_fiber_laser_back_reflection_return_loss_photodiode
+name: Fiber Laser Back-Reflection (Return Loss) Photodiode
+domain_id: 19
+domain_title: High-Energy Laser, Directed Energy & Optoelectronic Sensors
+category: OPTICAL
+target_protocol: MODBUS_TCP
+default_port: 15131
+interface: In-Fiber Directional Optical Tap
+description: 'Fiber Laser Back-Reflection (Return Loss) Photodiode is a specialized
+  Domain 19 (High-Energy Laser, Directed Energy & Optoelectronic Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via In-Fiber Directional Optical Tap, it
+  is specifically engineered to mitigate and detect Catastrophic "Fiber Fuse" effect,
+  end-facet plasma flashover. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Return loss ratio \frac{P_{reflected}}{P_{forward}}
+  <= -25\,dB; reflected light surge isolates fiber amplifier pump diodes in < 100\,ns..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Catastrophic "Fiber Fuse" effect, end-facet plasma flashover
+core_invariant: Return loss ratio \frac{P_{reflected}}{P_{forward}} <= -25\,dB; reflected
+  light surge isolates fiber amplifier pump diodes in < 100\,ns.
+physics:
+  engine: optical_laser
+  baseline_value: -0.5
+  min_value: -40.0
+  max_value: 10.0
+  noise_sigma: 0.05
+  unit: dBm
+registers:
+  holding_registers:
+    40271:
+      name: s131_fiber_laser_back_reflection_return_loss_photodiode_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40273:
+      name: s131_fiber_laser_back_reflection_return_loss_photodiode_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s131_fiber_laser_back_reflection_return_loss_photodiode_fault
+  action: step_decrease
+  value: -15.0
+  description: 'Injects anomaly: Catastrophic "Fiber Fuse" effect, end-facet plasma
+    flashover'

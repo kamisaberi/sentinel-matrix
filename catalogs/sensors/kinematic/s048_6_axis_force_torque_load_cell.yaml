@@ -1,0 +1,42 @@
+sensor_id: s048_6_axis_force_torque_load_cell
+name: 6-Axis Force/Torque Load Cell
+domain_id: 8
+domain_title: Mechanical, Displacement & Kinematic Sensors
+category: KINEMATIC
+target_protocol: MODBUS_TCP
+default_port: 15048
+interface: EtherCAT / CANopen Strain Bridge
+description: '6-Axis Force/Torque Load Cell is a specialized Domain 08 (Mechanical,
+  Displacement & Kinematic Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via EtherCAT / CANopen Strain Bridge, it is specifically engineered to
+  mitigate and detect Cobot human crushing, machine tool collision. In the Aryorithm
+  edge architecture, it continuously asserts the operational invariant: End-effector
+  force must remain <= 150\,N (ISO/TS 15066 safety limit).. Any divergence between
+  commanded network state and this physical reading triggers sub-microsecond in-kernel
+  eBPF packet mitigation.'
+target_threat: Cobot human crushing, machine tool collision
+core_invariant: End-effector force must remain <= 150\,N (ISO/TS 15066 safety limit).
+physics:
+  engine: kinematic_encoder
+  baseline_value: 0.0
+  min_value: -180.0
+  max_value: 180.0
+  noise_sigma: 0.02
+  unit: mm
+registers:
+  holding_registers:
+    40471:
+      name: s048_6_axis_force_torque_load_cell_pv
+      type: float32
+      scale: 1.0
+      unit: mm
+    40473:
+      name: s048_6_axis_force_torque_load_cell_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s048_6_axis_force_torque_load_cell_fault
+  action: step_increase
+  value: 45.0
+  description: 'Injects anomaly: Cobot human crushing, machine tool collision'

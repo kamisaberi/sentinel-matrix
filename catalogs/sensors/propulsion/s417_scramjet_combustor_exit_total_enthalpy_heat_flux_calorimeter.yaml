@@ -1,0 +1,45 @@
+sensor_id: s417_scramjet_combustor_exit_total_enthalpy_heat_flux_calorimeter
+name: Scramjet Combustor Exit Total Enthalpy Heat Flux Calorimeter
+domain_id: 59
+domain_title: Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15417
+interface: Coaxial Copper-Constantan Fast Gauge
+description: 'Scramjet Combustor Exit Total Enthalpy Heat Flux Calorimeter is a specialized
+  Domain 59 (Hypersonic Scramjet Propulsion & Supersonic Combustion Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Coaxial Copper-Constantan Fast Gauge,
+  it is specifically engineered to mitigate and detect Excessive heat release, structural
+  titanium-aluminide melting. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Stagnation enthalpy flux: H_0 <= H_{structural\_limit};
+  heat flux breach commands angle-of-attack pitch-up to reduce dynamic pressure..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Excessive heat release, structural titanium-aluminide melting
+core_invariant: 'Stagnation enthalpy flux: H_0 <= H_{structural\_limit}; heat flux
+  breach commands angle-of-attack pitch-up to reduce dynamic pressure.'
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40431:
+      name: s417_scramjet_combustor_exit_total_enthalpy_heat_flux_calorimeter_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40433:
+      name: s417_scramjet_combustor_exit_total_enthalpy_heat_flux_calorimeter_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s417_scramjet_combustor_exit_total_enthalpy_heat_flux_calorimeter_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Excessive heat release, structural titanium-aluminide
+    melting'

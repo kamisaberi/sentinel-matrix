@@ -1,0 +1,45 @@
+sensor_id: s450_dual_frequency_airborne_electromagnetic_ice_thickness_probe
+name: Dual-Frequency Airborne Electromagnetic Ice Thickness Probe
+domain_id: 64
+domain_title: Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors
+category: ELECTRICAL
+target_protocol: MODBUS_TCP
+default_port: 15450
+interface: Towed Bird Sensor (3--4 kHz)
+description: 'Dual-Frequency Airborne Electromagnetic Ice Thickness Probe is a specialized
+  Domain 64 (Extreme Arctic LNG & Icebreaker Hydro-Structural Hull Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Towed Bird Sensor (3--4 kHz), it is
+  specifically engineered to mitigate and detect Ship entry into multi-year ice ridges
+  exceeding vessel class limits. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Sea-ice thickness: h_{ice} <= 2.1\,meters (Arc7
+  Polar Class limit); thick ice detection auto-recalculates safe navigation route..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Ship entry into multi-year ice ridges exceeding vessel class limits
+core_invariant: 'Sea-ice thickness: h_{ice} <= 2.1\,meters (Arc7 Polar Class limit);
+  thick ice detection auto-recalculates safe navigation route.'
+physics:
+  engine: grid_harmonics
+  baseline_value: 230.0
+  min_value: 0.0
+  max_value: 500.0
+  noise_sigma: 0.35
+  unit: V
+registers:
+  holding_registers:
+    40241:
+      name: s450_dual_frequency_airborne_electromagnetic_ice_thickness_probe_pv
+      type: float32
+      scale: 1.0
+      unit: V
+    40243:
+      name: s450_dual_frequency_airborne_electromagnetic_ice_thickness_probe_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s450_dual_frequency_airborne_electromagnetic_ice_thickness_probe_fault
+  action: step_decrease
+  value: -45.0
+  description: 'Injects anomaly: Ship entry into multi-year ice ridges exceeding vessel
+    class limits'

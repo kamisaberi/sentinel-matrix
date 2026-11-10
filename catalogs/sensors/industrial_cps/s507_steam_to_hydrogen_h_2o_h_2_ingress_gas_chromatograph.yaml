@@ -1,0 +1,44 @@
+sensor_id: s507_steam_to_hydrogen_h_2o_h_2_ingress_gas_chromatograph
+name: Steam-to-Hydrogen (H_2O/H_2) Ingress Gas Chromatograph
+domain_id: 72
+domain_title: High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15507
+interface: Thermal Conductivity Detector (TCD)
+description: 'Steam-to-Hydrogen (H_2O/H_2) Ingress Gas Chromatograph is a specialized
+  Domain 72 (High-Temperature Solid Oxide Electrolyzer Cell (SOEC) Hydrogen Sensors)
+  cyber-physical monitoring sensor. Interfacing directly via Thermal Conductivity
+  Detector (TCD), it is specifically engineered to mitigate and detect Steam starvation,
+  nickel cermet fuel electrode re-oxidation. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Steam-to-hydrogen ratio: \frac{P_{H_2O}}{P_{H_2}}
+  >= 0.10; steam starvation causes destructive nickel oxidation; auto-injects purge
+  gas.. Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Steam starvation, nickel cermet fuel electrode re-oxidation
+core_invariant: 'Steam-to-hydrogen ratio: \frac{P_{H_2O}}{P_{H_2}} >= 0.10; steam
+  starvation causes destructive nickel oxidation; auto-injects purge gas.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40301:
+      name: s507_steam_to_hydrogen_h_2o_h_2_ingress_gas_chromatograph_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40303:
+      name: s507_steam_to_hydrogen_h_2o_h_2_ingress_gas_chromatograph_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s507_steam_to_hydrogen_h_2o_h_2_ingress_gas_chromatograph_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Steam starvation, nickel cermet fuel electrode re-oxidation'

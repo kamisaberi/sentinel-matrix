@@ -18,33 +18,79 @@ YELLOW = "\033[1;33m"
 RED = "\033[1;31m"
 RESET = "\033[0m"
 
-def cmd_list():
-    
-    profiles = sorted(list(CATALOG_DIR.rglob("*.yaml")))
-    print(f"{CYAN}========================================================================================================{RESET}")
-    print(f"\033[1;37m        ARYORITHM SENSOR CATALOG: 550+ INDUSTRIAL ASSET ARCHETYPES                      {RESET}")
-    print(f"{CYAN}========================================================================================================{RESET}")
-    print(f"{'SENSOR ID':<24} {'CATEGORY':<12} {'VENDOR':<16} {'PORT':<8} {'PROTOCOL':<12} {'PHYSICS ENGINE'}")
-    print("-" * 104)
+# --- REPLACE cmd_list() IN tools/sensor_ctl.py ---
+def cmd_list(category_filter=None, search_query=None, domain_filter=None, limit=None):
+    profiles = list(CATALOG_DIR.rglob("*.yaml"))
+    if not profiles:
+        print(f"[-] No sensor profiles found in {CATALOG_DIR}")
+        return
 
+    # 1. Parse and extract all sensors
+    sensors = []
     for p in profiles:
         try:
-            with open(p) as f:
+            with open(p, "r", encoding="utf-8") as f:
                 prof = yaml.safe_load(f)
             s_id = prof.get("sensor_id", p.stem)
-            cat = prof.get("category", "UNKNOWN")
-            vendor = prof.get("vendor", "Generic")
-            port = prof.get("default_port", 15501)
-            proto = prof.get("target_protocol", "MODBUS_TCP")
-            engine = prof.get("physics", {}).get("engine", "generic_ode")
-            print(f"{s_id:<24} {cat:<12} {vendor:<16} {port:<8} {proto:<12} {GREEN}{engine}{RESET}")
+            
+            # Extract numerical ID for sorting (s001 -> 1)
+            num_match = re.search(r"s(\d+)", s_id)
+            num = int(num_match.group(1)) if num_match else 9999
+            
+            sensors.append({
+                "num": num,
+                "slug": s_id,
+                "name": prof.get("name", prof.get("model", s_id)),
+                "category": prof.get("category", "INDUSTRIAL"),
+                "domain_id": prof.get("domain_id", 0),
+                "port": prof.get("default_port", 15501),
+                "interface": prof.get("interface", "Modbus / Analog"),
+                "engine": prof.get("physics", {}).get("engine", "generic_ode")
+            })
         except Exception:
             pass
 
-    print("-" * 104)
-    print(f"[+] Total Cataloged Sensor Profiles: {len(profiles)} | Add to scenario: {YELLOW}aryo scenario add <scen> <sensor_id>{RESET}")
-    print(f"{CYAN}========================================================================================================{RESET}")
+    # 2. Sort numerically (#001 -> #570)
+    sensors.sort(key=lambda x: x["num"])
 
+    # 3. Apply optional filters
+    filtered = []
+    for s in sensors:
+        if category_filter and category_filter.upper() != s["category"].upper():
+            continue
+        if domain_filter and int(domain_filter) != s["domain_id"]:
+            continue
+        if search_query:
+            q = search_query.lower()
+            if q not in s["name"].lower() and q not in s["slug"].lower() and q not in s["interface"].lower():
+                continue
+        filtered.append(s)
+
+    if limit:
+        filtered = filtered[:int(limit)]
+
+    # 4. Render 120-Column Aligned Table
+    print(f"{CYAN}========================================================================================================================{RESET}")
+    print(f"\033[1;37m                       ARYORITHM MASTER SENSOR CATALOG (570 INDUSTRIAL TELEMETRY ARCHETYPES)                            {RESET}")
+    print(f"{CYAN}========================================================================================================================{RESET}")
+    print(f"{'ID':<6} {'SENSOR NAME':<44} {'CATEGORY':<14} {'PORT':<8} {'INTERFACE':<26} {'PHYSICS ENGINE'}")
+    print("-" * 120)
+
+    for s in filtered:
+        s_num = f"#{s['num']:03d}"
+        s_name = s['name'][:42]
+        s_cat = s['category'][:13]
+        s_port = f":{s['port']}"
+        s_iface = s['interface'][:24]
+        s_engine = s['engine']
+        print(f"{YELLOW}{s_num:<6}{RESET} {s_name:<44} {s_cat:<14} {s_port:<8} {s_iface:<26} {GREEN}{s_engine}{RESET}")
+
+    print("-" * 120)
+    print(f"[+] Displaying {len(filtered)} of {len(sensors)} cataloged sensors | Filters: {YELLOW}aryo sensor list [--category <c>] [--search <q>]{RESET}")
+    print(f"{CYAN}========================================================================================================================{RESET}")
+
+
+    
 def cmd_inspect(sensor_id):
     target_yaml = CATALOG_DIR / f"{sensor_id}.yaml"
     if not target_yaml.exists():
@@ -100,8 +146,17 @@ def main():
         sys.exit(0)
 
     cmd = sys.argv[1]
+
+
+# --- IN main() of tools/sensor_ctl.py ---
     if cmd == "list":
-        cmd_list()
+        cat_f, q_f, dom_f, lim_f = None, None, None, None
+        for i in range(2, len(sys.argv)):
+            if sys.argv[i] == "--category" and i + 1 < len(sys.argv): cat_f = sys.argv[i+1]
+            elif sys.argv[i] == "--search" and i + 1 < len(sys.argv): q_f = sys.argv[i+1]
+            elif sys.argv[i] == "--domain" and i + 1 < len(sys.argv): dom_f = sys.argv[i+1]
+            elif sys.argv[i] == "--limit" and i + 1 < len(sys.argv): lim_f = sys.argv[i+1]
+        cmd_list(cat_f, q_f, dom_f, lim_f)
     elif cmd == "inspect" and len(sys.argv) >= 3:
         cmd_inspect(sys.argv[2])
     elif cmd == "fault" and len(sys.argv) >= 4:

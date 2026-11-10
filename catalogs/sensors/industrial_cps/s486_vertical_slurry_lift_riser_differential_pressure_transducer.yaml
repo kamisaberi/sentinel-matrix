@@ -1,0 +1,47 @@
+sensor_id: s486_vertical_slurry_lift_riser_differential_pressure_transducer
+name: Vertical Slurry Lift Riser Differential Pressure Transducer
+domain_id: 69
+domain_title: Deep Sea Mining Crawler & Slurry Riser Lift Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15486
+interface: Subsea Diaphragm Sensor (500\,bar)
+description: "Vertical Slurry Lift Riser Differential Pressure Transducer is a specialized\
+  \ Domain 69 (Deep Sea Mining Crawler & Slurry Riser Lift Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Subsea Diaphragm Sensor (500\\,bar),\
+  \ it is specifically engineered to mitigate and detect Slurry column blockage, hydraulic\
+  \ flow stall, catastrophic riser collapse. In the Aryorithm edge architecture, it\
+  \ continuously asserts the operational invariant: Vertical pressure gradient: \\\
+  frac{dP}{dz} = \\rho_{slurry}(C_v) \\cdot g + \u0394 P_{friction}; pressure spike\
+  \ triggers high-pressure seawater backflush.. Any divergence between commanded network\
+  \ state and this physical reading triggers sub-microsecond in-kernel eBPF packet\
+  \ mitigation."
+target_threat: Slurry column blockage, hydraulic flow stall, catastrophic riser collapse
+core_invariant: "Vertical pressure gradient: \\frac{dP}{dz} = \\rho_{slurry}(C_v)\
+  \ \\cdot g + \u0394 P_{friction}; pressure spike triggers high-pressure seawater\
+  \ backflush."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40101:
+      name: s486_vertical_slurry_lift_riser_differential_pressure_transducer_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40103:
+      name: s486_vertical_slurry_lift_riser_differential_pressure_transducer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s486_vertical_slurry_lift_riser_differential_pressure_transducer_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Slurry column blockage, hydraulic flow stall, catastrophic
+    riser collapse'

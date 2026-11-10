@@ -1,0 +1,45 @@
+sensor_id: s296_ground_clearance_lidar_profiler
+name: Ground Clearance LiDAR Profiler
+domain_id: 42
+domain_title: High-Tension Transmission Pylon & Dynamic Line Rating (DLR) Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15296
+interface: Tower-Mounted 3D LiDAR Scanner
+description: 'Ground Clearance LiDAR Profiler is a specialized Domain 42 (High-Tension
+  Transmission Pylon & Dynamic Line Rating (DLR) Sensors) cyber-physical monitoring
+  sensor. Interfacing directly via Tower-Mounted 3D LiDAR Scanner, it is specifically
+  engineered to mitigate and detect Vegetation intrusion, wildfire ignition hazard
+  (2018 Camp Fire scenario). In the Aryorithm edge architecture, it continuously asserts
+  the operational invariant: Clearance distance to ground/trees: d_{clearance} >=
+  d_{regulatory} = 10.5\,meters; flashover proximity flags emergency line de-rate..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Vegetation intrusion, wildfire ignition hazard (2018 Camp Fire scenario)
+core_invariant: 'Clearance distance to ground/trees: d_{clearance} >= d_{regulatory}
+  = 10.5\,meters; flashover proximity flags emergency line de-rate.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40321:
+      name: s296_ground_clearance_lidar_profiler_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40323:
+      name: s296_ground_clearance_lidar_profiler_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s296_ground_clearance_lidar_profiler_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Vegetation intrusion, wildfire ignition hazard (2018
+    Camp Fire scenario)'

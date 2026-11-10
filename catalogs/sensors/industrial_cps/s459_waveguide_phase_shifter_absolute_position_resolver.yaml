@@ -1,0 +1,44 @@
+sensor_id: s459_waveguide_phase_shifter_absolute_position_resolver
+name: Waveguide Phase Shifter Absolute Position Resolver
+domain_id: 65
+domain_title: Directed-Energy Counter-Electronics (HPEM/HPM) Waveguide Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15459
+interface: Brushless Rotary Inductive Resolver
+description: "Waveguide Phase Shifter Absolute Position Resolver is a specialized\
+  \ Domain 65 (Directed-Energy Counter-Electronics (HPEM/HPM) Waveguide Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Brushless Rotary Inductive Resolver,\
+  \ it is specifically engineered to mitigate and detect Directed-energy phased array\
+  \ beam-steering sabotage. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Phase shift angle: \\phi_{actual} = \\phi_{command}\
+  \ \xB1 0.5^\\circ; phase disagreement cuts transmitter power to prevent off-target\
+  \ firing.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Directed-energy phased array beam-steering sabotage
+core_invariant: "Phase shift angle: \\phi_{actual} = \\phi_{command} \xB1 0.5^\\circ;\
+  \ phase disagreement cuts transmitter power to prevent off-target firing."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40331:
+      name: s459_waveguide_phase_shifter_absolute_position_resolver_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40333:
+      name: s459_waveguide_phase_shifter_absolute_position_resolver_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s459_waveguide_phase_shifter_absolute_position_resolver_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Directed-energy phased array beam-steering sabotage'

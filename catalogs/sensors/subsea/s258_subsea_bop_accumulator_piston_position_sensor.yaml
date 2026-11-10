@@ -1,0 +1,45 @@
+sensor_id: s258_subsea_bop_accumulator_piston_position_sensor
+name: Subsea BOP Accumulator Piston Position Sensor
+domain_id: 37
+domain_title: Subsea Well Intervention, Choke & Hydrate Management Sensors
+category: SUBSEA
+target_protocol: MODBUS_TCP
+default_port: 15258
+interface: Magnetostrictive Waveguide Probe
+description: 'Subsea BOP Accumulator Piston Position Sensor is a specialized Domain
+  37 (Subsea Well Intervention, Choke & Hydrate Management Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Magnetostrictive Waveguide Probe, it
+  is specifically engineered to mitigate and detect Hydraulic fluid loss in subsea
+  BOP, deadman autoshear failure. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Piston displacement x_{piston} indicates active
+  usable hydraulic volume: V_{usable} >= V_{shear\_all\_rams}; fluid loss locks drilling
+  operations.. Any divergence between commanded network state and this physical reading
+  triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hydraulic fluid loss in subsea BOP, deadman autoshear failure
+core_invariant: 'Piston displacement x_{piston} indicates active usable hydraulic
+  volume: V_{usable} >= V_{shear\_all\_rams}; fluid loss locks drilling operations.'
+physics:
+  engine: subsea_acoustic
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: m/s
+registers:
+  holding_registers:
+    40481:
+      name: s258_subsea_bop_accumulator_piston_position_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: m/s
+    40483:
+      name: s258_subsea_bop_accumulator_piston_position_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s258_subsea_bop_accumulator_piston_position_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Hydraulic fluid loss in subsea BOP, deadman autoshear
+    failure'

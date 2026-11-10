@@ -1,0 +1,45 @@
+sensor_id: s243_vacuum_jacketed_cryogenic_line_pirani_vacuum_sentry
+name: Vacuum-Jacketed Cryogenic Line Pirani Vacuum Sentry
+domain_id: 35
+domain_title: Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors
+category: TEMPERATURE
+target_protocol: MODBUS_TCP
+default_port: 15243
+interface: Thermal Conductivity Vacuum Gauge
+description: "Vacuum-Jacketed Cryogenic Line Pirani Vacuum Sentry is a specialized\
+  \ Domain 35 (Liquid Hydrogen (LH_2) & Cryogenic Infrastructure Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Thermal Conductivity Vacuum Gauge,\
+  \ it is specifically engineered to mitigate and detect Annular vacuum loss, catastrophic\
+  \ cryogenic boiling overpressure. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Annular vacuum: P_{vacuum} <= 10^{-4}\\,mbar;\
+  \ vacuum loss causes rapid heat leak (> 100\xD7); trips emergency shutoff valves\
+  \ in < 2\\,seconds.. Any divergence between commanded network state and this physical\
+  \ reading triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Annular vacuum loss, catastrophic cryogenic boiling overpressure
+core_invariant: "Annular vacuum: P_{vacuum} <= 10^{-4}\\,mbar; vacuum loss causes\
+  \ rapid heat leak (> 100\xD7); trips emergency shutoff valves in < 2\\,seconds."
+physics:
+  engine: thermal_lag_ode
+  baseline_value: 68.5
+  min_value: -50.0
+  max_value: 400.0
+  noise_sigma: 0.15
+  unit: degC
+registers:
+  holding_registers:
+    40331:
+      name: s243_vacuum_jacketed_cryogenic_line_pirani_vacuum_sentry_pv
+      type: float32
+      scale: 1.0
+      unit: degC
+    40333:
+      name: s243_vacuum_jacketed_cryogenic_line_pirani_vacuum_sentry_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s243_vacuum_jacketed_cryogenic_line_pirani_vacuum_sentry_fault
+  action: linear_ramp
+  value: 15.0
+  description: 'Injects anomaly: Annular vacuum loss, catastrophic cryogenic boiling
+    overpressure'

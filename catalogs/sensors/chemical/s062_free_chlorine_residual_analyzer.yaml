@@ -1,0 +1,42 @@
+sensor_id: s062_free_chlorine_residual_analyzer
+name: Free Chlorine Residual Analyzer
+domain_id: 10
+domain_title: Chemical, Gas & Dielectric Sensors
+category: CHEMICAL
+target_protocol: MODBUS_TCP
+default_port: 15062
+interface: Amperometric Flow Cell
+description: 'Free Chlorine Residual Analyzer is a specialized Domain 10 (Chemical,
+  Gas & Dielectric Sensors) cyber-physical monitoring sensor. Interfacing directly
+  via Amperometric Flow Cell, it is specifically engineered to mitigate and detect
+  Water disinfection failure, excessive chlorination. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Free chlorine maintained at 0.5--2.0\,mg/L;
+  zero chlorine flags pathogen danger.. Any divergence between commanded network state
+  and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Water disinfection failure, excessive chlorination
+core_invariant: Free chlorine maintained at 0.5--2.0\,mg/L; zero chlorine flags pathogen
+  danger.
+physics:
+  engine: chemical_nernst
+  baseline_value: 45.0
+  min_value: 0.0
+  max_value: 1000.0
+  noise_sigma: 0.02
+  unit: ppm
+registers:
+  holding_registers:
+    40111:
+      name: s062_free_chlorine_residual_analyzer_pv
+      type: float32
+      scale: 1.0
+      unit: ppm
+    40113:
+      name: s062_free_chlorine_residual_analyzer_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s062_free_chlorine_residual_analyzer_fault
+  action: step_increase
+  value: 25.0
+  description: 'Injects anomaly: Water disinfection failure, excessive chlorination'

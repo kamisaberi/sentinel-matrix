@@ -1,0 +1,45 @@
+sensor_id: s395_grain_moisture_dielectric_high_frequency_capacitance_plate
+name: Grain Moisture Dielectric High-Frequency Capacitance Plate
+domain_id: 56
+domain_title: Autonomous Agricultural Combine Harvester & Grain Loss Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15395
+interface: 10--50 MHz Dielectric Cell
+description: "Grain Moisture Dielectric High-Frequency Capacitance Plate is a specialized\
+  \ Domain 56 (Autonomous Agricultural Combine Harvester & Grain Loss Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via 10--50 MHz Dielectric Cell, it is\
+  \ specifically engineered to mitigate and detect Grain spoilage in storage, wet\
+  \ crop harvesting jamming augers. In the Aryorithm edge architecture, it continuously\
+  \ asserts the operational invariant: Permittivity ratio \\epsilon_r \u221D Moisture\\\
+  %; grain moisture > 18\\% flags grain drying requirement before bin transfer.. Any\
+  \ divergence between commanded network state and this physical reading triggers\
+  \ sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Grain spoilage in storage, wet crop harvesting jamming augers
+core_invariant: "Permittivity ratio \\epsilon_r \u221D Moisture\\%; grain moisture\
+  \ > 18\\% flags grain drying requirement before bin transfer."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40221:
+      name: s395_grain_moisture_dielectric_high_frequency_capacitance_plate_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40223:
+      name: s395_grain_moisture_dielectric_high_frequency_capacitance_plate_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s395_grain_moisture_dielectric_high_frequency_capacitance_plate_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Grain spoilage in storage, wet crop harvesting jamming
+    augers'

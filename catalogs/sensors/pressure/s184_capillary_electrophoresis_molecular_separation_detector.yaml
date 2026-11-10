@@ -1,0 +1,47 @@
+sensor_id: s184_capillary_electrophoresis_molecular_separation_detector
+name: Capillary Electrophoresis Molecular Separation Detector
+domain_id: 26
+domain_title: Microfluidic, Lab-on-a-Chip & DNA Synthesis Biosecurity Sensors
+category: PRESSURE
+target_protocol: MODBUS_TCP
+default_port: 15184
+interface: Laser-Induced Fluorescence (LIF) Micro-Cell
+description: "Capillary Electrophoresis Molecular Separation Detector is a specialized\
+  \ Domain 26 (Microfluidic, Lab-on-a-Chip & DNA Synthesis Biosecurity Sensors) cyber-physical\
+  \ monitoring sensor. Interfacing directly via Laser-Induced Fluorescence (LIF) Micro-Cell,\
+  \ it is specifically engineered to mitigate and detect Biochemical weapon precursor\
+  \ purification, illicit protein toxin isolation. In the Aryorithm edge architecture,\
+  \ it continuously asserts the operational invariant: Electrophoretic mobility: \xB5\
+  _e = \\frac{q}{6\\pi \\eta r}; migration transit time through the micro-channel\
+  \ confirms molecular charge-to-size ratio matches benign targets.. Any divergence\
+  \ between commanded network state and this physical reading triggers sub-microsecond\
+  \ in-kernel eBPF packet mitigation."
+target_threat: Biochemical weapon precursor purification, illicit protein toxin isolation
+core_invariant: "Electrophoretic mobility: \xB5_e = \\frac{q}{6\\pi \\eta r}; migration\
+  \ transit time through the micro-channel confirms molecular charge-to-size ratio\
+  \ matches benign targets."
+physics:
+  engine: fluid_pressure_ode
+  baseline_value: 6.2
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.04
+  unit: bar
+registers:
+  holding_registers:
+    40281:
+      name: s184_capillary_electrophoresis_molecular_separation_detector_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40283:
+      name: s184_capillary_electrophoresis_molecular_separation_detector_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s184_capillary_electrophoresis_molecular_separation_detector_fault
+  action: step_increase
+  value: 8.5
+  description: 'Injects anomaly: Biochemical weapon precursor purification, illicit
+    protein toxin isolation'

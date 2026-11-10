@@ -1,0 +1,43 @@
+sensor_id: s024_1pps_clock_phase_discontinuity_sensor
+name: 1PPS Clock Phase-Discontinuity Sensor
+domain_id: 4
+domain_title: Radio Frequency, GNSS & Electromagnetic Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15024
+interface: Hardware Timer Capture Pin
+description: '1PPS Clock Phase-Discontinuity Sensor is a specialized Domain 04 (Radio
+  Frequency, GNSS & Electromagnetic Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via Hardware Timer Capture Pin, it is specifically engineered to mitigate
+  and detect Synchrophasor phase-shift attacks. In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Phase drift > 100\,ns against
+  local atomic rubidium clock triggers holdover mode.. Any divergence between commanded
+  network state and this physical reading triggers sub-microsecond in-kernel eBPF
+  packet mitigation.'
+target_threat: Synchrophasor phase-shift attacks
+core_invariant: Phase drift > 100\,ns against local atomic rubidium clock triggers
+  holdover mode.
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40231:
+      name: s024_1pps_clock_phase_discontinuity_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40233:
+      name: s024_1pps_clock_phase_discontinuity_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s024_1pps_clock_phase_discontinuity_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Synchrophasor phase-shift attacks'

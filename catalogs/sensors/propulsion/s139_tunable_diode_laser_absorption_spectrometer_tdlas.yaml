@@ -1,0 +1,45 @@
+sensor_id: s139_tunable_diode_laser_absorption_spectrometer_tdlas
+name: Tunable Diode Laser Absorption Spectrometer (TDLAS)
+domain_id: 20
+domain_title: Combustion, Turbomachinery & Rocket Propulsion Sensors
+category: PROPULSION
+target_protocol: MODBUS_TCP
+default_port: 15139
+interface: Distributed Feedback (DFB) Laser Receiver
+description: 'Tunable Diode Laser Absorption Spectrometer (TDLAS) is a specialized
+  Domain 20 (Combustion, Turbomachinery & Rocket Propulsion Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Distributed Feedback (DFB) Laser Receiver,
+  it is specifically engineered to mitigate and detect Fuel/air equivalence ratio
+  manipulation, carbon monoxide spikes. In the Aryorithm edge architecture, it continuously
+  asserts the operational invariant: Beer-Lambert absorption law I = I_0 e^{-\alpha(T,
+  P) L}; real-time in-situ temperature and gas species mole fractions (CO, H_2O, CH_4)..
+  Any divergence between commanded network state and this physical reading triggers
+  sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Fuel/air equivalence ratio manipulation, carbon monoxide spikes
+core_invariant: Beer-Lambert absorption law I = I_0 e^{-\alpha(T, P) L}; real-time
+  in-situ temperature and gas species mole fractions (CO, H_2O, CH_4).
+physics:
+  engine: combustion_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: bar
+registers:
+  holding_registers:
+    40351:
+      name: s139_tunable_diode_laser_absorption_spectrometer_tdlas_pv
+      type: float32
+      scale: 1.0
+      unit: bar
+    40353:
+      name: s139_tunable_diode_laser_absorption_spectrometer_tdlas_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s139_tunable_diode_laser_absorption_spectrometer_tdlas_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Fuel/air equivalence ratio manipulation, carbon monoxide
+    spikes'

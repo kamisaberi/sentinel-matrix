@@ -1,0 +1,45 @@
+sensor_id: s499_dual_antenna_gnss_rtk_spreader_heading_sensor
+name: Dual-Antenna GNSS-RTK Spreader Heading Sensor
+domain_id: 71
+domain_title: Autonomous Port Container Straddle Carrier & AGV Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15499
+interface: Dual-Antenna GPS/Galileo RTK Module
+description: "Dual-Antenna GNSS-RTK Spreader Heading Sensor is a specialized Domain\
+  \ 71 (Autonomous Port Container Straddle Carrier & AGV Sensors) cyber-physical monitoring\
+  \ sensor. Interfacing directly via Dual-Antenna GPS/Galileo RTK Module, it is specifically\
+  \ engineered to mitigate and detect Spreader skew error during high-speed hoist,\
+  \ container corner clash. In the Aryorithm edge architecture, it continuously asserts\
+  \ the operational invariant: Heading angle: \\psi_{spreader} = \\psi_{carrier} \xB1\
+  \ 0.2^\\circ; angular mismatch inhibits hoist motion to prevent collision with container\
+  \ guides.. Any divergence between commanded network state and this physical reading\
+  \ triggers sub-microsecond in-kernel eBPF packet mitigation."
+target_threat: Spreader skew error during high-speed hoist, container corner clash
+core_invariant: "Heading angle: \\psi_{spreader} = \\psi_{carrier} \xB1 0.2^\\circ;\
+  \ angular mismatch inhibits hoist motion to prevent collision with container guides."
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40221:
+      name: s499_dual_antenna_gnss_rtk_spreader_heading_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40223:
+      name: s499_dual_antenna_gnss_rtk_spreader_heading_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s499_dual_antenna_gnss_rtk_spreader_heading_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Spreader skew error during high-speed hoist, container
+    corner clash'

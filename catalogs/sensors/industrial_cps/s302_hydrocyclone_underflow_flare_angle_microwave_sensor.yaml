@@ -1,0 +1,45 @@
+sensor_id: s302_hydrocyclone_underflow_flare_angle_microwave_sensor
+name: Hydrocyclone Underflow Flare Angle Microwave Sensor
+domain_id: 43
+domain_title: Mining Flotation & Mineral Beneficiation Process Sensors
+category: INDUSTRIAL_CPS
+target_protocol: MODBUS_TCP
+default_port: 15302
+interface: Non-Contact Microwave Reflection Probe
+description: 'Hydrocyclone Underflow Flare Angle Microwave Sensor is a specialized
+  Domain 43 (Mining Flotation & Mineral Beneficiation Process Sensors) cyber-physical
+  monitoring sensor. Interfacing directly via Non-Contact Microwave Reflection Probe,
+  it is specifically engineered to mitigate and detect Hydrocyclone "roping" (coarse
+  particle overload), un-ground ore bypass. In the Aryorithm edge architecture, it
+  continuously asserts the operational invariant: Discharge geometry angle: \theta_{spray}
+  >= 20^\circ (cone discharge); collapse to cylindrical "rope" discharge trips feed
+  diversion valve.. Any divergence between commanded network state and this physical
+  reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: Hydrocyclone "roping" (coarse particle overload), un-ground ore bypass
+core_invariant: 'Discharge geometry angle: \theta_{spray} >= 20^\circ (cone discharge);
+  collapse to cylindrical "rope" discharge trips feed diversion valve.'
+physics:
+  engine: generic_ode
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: units
+registers:
+  holding_registers:
+    40381:
+      name: s302_hydrocyclone_underflow_flare_angle_microwave_sensor_pv
+      type: float32
+      scale: 1.0
+      unit: units
+    40383:
+      name: s302_hydrocyclone_underflow_flare_angle_microwave_sensor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s302_hydrocyclone_underflow_flare_angle_microwave_sensor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: Hydrocyclone "roping" (coarse particle overload),
+    un-ground ore bypass'

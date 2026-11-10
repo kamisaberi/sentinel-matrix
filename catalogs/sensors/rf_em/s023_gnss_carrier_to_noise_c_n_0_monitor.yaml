@@ -1,0 +1,42 @@
+sensor_id: s023_gnss_carrier_to_noise_c_n_0_monitor
+name: GNSS Carrier-to-Noise (C/N_0) Monitor
+domain_id: 4
+domain_title: Radio Frequency, GNSS & Electromagnetic Sensors
+category: RF_EM
+target_protocol: MODBUS_TCP
+default_port: 15023
+interface: NMEA / UBX Binary Receiver
+description: 'GNSS Carrier-to-Noise (C/N_0) Monitor is a specialized Domain 04 (Radio
+  Frequency, GNSS & Electromagnetic Sensors) cyber-physical monitoring sensor. Interfacing
+  directly via NMEA / UBX Binary Receiver, it is specifically engineered to mitigate
+  and detect GPS/Galileo spoofing (meaconing). In the Aryorithm edge architecture,
+  it continuously asserts the operational invariant: Uniform C/N_0 across all satellite
+  PRNs indicates simulated/spoofed signals.. Any divergence between commanded network
+  state and this physical reading triggers sub-microsecond in-kernel eBPF packet mitigation.'
+target_threat: GPS/Galileo spoofing (meaconing)
+core_invariant: Uniform C/N_0 across all satellite PRNs indicates simulated/spoofed
+  signals.
+physics:
+  engine: rf_signal_sdr
+  baseline_value: 10.0
+  min_value: 0.0
+  max_value: 100.0
+  noise_sigma: 0.1
+  unit: dBm
+registers:
+  holding_registers:
+    40221:
+      name: s023_gnss_carrier_to_noise_c_n_0_monitor_pv
+      type: float32
+      scale: 1.0
+      unit: dBm
+    40223:
+      name: s023_gnss_carrier_to_noise_c_n_0_monitor_status
+      type: uint16
+      scale: 1.0
+      unit: bitmask
+fault_hooks:
+- id: s023_gnss_carrier_to_noise_c_n_0_monitor_fault
+  action: step_increase
+  value: 10.0
+  description: 'Injects anomaly: GPS/Galileo spoofing (meaconing)'
