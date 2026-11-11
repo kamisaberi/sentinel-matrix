@@ -31,6 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let audioSilenced = false;
     let audioCtx = null;
 
+    // --- REPLACE loadFleetNodes() IN mission_control.js ---
+
+    let currentSelectedNodeId = null;
+
     async function loadFleetNodes() {
         try {
             const resp = await fetch("/api/v1/fleet/nodes");
@@ -44,14 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         activeNodeCountEl.textContent = `${onlineCount}/${liveNodes.length}`;
                     }
 
-                    // 1. Check for Complete System / Sentry Outage
+                    // 1. Check for Complete System Outage
                     if (liveNodes.length === 0) {
                         triggerSystemAlarm("CRITICAL", "ALL EDGE SENTRIES OFFLINE — ZERO NODES REGISTERED IN C2");
                         if (nodeSelect) nodeSelect.innerHTML = `<option value="">[SYSTEM OFFLINE] No Sentries Online</option>`;
                         return;
                     }
 
-                    // 2. Check for Individual Node Outage
+                    // 2. Check for Individual Node Outages
                     const offlineNodes = liveNodes.filter(n => n.status === "OFFLINE");
                     if (offlineNodes.length > 0) {
                         const offNames = offlineNodes.map(n => n.site || n.node_id).join(", ");
@@ -60,21 +64,38 @@ document.addEventListener("DOMContentLoaded", () => {
                         clearSystemAlarm();
                     }
 
-                    // 3. Populate Selector with Live Nodes
+                    // 3. Update Dropdown Options (Preserve user selection)
                     if (nodeSelect) {
+                        const previousValue = nodeSelect.value;
                         nodeSelect.innerHTML = liveNodes.map(n =>
                             `<option value="${n.node_id}" ${n.status === 'OFFLINE' ? 'style="color:#EF4444;"' : ''}>
                                 [${n.status}] [${n.node_id.slice(0, 10)}] ${n.site} (${n.hostname})
                             </option>`
                         ).join("");
 
-                        if (!activeNodeId || !liveNodes.some(n => n.node_id === activeNodeId)) {
+                        if (previousValue && liveNodes.some(n => n.node_id === previousValue)) {
+                            nodeSelect.value = previousValue;
+                            activeNodeId = previousValue;
+                        } else {
                             activeNodeId = liveNodes[0].node_id;
+                            nodeSelect.value = activeNodeId;
                         }
-                        nodeSelect.value = activeNodeId;
                     }
 
-                    applyNodeContext(activeNodeId);
+                    // 4. ONLY apply node context if the selected node ID actually changed!
+                    if (currentSelectedNodeId !== activeNodeId) {
+                        currentSelectedNodeId = activeNodeId;
+                        applyNodeContext(activeNodeId);
+                    } else {
+                        // Update in-place metrics without wiping DOM/charts
+                        const activeNode = liveNodes.find(n => n.node_id === activeNodeId);
+                        if (activeNode) {
+                            const kpiDrops = document.getElementById("kpi-mitigation-sla");
+                            if (kpiDrops && activeNode.mitigation_latency_us) {
+                                kpiDrops.textContent = activeNode.mitigation_latency_us;
+                            }
+                        }
+                    }
                     return;
                 }
             }
@@ -82,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
             triggerSystemAlarm("CRITICAL", "SENTINEL-NEXUS C2 UNREACHABLE — NETWORK CONNECTION OR BACKEND DAEMON DOWN");
         }
     }
-
     // --- ALARM & HEARTBEAT ENGINE (mission_control.js) ---
 
     function triggerSystemAlarm(severity, message) {
