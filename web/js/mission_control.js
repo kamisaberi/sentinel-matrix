@@ -29,12 +29,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // ========================================================================
     // 1. FLEET DISCOVERY & MASTER SENTRY RAIL (No Hardcoding)
     // ========================================================================
+    let consecutiveFailures = 0;
+
     async function loadFleetNodes() {
         try {
             const resp = await fetch("/api/v1/fleet/nodes");
             if (resp.ok) {
                 const nodes = await resp.json();
                 if (Array.isArray(nodes) && nodes.length > 0) {
+                    consecutiveFailures = 0;
                     liveNodes = nodes;
                     isSystemOffline = false;
                     clearSystemOutage();
@@ -53,19 +56,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     renderSentryRail();
 
-                    // If first load or active node removed, select first available
+                    // RESILIENCE FIX: If no sentry is selected, OR if the right workspace failed to load sensors, reload!
                     if (!activeNodeId || !liveNodes.some(n => n.node_id === activeNodeId)) {
                         selectSentry(liveNodes[0].node_id);
+                    } else if (!activeNodeData || activeSensors.length === 0) {
+                        // Automatically heal blank panes if a previous fetch lagged
+                        selectSentry(activeNodeId);
                     }
                     return;
                 }
             }
-            triggerSystemOutage("ZERO EDGE SENTRIES REGISTERED IN NEXUS C2");
         } catch (err) {
-            triggerSystemOutage("NEXUS C2 BACKEND UNREACHABLE (HTTP 9443 FAILED)");
+            console.warn("Heartbeat poll failed", err);
+        }
+
+        consecutiveFailures++;
+        // Require 2 consecutive failures before declaring a full system outage
+        if (consecutiveFailures >= 2) {
+            triggerSystemOutage("ZERO EDGE SENTRIES RESPONDING IN NEXUS C2");
         }
     }
-
     function renderSentryRail() {
         if (!sentryRail) return;
         if (sentryRailCount) sentryRailCount.textContent = `${liveNodes.length} NODES`;
@@ -103,11 +113,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    async function selectSentry(nodeId) {
+ async function selectSentry(nodeId) {
+        if (!nodeId) return;
         activeNodeId = nodeId;
         renderSentryRail();
 
-        const workspace = document.getElementById("mc-sentry-workspace");
         const titleEl = document.getElementById("sentry-header-title");
         const hostEl = document.getElementById("sentry-header-host");
         const pipEl = document.getElementById("sentry-header-pip");
@@ -121,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 activeNodeData = await resp.json();
 
                 if (titleEl) titleEl.textContent = activeNodeData.site || activeNodeData.node_id;
-                if (hostEl) hostEl.textContent = `${activeNodeData.hostname} (${activeNodeData.node_id})`;
+                if (hostEl) hostEl.textContent = `${activeNodeData.hostname} (${activeNodeData.node_id.slice(0, 10)})`;
                 if (backendEl) backendEl.textContent = activeNodeData.kernel || "IN-KERNEL eBPF";
                 if (dropsEl) dropsEl.textContent = `DROPS: ${activeNodeData.ebpf_drops || 0}`;
                 if (statusEl) statusEl.textContent = activeNodeData.status;
@@ -129,23 +139,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 const isOnline = (activeNodeData.status === "ONLINE");
                 if (pipEl) pipEl.style.background = isOnline ? "#00FFA3" : "#FF3366";
 
-                logEvent(`[FOCUS] Sentry Cockpit switched to ${activeNodeData.site} (${activeNodeData.hostname})`, "text-cyan");
-
-                // Render Pane 1 (Primary Apparatus)
+                // 1. Render Pane 1 (Primary Apparatus)
                 updatePrimaryInstrument(activeNodeData.primary_instrument || {});
 
-                // Render Pane 2 (Field Sensors)
+                // 2. Render Pane 2 (Field Sensors)
                 activeSensors = activeNodeData.sensors || [];
                 renderDynamicSensorCards();
 
-                // Render Pane 4 (Target Protocol Exploits)
+                // 3. Render Pane 4 (Target Protocol Exploits)
                 renderContextualAttacks(activeNodeData.attacks || []);
+
+                // 4. Force initial chart draw immediately after layout settles (no 300ms delay)
+                setTimeout(() => {
+                    activeSensors.forEach(s => {
+                        const sid = s.sensor_id;
+                        const base = parseFloat(s.baseline) || 10.0;
+                        const hist = sensorHistories[sid] || [base];
+                        updateSensorEChart(sid, s, base, hist);
+                    });
+                }, 50);
             }
         } catch (e) {
-            console.error("Failed to load node detail", e);
+            console.error("Failed to load node detail for " + nodeId, e);
         }
     }
-
     // ========================================================================
     // 2. OUTAGE AND LOCKOUT CONTROLLER
     // ========================================================================
@@ -336,7 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-// --- REPLACE updateSensorEChart() IN mission_control.js ---
+    // --- REPLACE updateSensorEChart() IN mission_control.js ---
     function updateSensorEChart(sid, s, val, history) {
         const chartDom = document.getElementById(`echart-${sid}`);
         if (!chartDom || chartDom.clientWidth === 0) return;
