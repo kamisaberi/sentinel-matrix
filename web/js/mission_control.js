@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeNodeId = null;
     let activeNodeData = null;
     let isSystemOffline = false;
+    let isThermalAnomaly = false;   // <--- ADD THIS VARIABLE DECLARATION!
+
     let activeSensors = [];
     const sensorHistories = {};
     const echartsInstances = {};
@@ -113,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
- async function selectSentry(nodeId) {
+    async function selectSentry(nodeId) {
         if (!nodeId) return;
         activeNodeId = nodeId;
         renderSentryRail();
