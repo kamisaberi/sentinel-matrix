@@ -371,6 +371,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const maxV = (s.max_val !== undefined) ? s.max_val : 100;
 
         const option = {
+            animation: false, // <--- INSTANT RENDER (Zero initial loading sweep)
+
             backgroundColor: 'transparent',
             // ZERO MARGIN: Stretches the line from absolute left edge to absolute right edge
             grid: {
