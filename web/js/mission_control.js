@@ -26,21 +26,46 @@ document.addEventListener("DOMContentLoaded", () => {
     // ========================================================================
     // 1. DYNAMIC FLEET DISCOVERY (Zero Hardcoding)
     // ========================================================================
+    // --- REPLACE loadFleetNodes() IN mission_control.js ---
+    let systemAlarmActive = false;
+    let audioSilenced = false;
+    let audioCtx = null;
+
     async function loadFleetNodes() {
         try {
             const resp = await fetch("/api/v1/fleet/nodes");
             if (resp.ok) {
                 const nodes = await resp.json();
-                if (Array.isArray(nodes) && nodes.length > 0) {
+                if (Array.isArray(nodes)) {
                     liveNodes = nodes;
-                    
+
                     if (activeNodeCountEl) {
-                        activeNodeCountEl.textContent = liveNodes.length;
+                        const onlineCount = liveNodes.filter(n => n.status === "ONLINE").length;
+                        activeNodeCountEl.textContent = `${onlineCount}/${liveNodes.length}`;
                     }
 
+                    // 1. Check for Complete System / Sentry Outage
+                    if (liveNodes.length === 0) {
+                        triggerSystemAlarm("CRITICAL", "ALL EDGE SENTRIES OFFLINE — ZERO NODES REGISTERED IN C2");
+                        if (nodeSelect) nodeSelect.innerHTML = `<option value="">[SYSTEM OFFLINE] No Sentries Online</option>`;
+                        return;
+                    }
+
+                    // 2. Check for Individual Node Outage
+                    const offlineNodes = liveNodes.filter(n => n.status === "OFFLINE");
+                    if (offlineNodes.length > 0) {
+                        const offNames = offlineNodes.map(n => n.site || n.node_id).join(", ");
+                        triggerSystemAlarm("WARNING", `SENTRY DISCONNECTED &bull; Offline Node(s): ${offNames}`);
+                    } else {
+                        clearSystemAlarm();
+                    }
+
+                    // 3. Populate Selector with Live Nodes
                     if (nodeSelect) {
-                        nodeSelect.innerHTML = liveNodes.map(n => 
-                            `<option value="${n.node_id}">[${n.node_id.slice(0, 12)}] ${n.site} (${n.hostname})</option>`
+                        nodeSelect.innerHTML = liveNodes.map(n =>
+                            `<option value="${n.node_id}" ${n.status === 'OFFLINE' ? 'style="color:#EF4444;"' : ''}>
+                                [${n.status}] [${n.node_id.slice(0, 10)}] ${n.site} (${n.hostname})
+                            </option>`
                         ).join("");
 
                         if (!activeNodeId || !liveNodes.some(n => n.node_id === activeNodeId)) {
@@ -54,22 +79,84 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } catch (e) {
-            console.warn("Failed to fetch live fleet nodes from Nexus, using fallback context", e);
+            triggerSystemAlarm("CRITICAL", "SENTINEL-NEXUS C2 UNREACHABLE — NETWORK CONNECTION OR BACKEND DAEMON DOWN");
+        }
+    }
+
+    // --- ALARM & HEARTBEAT ENGINE (mission_control.js) ---
+
+    function triggerSystemAlarm(severity, message) {
+        const banner = document.getElementById("system-alarm-banner");
+        const title = document.getElementById("alarm-title");
+        const msg = document.getElementById("alarm-message");
+        const pip = document.getElementById("alarm-pip");
+
+        if (!banner || !title || !msg) return;
+
+        banner.style.display = "flex";
+        msg.innerHTML = message;
+
+        if (severity === "CRITICAL") {
+            banner.style.background = "rgba(239, 68, 68, 0.18)";
+            banner.style.border = "1px solid #EF4444";
+            banner.style.color = "#EF4444";
+            title.textContent = "[!] CRITICAL SYSTEM ALARM";
+            if (pip) { pip.style.background = "#EF4444"; pip.style.boxShadow = "0 0 12px #EF4444"; }
+            playAlarmBeep(880, 0.3); // High-pitch warning pulse
+        } else {
+            banner.style.background = "rgba(245, 158, 11, 0.18)";
+            banner.style.border = "1px solid #F59E0B";
+            banner.style.color = "#F59E0B";
+            title.textContent = "[!] SENTRY DEGRADED WARNING";
+            if (pip) { pip.style.background = "#F59E0B"; pip.style.boxShadow = "0 0 12px #F59E0B"; }
+            playAlarmBeep(440, 0.15); // Medium warning pulse
         }
 
-        // Fallback placeholder node if no containers are registered
-        liveNodes = [{
-            node_id: "NODE-DEFAULT",
-            site: "Substation Alpha (High-Voltage Grid)",
-            hostname: "substation-01.matrix.internal",
-            kernel: "6.8.0-generic",
-            mitigation_latency_us: 0.84
-        }];
-        if (nodeSelect) {
-            nodeSelect.innerHTML = `<option value="NODE-DEFAULT">[NODE-DEFAULT] Substation Alpha (10.240.0.101)</option>`;
+        if (!systemAlarmActive) {
+            logEvent(`[ALARM SYSTEM] ${severity}: ${message}`, "text-yellow");
+            systemAlarmActive = true;
         }
-        applyNodeContext("NODE-DEFAULT");
     }
+
+    function clearSystemAlarm() {
+        const banner = document.getElementById("system-alarm-banner");
+        if (banner) banner.style.display = "none";
+        if (systemAlarmActive) {
+            logEvent(`[ALARM SYSTEM] SYSTEM NOMINAL &bull; All Edge Sentries Healthy`, "text-green");
+            systemAlarmActive = false;
+        }
+    }
+
+    // 100% Air-Gapped Web Audio API Synthesizer (No external mp3 needed)
+    function playAlarmBeep(freq = 880, duration = 0.2) {
+        if (audioSilenced) return;
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === "suspended") audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) { }
+    }
+
+    document.getElementById("btn-silence-alarm")?.addEventListener("click", () => {
+        audioSilenced = true;
+        const banner = document.getElementById("system-alarm-banner");
+        if (banner) banner.style.opacity = "0.6";
+        logEvent(`[ALARM] Audio alarm silenced by operator`, "text-cyan");
+    });
+
+    // Heartbeat Poller: Checks C2 & Node Health every 3 seconds
+    setInterval(loadFleetNodes, 3000);
 
     if (nodeSelect) {
         nodeSelect.addEventListener("change", (e) => {
@@ -77,6 +164,8 @@ document.addEventListener("DOMContentLoaded", () => {
             applyNodeContext(activeNodeId);
         });
     }
+
+
 
     function applyNodeContext(nodeId) {
         const node = liveNodes.find(n => n.node_id === nodeId) || liveNodes[0];
@@ -353,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (echartsInstances[k] && !echartsInstances[k].isDisposed()) {
                     echartsInstances[k].dispose();
                 }
-            } catch (e) {}
+            } catch (e) { }
             delete echartsInstances[k];
         });
 
@@ -478,7 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // GUARD 2: Dispose instance if bound to an old or detached DOM element
         if (echartsInstances[sid]) {
             if (echartsInstances[sid].isDisposed() || echartsInstances[sid].getDom() !== chartDom) {
-                try { echartsInstances[sid].dispose(); } catch (e) {}
+                try { echartsInstances[sid].dispose(); } catch (e) { }
                 delete echartsInstances[sid];
             }
         }
@@ -496,7 +585,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // A. RADIAL INDUSTRIAL GAUGE (Pressure, Temperature, Flow, Level)
         if (cat === "PRESSURE" || cat === "TEMPERATURE" || cat === "FLOW" || cat === "LEVEL") {
             const gaugeColor = isSensorSurge ? '#EF4444' : (cat === 'TEMPERATURE' ? '#F59E0B' : '#00E5FF');
-            
+
             const option = {
                 backgroundColor: 'transparent',
                 series: [{
@@ -534,15 +623,15 @@ document.addEventListener("DOMContentLoaded", () => {
         // B. STREAMING WAVEFORM WITH GLOW (Vibration, Acoustic, Seismic, Electrical, Streams)
         else {
             const lineColor = isSensorSurge ? '#EF4444' : (cat === 'VIBRATION' ? '#10B981' : (cat === 'CHEMICAL' ? '#38BDF8' : '#00F0FF'));
-            
+
             const option = {
                 backgroundColor: 'transparent',
                 grid: { left: 4, right: 4, top: 8, bottom: 4, containLabel: false },
-                tooltip: { 
-                    trigger: 'axis', 
-                    backgroundColor: '#0F172A', 
-                    borderColor: '#334155', 
-                    textStyle: { color: '#F8FAFC', fontSize: 10 } 
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: '#0F172A',
+                    borderColor: '#334155',
+                    textStyle: { color: '#F8FAFC', fontSize: 10 }
                 },
                 xAxis: { type: 'category', show: false, boundaryGap: false },
                 yAxis: { type: 'value', min: minV, max: maxV, show: false },
@@ -649,24 +738,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const siteLower = (node.site || "").toLowerCase();
         let attacks = [
             { id: "MODBUS_FC05_OVERRIDE", name: "Modbus Coil Override (FC05)" },
-            { id: "IEC104_BREAKER_TRIP",  name: "IEC-104 Breaker Trip (COT 6)" },
-            { id: "5G_GTPU_SLICE_HOP",     name: "5G TEID Slice-Hopping" },
-            { id: "AI_PROMPT_INJECTION",   name: "AI TRiSM Prompt Jailbreak" }
+            { id: "IEC104_BREAKER_TRIP", name: "IEC-104 Breaker Trip (COT 6)" },
+            { id: "5G_GTPU_SLICE_HOP", name: "5G TEID Slice-Hopping" },
+            { id: "AI_PROMPT_INJECTION", name: "AI TRiSM Prompt Jailbreak" }
         ];
 
         if (siteLower.includes("hospital") || siteLower.includes("pacs")) {
             attacks = [
-                { id: "DICOM_CSTORE_FLOOD",    name: "DICOM C-STORE Flood Attack" },
-                { id: "AI_PROMPT_INJECTION",   name: "AI TRiSM Diagnostics Jailbreak" },
-                { id: "LIDAR_SPOOF_OBSTACLE",  name: "LiDAR Point-Cloud Blind Vector" },
-                { id: "MODBUS_FC05_OVERRIDE",  name: "Chiller Temperature Override" }
+                { id: "DICOM_CSTORE_FLOOD", name: "DICOM C-STORE Flood Attack" },
+                { id: "AI_PROMPT_INJECTION", name: "AI TRiSM Diagnostics Jailbreak" },
+                { id: "LIDAR_SPOOF_OBSTACLE", name: "LiDAR Point-Cloud Blind Vector" },
+                { id: "MODBUS_FC05_OVERRIDE", name: "Chiller Temperature Override" }
             ];
         } else if (siteLower.includes("refinery") || siteLower.includes("reactor")) {
             attacks = [
-                { id: "S7COMM_CPU_STOP",       name: "S7Comm CPU STOP (0x29)" },
-                { id: "MODBUS_FC05_OVERRIDE",  name: "Valve Surge Coil Force" },
-                { id: "SAFETY_SIS_BYPASS",     name: "Safety SIS Interlock Bypass" },
-                { id: "5G_GTPU_SLICE_HOP",     name: "5G Edge Gateway Slice Hop" }
+                { id: "S7COMM_CPU_STOP", name: "S7Comm CPU STOP (0x29)" },
+                { id: "MODBUS_FC05_OVERRIDE", name: "Valve Surge Coil Force" },
+                { id: "SAFETY_SIS_BYPASS", name: "Safety SIS Interlock Bypass" },
+                { id: "5G_GTPU_SLICE_HOP", name: "5G Edge Gateway Slice Hop" }
             ];
         }
 

@@ -25,7 +25,8 @@
             --muted: #8a99ad;
         }
 
-        html, body {
+        html,
+        body {
             background-color: var(--void) !important;
             color: var(--ink) !important;
             font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -104,7 +105,10 @@
             color: rgba(138, 153, 173, 0.6);
             margin: 16px 0 6px 10px;
         }
-        .admin-group-title:first-child { margin-top: 0; }
+
+        .admin-group-title:first-child {
+            margin-top: 0;
+        }
 
         .admin-nav-item {
             display: flex;
@@ -141,6 +145,7 @@
         .admin-nav-item.highlight-lab {
             color: var(--accent) !important;
         }
+
         .admin-nav-item.highlight-lab.active {
             background: rgba(0, 229, 255, 0.15) !important;
             border-color: var(--accent) !important;
@@ -339,9 +344,23 @@
             word-break: break-all;
         }
 
-        .badge-cyan { background: rgba(0, 229, 255, 0.15); color: var(--accent); border: 1px solid var(--accent); }
-        .badge-green { background: rgba(0, 255, 163, 0.15); color: var(--kernel); border: 1px solid var(--kernel); }
-        .badge-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid #c084fc; }
+        .badge-cyan {
+            background: rgba(0, 229, 255, 0.15);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .badge-green {
+            background: rgba(0, 255, 163, 0.15);
+            color: var(--kernel);
+            border: 1px solid var(--kernel);
+        }
+
+        .badge-purple {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid #c084fc;
+        }
 
         .dashboard-viewport {
             width: 100%;
@@ -424,8 +443,11 @@
         <!-- Sidebar Footer Status -->
         <div style="padding: 14px 16px; border-top: 1px solid var(--hairline); background: rgba(7,9,14,0.6);">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--kernel); box-shadow: 0 0 8px var(--kernel);"></span>
-                <span style="font-family: monospace; font-size: 10px; color: var(--kernel); font-weight: bold; letter-spacing: 0.1em;">AIR-GAPPED 100%</span>
+                <span
+                    style="width: 8px; height: 8px; border-radius: 50%; background: var(--kernel); box-shadow: 0 0 8px var(--kernel);"></span>
+                <span
+                    style="font-family: monospace; font-size: 10px; color: var(--kernel); font-weight: bold; letter-spacing: 0.1em;">AIR-GAPPED
+                    100%</span>
             </div>
             <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Port: 9443 &middot; $0.00 Egress</div>
         </div>
@@ -433,18 +455,36 @@
 
     <!-- Main Content Canvas (Offset by 256px) -->
     <div class="admin-main">
-
+        <!-- --- INSERT ALARM BANNER IN index.html ABOVE admin-topbar --- -->
+        <!-- Flashing System & Edge Node Alarm Banner -->
+        <div id="system-alarm-banner"
+            style="display: none; width: 100%; margin-bottom: 16px; padding: 12px 18px; border-radius: 4px; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="alarm-pip"
+                    style="width: 10px; height: 10px; border-radius: 50%; display: inline-block;"></span>
+                <span id="alarm-title">SYSTEM ALARM</span>
+                <span id="alarm-message" style="font-weight: 500; opacity: 0.9;">-</span>
+            </div>
+            <button id="btn-silence-alarm"
+                style="background: rgba(0,0,0,0.3); border: 1px solid currentColor; color: inherit; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: 700;">
+                SILENCE AUDIO
+            </button>
+        </div>
         <!-- Top Status Bar -->
         <header class="admin-topbar">
             <div>
-                <span style="font-size: 16px; font-weight: 800; letter-spacing: 0.1em; color: var(--ink);">SOVEREIGN FLEET COMMAND</span>
-                <span style="font-size: 11px; color: var(--muted); margin-left: 12px; font-family: monospace;">NEXUS C2 &middot; SUB-50MS DEFENSE GRID</span>
+                <span style="font-size: 16px; font-weight: 800; letter-spacing: 0.1em; color: var(--ink);">SOVEREIGN
+                    FLEET COMMAND</span>
+                <span style="font-size: 11px; color: var(--muted); margin-left: 12px; font-family: monospace;">NEXUS C2
+                    &middot; SUB-50MS DEFENSE GRID</span>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="status-pill status-pill-airgap" style="background: rgba(0,255,163,0.1); border: 1px solid var(--kernel); color: var(--kernel); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+                <div class="status-pill status-pill-airgap"
+                    style="background: rgba(0,255,163,0.1); border: 1px solid var(--kernel); color: var(--kernel); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;">
                     ● AIR-GAPPED SOVEREIGN
                 </div>
-                <div class="status-pill status-pill-nodes" style="background: rgba(0,229,255,0.1); border: 1px solid var(--accent); color: var(--accent); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+                <div class="status-pill status-pill-nodes"
+                    style="background: rgba(0,229,255,0.1); border: 1px solid var(--accent); color: var(--accent); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;">
                     <span id="active-node-count">3</span> ACTIVE NODES
                 </div>
             </div>
@@ -691,7 +731,8 @@
                         </div>
                         <div
                             style="background: #050811; padding: 10px; border-radius: 4px; border: 1px solid var(--hairline); height: 190px; overflow-y: auto;">
-                            <div style="color: var(--muted); font-size: 10px; margin-bottom: 4px;">TOPOLOGY NODES (10.240.0.0/24):</div>
+                            <div style="color: var(--muted); font-size: 10px; margin-bottom: 4px;">TOPOLOGY NODES
+                                (10.240.0.0/24):</div>
                             <span class="badge badge-cyan">nexus:10</span>
                             <span class="badge badge-cyan">mock-plc:150</span>
                             <span class="badge badge-cyan">forge:20</span>
@@ -703,7 +744,8 @@
                             <span class="badge badge-cyan">pwr:78</span>
                             <span class="badge badge-cyan">adv:99</span>
                             <hr style="border: 0; border-top: 1px solid var(--hairline); margin: 8px 0;">
-                            <div style="color: var(--muted); font-size: 10px; margin-bottom: 4px;">ACTIVE INVARIANTS:</div>
+                            <div style="color: var(--muted); font-size: 10px; margin-bottom: 4px;">ACTIVE INVARIANTS:
+                            </div>
                             <span class="badge badge-green">3GPP 5G Slicing</span>
                             <span class="badge badge-green">Live-SBOM W^X</span>
                             <span class="badge badge-green">AI TRiSM Guard</span>
@@ -739,10 +781,14 @@
                             <button class="lab-btn" onclick="injectLab('blast')">4. Wire-Speed Blaster</button>
                             <button class="lab-btn" onclick="injectLab('evasion')">5. Grammar Mutation</button>
                             <button class="lab-btn" onclick="injectLab('5g_slice_hop')">6. 5G Slice-Hop</button>
-                            <button class="lab-btn" onclick="injectLab('trism_jailbreak')">7. AI TRiSM Jailbreak</button>
-                            <button class="lab-btn lab-btn-spike" onclick="injectLab('heater_spike')">🔥 Thermal Spike</button>
-                            <button class="lab-btn lab-btn-success" onclick="injectLab('heater_normal')">❄️ Thermal Safe</button>
-                            <button class="lab-btn lab-btn-danger" style="grid-column: span 3;" onclick="injectLab('reset')">⏹ Emergency All-Stop &amp; Clear Log</button>
+                            <button class="lab-btn" onclick="injectLab('trism_jailbreak')">7. AI TRiSM
+                                Jailbreak</button>
+                            <button class="lab-btn lab-btn-spike" onclick="injectLab('heater_spike')">🔥 Thermal
+                                Spike</button>
+                            <button class="lab-btn lab-btn-success" onclick="injectLab('heater_normal')">❄️ Thermal
+                                Safe</button>
+                            <button class="lab-btn lab-btn-danger" style="grid-column: span 3;"
+                                onclick="injectLab('reset')">⏹ Emergency All-Stop &amp; Clear Log</button>
                         </div>
                         <div style="font-size: 10px; color: var(--muted); margin-top: 8px; text-align: center;">
                             Trigger actions asynchronously and stream scientific output into the console below.
@@ -756,7 +802,8 @@
                         <span>LIVE RESEARCH MODULE EXECUTION CONSOLE (STDOUT / STDERR)</span>
                         <span id="lab-log-status">POLLING ACTIVE</span>
                     </div>
-                    <div id="labTerminalBody" class="lab-terminal-body">[*] Sentinel-Lab live log buffer initialized. Click any injection button to execute.</div>
+                    <div id="labTerminalBody" class="lab-terminal-body">[*] Sentinel-Lab live log buffer initialized.
+                        Click any injection button to execute.</div>
                 </div>
             </div>
 
@@ -794,7 +841,8 @@
                                 <h3>UNIVERSAL ARTIFACT INGESTION</h3>
                                 <span class="badge badge-purple">7 ASSET TYPES</span>
                             </div>
-                            <p class="panel-desc">Drag and drop any verified artifact (.spkg, .onnx, .slab, .pcap, .tar.gz, .blueprint, .aryopack) to inspect headers and deploy locally.</p>
+                            <p class="panel-desc">Drag and drop any verified artifact (.spkg, .onnx, .slab, .pcap,
+                                .tar.gz, .blueprint, .aryopack) to inspect headers and deploy locally.</p>
                             <div class="dropzone" id="spkg-dropzone">
                                 <input type="file" id="spkg-file-input"
                                     accept=".spkg,.onnx,.slab,.pcap,.gz,.tar,.blueprint,.aryopack"
@@ -802,7 +850,8 @@
                                 <div class="dropzone-content">
                                     <div class="dropzone-icon">&#10515;</div>
                                     <span class="dropzone-title">Drop artifact container here</span>
-                                    <span class="dropzone-sub">Accepts .spkg, .onnx, .slab, .pcap, .tar.gz, .blueprint, .aryopack</span>
+                                    <span class="dropzone-sub">Accepts .spkg, .onnx, .slab, .pcap, .tar.gz, .blueprint,
+                                        .aryopack</span>
                                 </div>
                             </div>
                             <div class="package-preview hidden" id="package-preview">
@@ -811,12 +860,17 @@
                                     <span class="preview-filename font-mono" id="prev-filename">-</span>
                                 </div>
                                 <div class="preview-details">
-                                    <div class="detail-row"><span class="lbl">Asset Type:</span><span class="val font-mono" id="prev-type">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Format / Spec:</span><span class="val text-cyan" id="prev-spec">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Payload Size:</span><span class="val" id="prev-size">-</span></div>
-                                    <div class="detail-row"><span class="lbl">Signature:</span><span class="val text-green" id="prev-sig">VERIFIED ED25519</span></div>
+                                    <div class="detail-row"><span class="lbl">Asset Type:</span><span
+                                            class="val font-mono" id="prev-type">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Format / Spec:</span><span
+                                            class="val text-cyan" id="prev-spec">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Payload Size:</span><span class="val"
+                                            id="prev-size">-</span></div>
+                                    <div class="detail-row"><span class="lbl">Signature:</span><span
+                                            class="val text-green" id="prev-sig">VERIFIED ED25519</span></div>
                                 </div>
-                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">STAGE / DEPLOY TO LOCAL RUNTIME</button>
+                                <button class="btn-primary w-full mt-4" id="btn-deploy-fleet">STAGE / DEPLOY TO LOCAL
+                                    RUNTIME</button>
                             </div>
                         </div>
                     </div>
@@ -833,21 +887,29 @@
                             <div class="artifact-filter-bar"
                                 style="display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px 0;">
                                 <button class="btn-ctrl active" data-filter="all"
-                                    style="font-size: 10px; padding: 4px 10px; background: var(--accent); color: var(--void); font-weight: 700; border-radius: 4px; border: none; cursor: pointer;">ALL (7 TYPES)</button>
+                                    style="font-size: 10px; padding: 4px 10px; background: var(--accent); color: var(--void); font-weight: 700; border-radius: 4px; border: none; cursor: pointer;">ALL
+                                    (7 TYPES)</button>
                                 <button class="btn-ctrl" data-filter="package"
-                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">PACKAGES (.spkg)</button>
+                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">PACKAGES
+                                    (.spkg)</button>
                                 <button class="btn-ctrl" data-filter="model"
-                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">MODELS (.onnx)</button>
+                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">MODELS
+                                    (.onnx)</button>
                                 <button class="btn-ctrl" data-filter="dataset"
-                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">DATASETS (.slab)</button>
+                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">DATASETS
+                                    (.slab)</button>
                                 <button class="btn-ctrl" data-filter="pcap"
-                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">PCAPS (.pcap)</button>
+                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">PCAPS
+                                    (.pcap)</button>
                                 <button class="btn-ctrl" data-filter="scenario"
-                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">SCENARIOS (.tar.gz)</button>
+                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">SCENARIOS
+                                    (.tar.gz)</button>
                                 <button class="btn-ctrl" data-filter="blueprint"
-                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">BLUEPRINTS (.blueprint)</button>
+                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">BLUEPRINTS
+                                    (.blueprint)</button>
                                 <button class="btn-ctrl" data-filter="appliance"
-                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">APPLIANCES (.aryopack)</button>
+                                    style="font-size: 10px; padding: 4px 10px; background: var(--panel); color: var(--muted); border-radius: 4px; border: 1px solid var(--hairline); cursor: pointer;">APPLIANCES
+                                    (.aryopack)</button>
                             </div>
 
                             <table class="data-table" id="table-extensions">
@@ -906,10 +968,13 @@
                         <h3>STATUTORY COMPLIANCE &amp; HARDWARE AUDIT VAULT</h3>
                     </div>
                     <div class="compliance-actions">
-                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171 Report</button>
-                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial Report</button>
+                        <button class="btn-secondary" id="btn-report-cmmc">Generate CMMC 2.0 / NIST 800-171
+                            Report</button>
+                        <button class="btn-secondary" id="btn-report-scada">Generate IEC 62443 Industrial
+                            Report</button>
                     </div>
-                    <pre class="report-preview-box" id="report-output">Select standard above to compile audit report...</pre>
+                    <pre class="report-preview-box"
+                        id="report-output">Select standard above to compile audit report...</pre>
                 </div>
             </div>
 
@@ -929,14 +994,15 @@
         </main>
 
         <footer class="boxed-footer">
-            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical Defense</span>
+            <span>&copy; 2026 Aryorithm Technologies B.V. &middot; Autonomous Sub-Microsecond Cyber-Physical
+                Defense</span>
             <span class="text-muted font-mono">v1.0.0-core-ebpf</span>
         </footer>
 
     </div><!-- end admin-main -->
 
     <!-- Self-Contained Local Vendor Scripts (Zero-CDN) -->
-     <!-- --- IN sentinel-nexus/web/index.html (Vendor Scripts Block) --- -->
+    <!-- --- IN sentinel-nexus/web/index.html (Vendor Scripts Block) --- -->
     <!-- Self-Contained Local Vendor Scripts (Zero-CDN) -->
     <script src="vendor/echarts.min.js"></script>
     <script src="vendor/whep_player.js"></script>
@@ -965,7 +1031,7 @@
                     e.preventDefault();
                     navItems.forEach(b => b.classList.remove('active'));
                     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-                    
+
                     btn.classList.add('active');
                     const targetId = btn.getAttribute('data-tab');
                     const targetPane = document.getElementById(targetId);
