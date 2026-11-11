@@ -536,122 +536,144 @@
         <!-- Master Viewports -->
         <main class="dashboard-viewport">
 
-            <!-- TAB 0: MISSION CONTROL -->
+
+            <!-- TAB 0: MISSION CONTROL (REDESIGNED MASTER-DETAIL TWO-PANE COCKPIT) -->
             <div class="tab-pane active" id="tab-mission-control">
-                <div class="mc-master-bar"
+
+                <!-- TOP GLOBAL SYSTEM-WIDE OUTPUT STRIP (Top of Orange Section) -->
+                <div class="global-system-strip"
                     style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span
-                            style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent);"></span>
-                        <label for="mc-node-select"
-                            style="font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: var(--ink); text-transform: uppercase;">
-                            TARGET ENCLAVE / ACTIVE EDGE SENTRY:
-                        </label>
-                        <select id="mc-node-select" class="form-select-sm"
-                            style="background: var(--void); color: var(--accent); border: 1px solid var(--accent); font-family: monospace; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
-                        </select>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="global-status-pip"
+                            style="width: 10px; height: 10px; border-radius: 50%; background: var(--kernel); box-shadow: 0 0 10px var(--kernel); display: inline-block;"></span>
+                        <span id="global-system-status"
+                            style="font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; color: var(--ink); letter-spacing: 0.08em;">
+                            FLEET C2 ONLINE &bull; ALL SYSTEMS OPERATIONAL
+                        </span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="badge badge-cyan" id="mc-node-backend-badge">INTEL OPENVINO</span>
-                        <span class="badge badge-purple" id="mc-target-ip-badge">TARGET: 10.240.0.101</span>
-                        <span class="badge badge-green">IN-KERNEL ACTIVE DEFENSE</span>
+                    <div
+                        style="display: flex; align-items: center; gap: 12px; font-family: monospace; font-size: 11px;">
+                        <span class="badge badge-cyan" id="badge-total-nodes">3 SENTRIES REGISTERED</span>
+                        <span class="badge badge-purple" id="badge-global-drops">FLEET DROPS: 0</span>
+                        <span class="badge badge-green" id="badge-global-sla">DRIVER SLA: &lt; 0.84 µs</span>
+                        <button id="btn-emergency-all-stop"
+                            style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--threat); color: var(--threat); padding: 4px 10px; border-radius: 3px; font-size: 10px; font-weight: 800; cursor: pointer;">
+                            EMERGENCY ALL-STOP / RESET
+                        </button>
                     </div>
                 </div>
 
-                <div class="mission-control-grid">
-                    <!-- FRAME 1: MULTI-CAMERA VISION WALL -->
-                    <div class="mc-frame">
-                        <div class="panel-header">
-                            <div class="frame-title-group">
-                                <span class="frame-index">FRAME 01</span>
-                                <h3>VISION WALL &amp; CAMERA FEED</h3>
-                            </div>
-                            <span class="badge badge-green" id="cam-protocol-tag">RTSP :8554 / WHEP</span>
+                <!-- MAIN TWO-PANE ORANGE SECTION: SENTRY RAIL (LEFT) + DETAIL WORKSPACE (RIGHT) -->
+                <div class="two-pane-cockpit"
+                    style="display: flex; gap: 14px; min-height: 680px; box-sizing: border-box;">
+
+                    <!-- LEFT RAIL: DISCOVERED EDGE SENTRIES LIST (Width: 280px) -->
+                    <div class="sentry-rail-col"
+                        style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px;">
+                        <div
+                            style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                            <span
+                                style="font-size: 11px; font-weight: 800; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">EDGE
+                                SENTRY FLEET</span>
+                            <span id="sentry-rail-count" class="badge badge-cyan" style="font-size: 9px;">3
+                                ONLINE</span>
                         </div>
-                        <div class="video-wall-container" id="mc-video-wall"></div>
-                        <div style="display: flex; gap: 8px; margin-top: 10px;">
-                            <button class="btn-attack btn-attack-danger" id="btn-cam-anomaly"
-                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
-                                [!] TRIGGER THERMAL RUNAWAY
-                            </button>
-                            <button class="btn-attack btn-attack-success" id="btn-cam-normalize"
-                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
-                                [+] NORMALIZE CAMERA FEED
-                            </button>
+                        <div id="mc-sentry-rail"
+                            style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 640px;">
+                            <!-- Populated dynamically by loadFleetNodes() -->
                         </div>
                     </div>
 
-                    <!-- FRAME 2: DYNAMIC SENSORS -->
-                    <div class="mc-frame">
-                        <div class="panel-header">
-                            <div class="frame-title-group">
-                                <span class="frame-index">FRAME 02</span>
-                                <h3>DYNAMIC SENSORS &amp; CBF BARRIER</h3>
-                            </div>
-                            <span class="badge badge-cyan" id="mc-sensor-count-badge">4 CHANNELS ACTIVE</span>
-                        </div>
-                        <div class="dynamic-sensor-grid" id="mc-sensor-grid"></div>
-                        <div style="display: flex; gap: 8px; margin-top: 10px;">
-                            <button class="btn-attack btn-attack-danger" id="btn-sensor-surge"
-                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
-                                [!] SURGE SENSORS (Violate h(x) &lt; 0)
-                            </button>
-                            <button class="btn-attack btn-attack-success" id="btn-sensor-stabilize"
-                                style="flex: 1; padding: 6px 10px; font-size: 10px;">
-                                [+] STABILIZE SENSORS (Lyapunov Safe)
-                            </button>
-                        </div>
-                    </div>
+                    <!-- RIGHT WORKSPACE: SELECTED SENTRY DETAILS (Flex: 1) -->
+                    <div class="sentry-workspace-col" id="mc-sentry-workspace"
+                        style="flex: 1; display: flex; flex-direction: column; gap: 14px;">
 
-                    <!-- FRAME 3: IN-KERNEL eBPF MITIGATION FEED -->
-                    <div class="mc-frame">
-                        <div class="panel-header">
-                            <div class="frame-title-group">
-                                <span class="frame-index">FRAME 03</span>
-                                <h3>IN-KERNEL eBPF DROPS (&lt; 0.84 µs SLA)</h3>
+                        <!-- Selected Sentry Identity Header -->
+                        <div class="selected-sentry-banner"
+                            style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span id="sentry-header-pip"
+                                    style="width: 8px; height: 8px; border-radius: 50%; background: var(--kernel);"></span>
+                                <span id="sentry-header-title"
+                                    style="font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: 0.08em;">SELECTING
+                                    ACTIVE SENTRY...</span>
+                                <span id="sentry-header-host"
+                                    style="font-family: monospace; font-size: 11px; color: var(--muted);">-</span>
                             </div>
                             <div style="display: flex; gap: 6px;">
-                                <button id="btn-clear-drops" class="btn-ctrl"
-                                    style="font-size: 10px; padding: 2px 8px; background: #111827; border: 1px solid var(--hairline); color: var(--muted); border-radius: 4px; cursor: pointer;">CLEAR</button>
-                                <span class="badge badge-green" id="mc-filter-status">AF_XDP LINE-RATE</span>
+                                <span class="badge badge-cyan" id="sentry-header-backend">BACKEND</span>
+                                <span class="badge badge-purple" id="sentry-header-drops">DROPS: 0</span>
+                                <span class="badge badge-green" id="sentry-header-status">ONLINE</span>
                             </div>
                         </div>
-                        <div class="drop-log-feed" id="mc-drop-feed" style="height: 240px; overflow-y: auto;">
-                            <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical
-                                interfaces...</div>
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <button class="btn-attack" id="btn-test-ebpf-drop"
-                                style="width: 100%; padding: 6px 10px; font-size: 10px; border-color: var(--accent); color: var(--accent);">
-                                [>] TEST DRIVER-RING PACKET DROP (&lt; 0.84 µs)
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- FRAME 4: RED-TEAM ATTACK INJECTION -->
-                    <div class="mc-frame">
-                        <div class="panel-header">
-                            <div class="frame-title-group">
-                                <span class="frame-index">FRAME 04</span>
-                                <h3>RED-TEAM INDUSTRIAL PROTOCOL EXPLOITS</h3>
+                        <!-- Sentry Cockpit Grid (4 Panes) -->
+                        <div class="mission-control-grid"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+
+                            <!-- PANE 1: PRIMARY PHYSICAL APPARATUS -->
+                            <div class="mc-frame">
+                                <div class="panel-header">
+                                    <div class="frame-title-group">
+                                        <span class="frame-index">PANE 01</span>
+                                        <h3 id="mc-frame1-title">PRIMARY PHYSICAL APPARATUS</h3>
+                                    </div>
+                                    <span class="badge badge-green" id="mc-frame1-tag">MODBUS</span>
+                                </div>
+                                <div class="video-wall-container" id="mc-video-wall"></div>
+                                <div id="mc-frame1-actions" style="display: flex; gap: 8px; margin-top: 10px;"></div>
                             </div>
-                            <span class="badge badge-purple">LIVE INJECTION</span>
+
+                            <!-- PANE 2: DYNAMIC SENSORY CLUSTER -->
+                            <div class="mc-frame">
+                                <div class="panel-header">
+                                    <div class="frame-title-group">
+                                        <span class="frame-index">PANE 02</span>
+                                        <h3>FIELD SENSORS &amp; CBF BARRIER</h3>
+                                    </div>
+                                    <span class="badge badge-cyan" id="mc-sensor-count-badge">0 CHANNELS ACTIVE</span>
+                                </div>
+                                <div class="dynamic-sensor-grid" id="mc-sensor-grid"></div>
+                            </div>
+
+                            <!-- PANE 3: IN-KERNEL eBPF FLIGHT RECORDER -->
+                            <div class="mc-frame">
+                                <div class="panel-header">
+                                    <div class="frame-title-group">
+                                        <span class="frame-index">PANE 03</span>
+                                        <h3>IN-KERNEL eBPF DROPS (&lt; 0.84 µs SLA)</h3>
+                                    </div>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button id="btn-clear-drops" class="btn-ctrl"
+                                            style="font-size: 10px; padding: 2px 8px; background: #111827; border: 1px solid var(--hairline); color: var(--muted); border-radius: 4px; cursor: pointer;">CLEAR</button>
+                                        <span class="badge badge-green" id="mc-filter-status">AF_XDP LINE-RATE</span>
+                                    </div>
+                                </div>
+                                <div class="drop-log-feed" id="mc-drop-feed" style="height: 240px; overflow-y: auto;">
+                                    <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on
+                                        physical interfaces...</div>
+                                </div>
+                            </div>
+
+                            <!-- PANE 4: RED-TEAM ADVERSARY EXPLOIT DECK -->
+                            <div class="mc-frame">
+                                <div class="panel-header">
+                                    <div class="frame-title-group">
+                                        <span class="frame-index">PANE 04</span>
+                                        <h3>TARGET ENCLAVE ADVERSARY EXPLOITS</h3>
+                                    </div>
+                                    <span class="badge badge-purple">LIVE INJECTION</span>
+                                </div>
+                                <p style="font-size: 10px; color: var(--muted); margin-bottom: 10px;">Dispatch protocol
+                                    attack vectors against the selected sentry:</p>
+                                <div class="attack-button-grid" id="mc-attack-grid"
+                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></div>
+                            </div>
                         </div>
-                        <p style="font-size: 10px; color: var(--muted); margin-bottom: 10px;">Replay industrial zero-day
-                            exploits targeting the selected active sentry:</p>
-                        <div class="attack-button-grid"
-                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <button class="btn-attack" data-attack="MODBUS_FC05_OVERRIDE">Modbus Coil Override
-                                (FC05)</button>
-                            <button class="btn-attack" data-attack="S7COMM_CPU_STOP">S7Comm CPU STOP (0x29)</button>
-                            <button class="btn-attack" data-attack="5G_GTPU_SLICE_HOP">5G TEID Slice-Hopping</button>
-                            <button class="btn-attack" data-attack="AI_PROMPT_INJECTION">AI TRiSM Prompt
-                                Jailbreak</button>
-                        </div>
+
                     </div>
                 </div>
             </div>
-
             <!-- TAB: 🔬 SENTINEL-LAB AIR-GAPPED SCIENTIFIC RESEARCH COCKPIT -->
             <div class="tab-pane" id="tab-lab-cockpit">
                 <div class="mc-master-bar"
