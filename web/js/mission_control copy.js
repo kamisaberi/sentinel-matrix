@@ -1,6 +1,6 @@
 /**
  * ARYORITHM SENTINEL NEXUS: MISSION CONTROL MULTI-FRAME CONTROLLER
- * Reactive Global Master Bar + Frame-Specific Action Buttons
+ * Reactive Global Master Bar + Dynamic Sensor Widget Factory + Chaos Injection
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -55,8 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeNodeKey = "matrix-edge-substation-01";
     let isThermalAnomaly = false;
     let isSensorSurge = false;
+    let activeSensors = [];
+    const sensorHistories = {};
 
-    // Elements
+    // DOM Elements
     const nodeSelect = document.getElementById("mc-node-select");
     const backendBadge = document.getElementById("mc-node-backend-badge");
     const targetIpBadge = document.getElementById("mc-target-ip-badge");
@@ -64,13 +66,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const sensorGrid = document.getElementById("mc-sensor-grid");
     const dropFeed = document.getElementById("mc-drop-feed");
 
-    const sensorHistories = { s1: [], s2: [], s3: [], s4: [] };
-
     // ========================================================================
-    // MASTER NODE SELECTOR (Globally Placed)
+    // MASTER NODE SELECTOR
     // ========================================================================
     if (nodeSelect) {
-        nodeSelect.innerHTML = Object.values(NODES).map(n => 
+        nodeSelect.innerHTML = Object.values(NODES).map(n =>
             `<option value="${n.id}">[${n.name}] ${n.site} (${n.ip})</option>`
         ).join("");
 
@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logEvent(`[CONTEXT] Active Sentry switched to ${node.name} &bull; ${node.site} (${node.ip})`, "text-cyan");
 
         updateVisionWallForNode(node);
-        renderSensorCards(node);
+        loadActiveSensors();
     }
 
     // ========================================================================
@@ -162,6 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function startDynamicCanvasSimulation(canvas, node) {
+        if (!canvas) return;
         const ctx = canvas.getContext("2d");
         let tick = 0;
 
@@ -245,83 +246,543 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ========================================================================
-    // FRAME 2: DYNAMIC SENSORY GRID & SENSOR ACTION BUTTONS
+    // FRAME 2: DYNAMIC SENSOR WIDGET FACTORY & CHAOS CONTROLS
     // ========================================================================
-    function renderSensorCards(node) {
-        if (!sensorGrid) return;
-        sensorHistories.s1 = []; sensorHistories.s2 = [];
-        sensorHistories.s3 = []; sensorHistories.s4 = [];
+    async function loadActiveSensors() {
+        try {
+            const resp = await fetch("/api/v1/matrix/active-sensors");
+            if (resp.ok) {
+                const data = await resp.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    activeSensors = data;
+                    renderDynamicSensorCards();
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to fetch active sensors, falling back to node sensors", e);
+        }
 
-        sensorGrid.innerHTML = Object.entries(node.sensors).map(([key, s]) => `
-            <div class="sensor-card" style="background:#0A0E14; border:1px solid #243144; border-radius:6px; padding:8px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:10px; font-weight:700; color:#F8FAFC;">${s.label}</span>
-                    <span class="badge badge-cyan" style="font-size:8px;">${s.port}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; margin:3px 0;">
-                    <span style="font-size:9px; color:#94A3B8;">Metric:</span>
-                    <span id="val-${key}" style="font-family:monospace; font-size:11px; font-weight:700; color:${s.color};">
-                        ${s.base} ${s.unit}
-                    </span>
-                </div>
-                <canvas id="canvas-${key}" width="160" height="32" style="width:100%; height:32px; display:block;"></canvas>
-            </div>
-        `).join("");
+        // Fallback to active node profile
+        const node = NODES[activeNodeKey];
+        if (node && node.sensors) {
+            activeSensors = Object.entries(node.sensors).map(([k, s]) => ({
+                sensor_id: k,
+                name: s.label,
+                category: s.label.includes("TEMP") ? "TEMPERATURE" : (s.label.includes("VIB") ? "VIBRATION" : (s.label.includes("PRESSURE") ? "PRESSURE" : "ELECTRICAL")),
+                port: s.port.replace(/[^0-9]/g, '') || "15501",
+                unit: s.unit,
+                baseline: s.base
+            }));
+        }
+        renderDynamicSensorCards();
     }
 
-    function drawSparkline(canvasId, values, color, minVal, maxVal) {
-        const cvs = document.getElementById(canvasId);
-        if (!cvs) return;
-        const ctx = cvs.getContext("2d");
-        const w = cvs.width;
-        const h = cvs.height;
+// ========================================================================
+    // 1. DYNAMIC SENSOR WIDGET FACTORY & CHAOS CONTROLLER
+    // ========================================================================
+    function renderDynamicSensorCards() {
+        if (!sensorGrid) return;
 
+        // Cleanly dispose existing instances before re-rendering HTML to prevent memory leaks
+        Object.keys(echartsInstances).forEach(k => {
+            try {
+                if (echartsInstances[k] && !echartsInstances[k].isDisposed()) {
+                    echartsInstances[k].dispose();
+                }
+            } catch (e) {}
+            delete echartsInstances[k];
+        });
+
+        const countBadge = document.getElementById("mc-sensor-count-badge");
+        if (countBadge) countBadge.textContent = `${activeSensors.length} CHANNELS ACTIVE`;
+
+        sensorGrid.innerHTML = activeSensors.map((s) => {
+            const sid = s.sensor_id;
+            sensorHistories[sid] = sensorHistories[sid] || [];
+
+            // Category color coding & safe boundaries
+            let badgeClass = "badge-cyan";
+            let color = "#00F0FF";
+            let catTag = s.category || "PROCESS";
+            let safeRange = `Safe: ${s.min_val || 0} - ${s.max_val || 100} ${s.unit || ''}`;
+
+            if (s.category === "VIBRATION") {
+                badgeClass = "badge-green"; color = "#10B981";
+                safeRange = `ISO 10816 Limit: < 4.5 ${s.unit || 'mm/s'}`;
+            } else if (s.category === "TEMPERATURE") {
+                badgeClass = "badge-purple"; color = "#F59E0B";
+                safeRange = `Nominal: ${s.baseline || 65} ± 15 ${s.unit || '°C'}`;
+            } else if (s.category === "CHEMICAL") {
+                badgeClass = "badge-cyan"; color = "#38BDF8";
+                safeRange = `Potable Band: 6.5 - 8.5 ${s.unit || 'pH'}`;
+            } else if (s.category === "PRESSURE") {
+                badgeClass = "badge-cyan"; color = "#00E5FF";
+                safeRange = `Joukowsky Limit: < 10.0 ${s.unit || 'bar'}`;
+            }
+
+            const cleanName = (s.name || sid).replace(/^s\d+_/i, '').replace(/_/g, ' ');
+            const portDisplay = s.port ? `:${s.port}` : ':MODBUS';
+            const faultLabel = (s.fault_hooks && s.fault_hooks[0]) ? s.fault_hooks[0].id.replace(/_/g, ' ') : "INJECT FAULT";
+
+            return `
+                <div class="sensor-card" id="card-${sid}" style="background:#080C13; border:1px solid #1E293B; border-radius:6px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                    <div>
+                        <!-- Header with Name, Port, Category Badge -->
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:11px; font-weight:800; color:#F8FAFC; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:145px;" title="${cleanName}">
+                                ${cleanName}
+                            </span>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <span class="badge ${badgeClass}" style="font-size:8px; padding:2px 5px;">${portDisplay}</span>
+                                <span class="badge badge-cyan" style="font-size:8px; padding:2px 5px;">${catTag}</span>
+                            </div>
+                        </div>
+
+                        <!-- Technical Role & Invariant Boundary -->
+                        <div style="display:flex; justify-content:space-between; font-size:9px; color:#64748B; margin:4px 0 2px 0;">
+                            <span>${s.interface || 'Analog Telemetry Bus'}</span>
+                            <span style="color:#94A3B8; font-family:monospace;">${safeRange}</span>
+                        </div>
+
+                        <!-- Live Digital Metric Readout -->
+                        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 6px 0;">
+                            <span style="font-size:9px; color:#94A3B8; text-transform:uppercase;">Measured PV:</span>
+                            <span id="val-${sid}" style="font-family:'JetBrains Mono', ui-monospace, monospace; font-size:15px; font-weight:800; color:${color};">
+                                ${s.baseline || 0.0} ${s.unit || ''}
+                            </span>
+                        </div>
+
+                        <!-- ECharts High-Precision Telemetry Container -->
+                        <div id="echart-${sid}" style="width:100%; height:86px; margin:4px 0; background:transparent;"></div>
+                    </div>
+
+                    <!-- Dynamic Chaos / Fault Action Footer -->
+                    <div style="margin-top:10px; display:flex; gap:6px;">
+                        <button class="btn-ctrl btn-fault-inject" data-sensor="${sid}" data-action="step_increase" data-val="8.5"
+                            style="flex:1; font-size:9px; padding:5px 6px; background:rgba(239,68,68,0.12); border:1px solid #EF4444; color:#EF4444; border-radius:3px; cursor:pointer; font-weight:800; text-transform:uppercase;">
+                            [!] ${faultLabel.slice(0, 18)}
+                        </button>
+                        <button class="btn-ctrl btn-fault-reset" data-sensor="${sid}" data-action="reset" data-val="0.0"
+                            style="font-size:9px; padding:5px 8px; background:#0F172A; border:1px solid #334155; color:#94A3B8; border-radius:3px; cursor:pointer; font-weight:700;">
+                            RST
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        // Attach event listeners for dynamic chaos/fault injection buttons
+        document.querySelectorAll(".btn-fault-inject").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const sid = btn.getAttribute("data-sensor");
+                const action = btn.getAttribute("data-action") || "step_increase";
+                const val = parseFloat(btn.getAttribute("data-val") || "8.5");
+                logEvent(`[CHAOS INJECTION] Triggered ${action} on ${sid} (Modifier: +${val})`, "text-yellow");
+
+                try {
+                    await fetch("/api/v1/sensors/fault", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sensor_id: sid, action: action, value: val })
+                    });
+                } catch (e) { console.error("Fault dispatch failed", e); }
+            });
+        });
+
+        document.querySelectorAll(".btn-fault-reset").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const sid = btn.getAttribute("data-sensor");
+                logEvent(`[CHAOS RESET] Restored physical baseline on ${sid}`, "text-green");
+
+                try {
+                    await fetch("/api/v1/sensors/fault", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sensor_id: sid, action: "reset", value: 0.0 })
+                    });
+                } catch (e) { console.error("Fault reset failed", e); }
+            });
+        });
+    }
+
+    // ========================================================================
+    // 2. INDUSTRIAL ECHARTS DISPATCHER & CANVAS LIFECYCLE CONTROLLER
+    // ========================================================================
+    function updateSensorEChart(sid, s, val, history) {
+        const chartDom = document.getElementById(`echart-${sid}`);
+        if (!chartDom) return;
+
+        // GUARD 1: If tab is hidden (display: none), skip drawing to prevent 0x0 collapse!
+        if (chartDom.clientWidth === 0 || chartDom.clientHeight === 0) {
+            return;
+        }
+
+        // GUARD 2: If instance exists but belongs to an old/detached DOM element, dispose it cleanly
+        if (echartsInstances[sid]) {
+            if (echartsInstances[sid].isDisposed() || echartsInstances[sid].getDom() !== chartDom) {
+                try { echartsInstances[sid].dispose(); } catch (e) {}
+                delete echartsInstances[sid];
+            }
+        }
+
+        // Initialize ECharts instance on current DOM element
+        if (!echartsInstances[sid]) {
+            echartsInstances[sid] = echarts.init(chartDom, 'dark', { renderer: 'canvas' });
+        }
+        const chart = echartsInstances[sid];
+
+        const cat = (s.category || "").toUpperCase();
+        const base = parseFloat(s.baseline) || 10.0;
+        const minV = parseFloat(s.min_val) || 0.0;
+        const maxV = parseFloat(s.max_val) || (base * 2.2);
+
+        // A. RADIAL INDUSTRIAL GAUGE (Pressure, Temperature, Flow, Level)
+        if (cat === "PRESSURE" || cat === "TEMPERATURE" || cat === "FLOW" || cat === "LEVEL") {
+            const gaugeColor = isSensorSurge ? '#EF4444' : (cat === 'TEMPERATURE' ? '#F59E0B' : '#00E5FF');
+            
+            const option = {
+                backgroundColor: 'transparent',
+                series: [{
+                    type: 'gauge',
+                    startAngle: 200,
+                    endAngle: -20,
+                    min: minV,
+                    max: maxV,
+                    splitNumber: 4,
+                    radius: '100%',
+                    center: ['50%', '70%'],
+                    axisLine: {
+                        lineStyle: {
+                            width: 6,
+                            color: [
+                                [0.75, '#10B981'],   // Safe green band
+                                [0.90, '#F59E0B'],   // Warning amber band
+                                [1.0, '#EF4444']     // Trip red band
+                            ]
+                        }
+                    },
+                    pointer: {
+                        width: 3,
+                        itemStyle: { color: gaugeColor }
+                    },
+                    axisTick: { show: false },
+                    splitLine: { length: 4, lineStyle: { width: 1, color: '#334155' } },
+                    axisLabel: { distance: 10, color: '#64748B', fontSize: 8 },
+                    detail: { show: false },
+                    data: [{ value: val.toFixed(1) }]
+                }]
+            };
+            chart.setOption(option, true);
+        }
+        // B. STREAMING WAVEFORM WITH GLOW (Vibration, Acoustic, Seismic, Electrical, Streams)
+        else {
+            const lineColor = isSensorSurge ? '#EF4444' : (cat === 'VIBRATION' ? '#10B981' : (cat === 'CHEMICAL' ? '#38BDF8' : '#00F0FF'));
+            
+            const option = {
+                backgroundColor: 'transparent',
+                grid: { left: 4, right: 4, top: 8, bottom: 4, containLabel: false },
+                tooltip: { 
+                    trigger: 'axis', 
+                    backgroundColor: '#0F172A', 
+                    borderColor: '#334155', 
+                    textStyle: { color: '#F8FAFC', fontSize: 10 } 
+                },
+                xAxis: { type: 'category', show: false, boundaryGap: false },
+                yAxis: { type: 'value', min: minV, max: maxV, show: false },
+                series: [{
+                    data: history,
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: { width: 2, color: lineColor, shadowColor: lineColor, shadowBlur: 8 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: lineColor + '44' },
+                            { offset: 1, color: lineColor + '00' }
+                        ])
+                    },
+                    // ISO 10816 alarm threshold line for mechanical vibration
+                    markLine: (cat === 'VIBRATION') ? {
+                        silent: true,
+                        symbol: 'none',
+                        data: [{ yAxis: 4.5 }],
+                        lineStyle: { color: 'rgba(239,68,68,0.6)', type: 'dashed' },
+                        label: { show: true, position: 'insideEndTop', formatter: 'ISO 4.5', fontSize: 8, color: '#EF4444' }
+                    } : undefined
+                }]
+            };
+            chart.setOption(option, true);
+        }
+    }
+    // --- 5 SPECIALIZED INDUSTRIAL CANVAS RENDERERS ---
+
+    // 1. Radial Arc Dial (Pressure, Temperature, Flow)
+    function drawRadialGauge(ctx, w, h, val, minV, maxV, unit, color) {
         ctx.clearRect(0, 0, w, h);
-        if (values.length < 2) return;
+        const cx = w / 2;
+        const cy = h - 6;
+        const radius = Math.min(w * 0.42, h * 0.82);
+        const norm = Math.max(0, Math.min(1, (val - minV) / ((maxV - minV) || 1)));
 
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
+        // Background track arc
         ctx.beginPath();
-        const step = w / (values.length - 1);
-        const range = (maxVal - minVal) || 1;
+        ctx.arc(cx, cy, radius, Math.PI, 2 * Math.PI);
+        ctx.strokeStyle = "#1E293B";
+        ctx.lineWidth = 6;
+        ctx.stroke();
 
-        values.forEach((v, i) => {
-            const norm = (v - minVal) / range;
-            const y = h - (norm * (h - 6)) - 3;
+        // Safe green arc (first 70%)
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, Math.PI, Math.PI + Math.PI * 0.7);
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // Red trip zone (last 30%)
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, Math.PI + Math.PI * 0.7, 2 * Math.PI);
+        ctx.strokeStyle = "rgba(239, 68, 68, 0.5)";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // Active value sweep
+        const targetAngle = Math.PI + norm * Math.PI;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, Math.PI, targetAngle);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 6;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Needle tip
+        const nx = cx + (radius - 10) * Math.cos(targetAngle);
+        const ny = cy + (radius - 10) * Math.sin(targetAngle);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(nx, ny);
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Center hub
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
+
+    // 2. Continuous Rolling Waveform & Scope (Vibration, Acoustic, Seismic)
+    function drawWaveformScope(ctx, w, h, history, color, maxV) {
+        ctx.clearRect(0, 0, w, h);
+
+        // Subtle background oscilloscope grid lines
+        ctx.strokeStyle = "rgba(30, 41, 59, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
+        ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
+        ctx.stroke();
+
+        // Alarm limit dashed line (at 80% height)
+        ctx.strokeStyle = "rgba(239, 68, 68, 0.4)";
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.2); ctx.lineTo(w, h * 0.2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        if (history.length < 2) return;
+
+        // Rolling sinusoidal wave
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        const step = w / (history.length - 1);
+        history.forEach((v, i) => {
+            const norm = Math.min(1.2, v / (maxV || 10));
+            const y = h - (norm * (h - 8)) - 4;
             const x = i * step;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         });
         ctx.stroke();
+        ctx.shadowBlur = 0;
     }
 
+    // 3. Chemical & Gas Gradient Strip (pH, Gas, Nuclear)
+    function drawGradientBar(ctx, w, h, val, minV, maxV, unit) {
+        ctx.clearRect(0, 0, w, h);
+        const barH = 14;
+        const barY = (h - barH) / 2;
+        const norm = Math.max(0, Math.min(1, (val - minV) / ((maxV - minV) || 14)));
+
+        // Color-coded gradient: Red (Acid) -> Green (Neutral) -> Violet (Base)
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0.0, "#EF4444");  // Lethal acid
+        grad.addColorStop(0.45, "#EAB308"); // Mild acid
+        grad.addColorStop(0.5, "#10B981");  // Neutral (7.0 pH)
+        grad.addColorStop(0.65, "#06B6D4"); // Potable
+        grad.addColorStop(1.0, "#A855F7");  // Caustic danger
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(8, barY, w - 16, barH);
+        ctx.strokeStyle = "#334155";
+        ctx.strokeRect(8, barY, w - 16, barH);
+
+        // Moving triangular pointer
+        const px = 8 + norm * (w - 16);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        ctx.moveTo(px, barY - 4);
+        ctx.lineTo(px - 5, barY - 10);
+        ctx.lineTo(px + 5, barY - 10);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.font = "bold 9px monospace";
+        ctx.fillStyle = "#94A3B8";
+        ctx.fillText("0", 8, barY + barH + 11);
+        ctx.fillText("7 (SAFE)", (w / 2) - 18, barY + barH + 11);
+        ctx.fillText("14", w - 22, barY + barH + 11);
+    }
+
+    // 4. Polar Radar Range Sweep (LiDAR, Spatial, Proximity)
+    function drawRadarSweep(ctx, w, h, val) {
+        ctx.clearRect(0, 0, w, h);
+        const cx = w / 2;
+        const cy = h / 2;
+        const radius = Math.min(w * 0.35, h * 0.45);
+
+        // Concentric distance rings
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.25)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 0.35, 0, 2 * Math.PI);
+        ctx.arc(cx, cy, radius * 0.70, 0, 2 * Math.PI);
+        ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // Crosshairs
+        ctx.beginPath();
+        ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy);
+        ctx.moveTo(cx, cy - radius); ctx.lineTo(cx, cy + radius);
+        ctx.stroke();
+
+        // Rotating radar beam
+        const angle = (Date.now() / 600) % (2 * Math.PI);
+        ctx.strokeStyle = "#00F0FF";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
+        ctx.stroke();
+
+        // Obstacle detection blip
+        const blipDist = radius * 0.55;
+        const bx = cx + blipDist * Math.cos(1.2);
+        const by = cy + blipDist * Math.sin(1.2);
+        ctx.fillStyle = "#10B981";
+        ctx.beginPath();
+        ctx.arc(bx, by, 3, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+
+    // 5. High-Tech Cyber Sparkline with Neon Fill (Data/Network Streams)
+    function drawModernSparkline(ctx, w, h, history, color, minV, maxV) {
+        ctx.clearRect(0, 0, w, h);
+        if (history.length < 2) return;
+
+        // Subtle background grid
+        ctx.strokeStyle = "rgba(30, 41, 59, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, w, h);
+
+        const step = w / (history.length - 1);
+        const range = (maxV - minV) || 1;
+
+        // Gradient area fill under curve
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, color + "33");
+        grad.addColorStop(1, color + "00");
+
+        ctx.beginPath();
+        history.forEach((v, i) => {
+            const norm = (v - minV) / range;
+            const y = h - (norm * (h - 8)) - 4;
+            const x = i * step;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Glowing stroke line
+        ctx.beginPath();
+        history.forEach((v, i) => {
+            const norm = (v - minV) / range;
+            const y = h - (norm * (h - 8)) - 4;
+            const x = i * step;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 6;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+
+    // --- REPLACE drawSensorWidget() AND drawSparkline() IN mission_control.js ---
+
+    const echartsInstances = {};
+
+
+    // Responsive auto-resizing
+    window.addEventListener('resize', () => {
+        Object.values(echartsInstances).forEach(c => c && c.resize());
+    });
+
+    // Dynamic Multi-Sensor Stepper Loop (1000ms tick)
+    // --- IN setInterval() IN mission_control.js ---
     setInterval(() => {
-        const node = NODES[activeNodeKey];
-        if (!node) return;
+        if (!activeSensors || activeSensors.length === 0) return;
 
-        Object.entries(node.sensors).forEach(([key, s]) => {
+        activeSensors.forEach(s => {
+            const sid = s.sensor_id;
+            const base = parseFloat(s.baseline) || 10.0;
             let val;
+
             if (isSensorSurge) {
-                val = s.base * (1.35 + Math.random() * 0.35);
+                val = base * (1.35 + Math.random() * 0.35);
             } else {
-                val = s.base + (Math.sin(Date.now() / 2500) * (s.base * 0.02)) + ((Math.random() - 0.5) * (s.base * 0.01));
+                val = base + (Math.sin(Date.now() / 2500) * (base * 0.02)) + ((Math.random() - 0.5) * (base * 0.015));
             }
 
-            const hist = sensorHistories[key];
+            const hist = sensorHistories[sid] || [];
             hist.push(val);
-            if (hist.length > 25) hist.shift();
+            if (hist.length > 30) hist.shift();
 
-            const valEl = document.getElementById(`val-${key}`);
+            const valEl = document.getElementById(`val-${sid}`);
             if (valEl) {
-                valEl.textContent = `${val.toFixed(val < 10 ? 2 : 1)} ${s.unit}`;
-                valEl.style.color = isSensorSurge ? "#EF4444" : s.color;
+                valEl.textContent = `${val.toFixed(val < 10 ? 3 : 1)} ${s.unit || ''}`;
+                valEl.style.color = isSensorSurge ? "#EF4444" : (val > base * 1.2 ? "#EF4444" : "#00F0FF");
             }
 
-            drawSparkline(`canvas-${key}`, hist, isSensorSurge ? "#EF4444" : s.color, s.range[0], s.range[1]);
+            // Dispatch to specialized 60-FPS canvas renderer
+            // drawSensorWidget(`canvas-${sid}`, s, val, hist);
+            updateSensorEChart(sid, s, val, hist);
+
         });
     }, 1000);
 
-    // Frame 2 Action Buttons
+
+    // Frame 2 Global Action Buttons
     document.getElementById("btn-sensor-surge")?.addEventListener("click", () => {
         isSensorSurge = true;
         const node = NODES[activeNodeKey];
@@ -399,6 +860,33 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 280);
     }
 
-    // Initialize Default State
+    // Initialize Default Context & Active Sensors
     applyNodeContext(activeNodeKey);
+});
+
+
+// --- INSERT AT BOTTOM OF mission_control.js ---
+
+// Automatically resize and restore charts whenever switching back to Mission Control
+document.querySelectorAll('.admin-nav-item, .nav-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-tab');
+        if (targetId === 'tab-mission-control') {
+            // Give the browser 60ms to apply display: block and calculate flexbox geometry
+            setTimeout(() => {
+                Object.values(echartsInstances).forEach(chart => {
+                    if (chart && !chart.isDisposed()) {
+                        chart.resize();
+                    }
+                });
+            }, 60);
+        }
+    });
+});
+
+// Also handle window resize
+window.addEventListener('resize', () => {
+    Object.values(echartsInstances).forEach(c => {
+        if (c && !c.isDisposed()) c.resize();
+    });
 });
