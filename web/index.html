@@ -675,159 +675,363 @@
                 </div>
             </div>
             <!-- TAB: 🔬 SENTINEL-LAB AIR-GAPPED SCIENTIFIC RESEARCH COCKPIT -->
+
+
+            <!-- TAB: 🔬 SENTINEL-LAB AIR-GAPPED SCIENTIFIC RESEARCH COCKPIT -->
             <div class="tab-pane" id="tab-lab-cockpit">
-                <div class="mc-master-bar"
-                    style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+
+                <!-- TOP HIGH-DENSITY SCIENTIFIC RIBBON -->
+                <div class="lab-master-ribbon"
+                    style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 10px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span
-                            style="font-size: 14px; font-weight: 800; color: var(--accent); letter-spacing: 0.8px;">SENTINEL-BENCH:
-                            14-DIMENSIONAL SCIENTIFIC TESTBED</span>
-                        <span class="badge badge-green">DOI: 10.5281/zenodo.23598779</span>
+                            style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent);"></span>
+                        <span
+                            style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: 0.08em;">
+                            SENTINEL-BENCH: 14-DIMENSIONAL SCIENTIFIC TESTBED
+                        </span>
+                        <span class="badge badge-green" style="font-size: 10px;">DOI: 10.5281/zenodo.23598779</span>
+                        <span class="badge badge-cyan" style="font-size: 9px;">FORMAL CBF &bull; EVT GUMBEL</span>
                     </div>
-                    <button class="btn-sm" onclick="exportLabScorecard()"
-                        style="background: var(--kernel); color: #07090e; font-weight: 700; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer;">
-                        Export LaTeX Scorecard
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button class="btn-sm" onclick="exportLabScorecard()"
+                            style="background: rgba(0, 255, 163, 0.15); border: 1px solid var(--kernel); color: var(--kernel); font-weight: 700; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; display: flex; align-items: center; gap: 6px;">
+                            <span>📄</span> Export LaTeX Scorecard
+                        </button>
+                        <button class="btn-sm" onclick="injectLab('reset')"
+                            style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--threat); color: var(--threat); font-weight: 700; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 11px;">
+                            ⏹ Reset Testbed
+                        </button>
+                    </div>
                 </div>
 
-                <div class="lab-grid">
-                    <!-- PANE 1: Physical Phase-Plane & Safety Barrier Canvas -->
-                    <div class="lab-card">
-                        <div class="lab-card-title">
-                            <span>PANE 1: REAL-TIME PHYSICAL THERMAL OSCILLOSCOPE &amp; BARRIER h(x)</span>
-                            <span id="cbf-status-badge" class="badge badge-green">h(x) &ge; 0 SAFE</span>
-                        </div>
-                        <canvas id="cbfCanvas" class="lab-canvas"></canvas>
-                        <div class="lab-metrics-row">
-                            <div>
-                                <div id="val-temp" class="lab-metric-val">85.0 °C</div>
-                                <div class="lab-metric-lbl">Plant Temp T(t)</div>
-                            </div>
-                            <div>
-                                <div id="val-barrier" class="lab-metric-val" style="color: var(--kernel);">+35.000</div>
-                                <div class="lab-metric-lbl">Barrier h(x)</div>
-                            </div>
-                            <div>
-                                <div id="val-lyapunov" class="lab-metric-val" style="color: var(--accent);">-0.150</div>
-                                <div class="lab-metric-lbl">Lyapunov &lambda;</div>
-                            </div>
-                            <div>
-                                <div id="val-tcrit" class="lab-metric-val">38.4 ms</div>
-                                <div class="lab-metric-lbl">T_crit Margin</div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- STAGE 1: DUAL SCIENTIFIC ECHARTS INSTRUMENTS (55% SCREEN HEIGHT) -->
+                <div class="lab-stage-instruments"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
 
-                    <!-- PANE 2: EVT WCET Tail Latency & PMU Hardware Counters -->
-                    <div class="lab-card">
-                        <div class="lab-card-title">
-                            <span>PANE 2: EVT WCET GUMBEL TAIL &amp; PMU HARDWARE METRICS</span>
-                            <span class="badge badge-cyan">p99.999% &le; 1.82 &mu;s</span>
-                        </div>
-                        <canvas id="evtCanvas" class="lab-canvas"></canvas>
-                        <div class="lab-metrics-row">
-                            <div>
-                                <div id="val-wcet" class="lab-metric-val">1.82 &mu;s</div>
-                                <div class="lab-metric-lbl">p99.999% WCET</div>
-                            </div>
-                            <div>
-                                <div id="val-ipc" class="lab-metric-val" style="color: var(--kernel);">2.42</div>
-                                <div class="lab-metric-lbl">PMU IPC</div>
-                            </div>
-                            <div>
-                                <div id="val-llc" class="lab-metric-val" style="color: var(--kernel);">1.24%</div>
-                                <div class="lab-metric-lbl">LLC Cache Miss</div>
-                            </div>
-                            <div>
-                                <div id="val-drop" class="lab-metric-val" style="color: var(--accent);">0.84 &mu;s</div>
-                                <div class="lab-metric-lbl">eBPF Drop SLA</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PANE 3: Live Grid Mesh Telemetry & Kernel Subsystems -->
-                    <div class="lab-card">
-                        <div class="lab-card-title">
-                            <span>PANE 3: 13-NODE TOPOLOGY &amp; KERNEL INVARIANTS</span>
-                            <span class="badge badge-green">13 NODES ONLINE</span>
-                        </div>
+                    <!-- INSTRUMENT 01: REAL-TIME PHYSICAL CONTROL BARRIER OSCILLOSCOPE -->
+                    <div class="lab-card"
+                        style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
                         <div
-                            style="background: #050811; padding: 10px; border-radius: 4px; border: 1px solid var(--hairline); height: 190px; overflow-y: auto;">
-                            <div style="color: var(--muted); font-size: 10px; margin-bottom: 4px;">TOPOLOGY NODES
-                                (10.240.0.0/24):</div>
-                            <span class="badge badge-cyan">nexus:10</span>
-                            <span class="badge badge-cyan">mock-plc:150</span>
-                            <span class="badge badge-cyan">forge:20</span>
-                            <span class="badge badge-cyan">edge-01:101</span>
-                            <span class="badge badge-cyan">edge-02:102</span>
-                            <span class="badge badge-cyan">edge-03:103</span>
-                            <span class="badge badge-cyan">cam:75</span>
-                            <span class="badge badge-cyan">vib:76</span>
-                            <span class="badge badge-cyan">pwr:78</span>
-                            <span class="badge badge-cyan">adv:99</span>
-                            <hr style="border: 0; border-top: 1px solid var(--hairline); margin: 8px 0;">
-                            <div style="color: var(--muted); font-size: 10px; margin-bottom: 4px;">ACTIVE INVARIANTS:
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span
+                                    style="font-size: 10px; font-weight: 800; color: var(--accent); background: rgba(0,229,255,0.1); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 3px;">INST
+                                    01</span>
+                                <span
+                                    style="font-size: 11px; font-weight: 800; color: var(--ink); letter-spacing: 0.05em;">PHYSICAL
+                                    THERMAL OSCILLOSCOPE &amp; BARRIER h(x)</span>
                             </div>
-                            <span class="badge badge-green">3GPP 5G Slicing</span>
-                            <span class="badge badge-green">Live-SBOM W^X</span>
-                            <span class="badge badge-green">AI TRiSM Guard</span>
-                            <span class="badge badge-green">Space CCSDS</span>
-                            <span class="badge badge-green">Honeynet Vaccine</span>
+                            <span id="cbf-status-badge" class="badge badge-green"
+                                style="font-size: 9px; font-weight: 800;">h(x) &ge; 0 SAFE</span>
                         </div>
-                        <div class="lab-metrics-row">
-                            <div>
-                                <div class="lab-metric-val">40.0M+</div>
-                                <div class="lab-metric-lbl">RSS Line Rate</div>
+
+                        <!-- ECharts Container for CBF Phase-Plane -->
+                        <div id="cbfEchart"
+                            style="width: 100%; height: 200px; background: #050811; border-radius: 4px; border: 1px solid var(--hairline);">
+                        </div>
+
+                        <!-- High-Density Telemetry Metrics Row -->
+                        <div class="lab-metrics-row"
+                            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; text-align: center;">
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div id="val-temp" class="lab-metric-val"
+                                    style="font-size: 15px; font-weight: 800; color: var(--ink); font-family: monospace;">
+                                    85.0 °C</div>
+                                <div class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">Plant Temp
+                                    T(t)</div>
                             </div>
-                            <div>
-                                <div class="lab-metric-val">0</div>
-                                <div class="lab-metric-lbl">Memory Drift</div>
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div id="val-barrier" class="lab-metric-val"
+                                    style="font-size: 15px; font-weight: 800; color: var(--kernel); font-family: monospace;">
+                                    +35.000</div>
+                                <div class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">Barrier h(x)
+                                </div>
                             </div>
-                            <div>
-                                <div class="lab-metric-val">0</div>
-                                <div class="lab-metric-lbl">5G Violations</div>
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div id="val-lyapunov" class="lab-metric-val"
+                                    style="font-size: 15px; font-weight: 800; color: var(--accent); font-family: monospace;">
+                                    -0.150</div>
+                                <div class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">Lyapunov
+                                    &lambda;</div>
+                            </div>
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div id="val-tcrit" class="lab-metric-val"
+                                    style="font-size: 15px; font-weight: 800; color: #f59e0b; font-family: monospace;">
+                                    38.4 ms</div>
+                                <div class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">T_crit
+                                    Margin</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- PANE 4: Interactive Scientific Stress-Test & Attack Injection Deck -->
-                    <div class="lab-card">
-                        <div class="lab-card-title">
-                            <span>PANE 4: 14-MODULE INTERACTIVE INJECTION DECK</span>
-                            <span id="deck-status" class="badge badge-cyan">READY</span>
+                    <!-- INSTRUMENT 02: EVT WCET GUMBEL TAIL & PMU HARDWARE COUNTERS -->
+                    <div class="lab-card"
+                        style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span
+                                    style="font-size: 10px; font-weight: 800; color: var(--accent); background: rgba(0,229,255,0.1); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 3px;">INST
+                                    02</span>
+                                <span
+                                    style="font-size: 11px; font-weight: 800; color: var(--ink); letter-spacing: 0.05em;">EVT
+                                    WCET GUMBEL TAIL &amp; PMU HARDWARE METRICS</span>
+                            </div>
+                            <span class="badge badge-cyan" style="font-size: 9px; font-weight: 800;">p99.999% &le; 1.82
+                                &mu;s</span>
                         </div>
-                        <div class="lab-deck-grid" style="height: 190px; align-content: center;">
-                            <button class="lab-btn" onclick="injectLab('cbf')">1. CBF Barrier Stress</button>
-                            <button class="lab-btn" onclick="injectLab('hil')">2. Run HIL Co-Sim</button>
-                            <button class="lab-btn" onclick="injectLab('fuzzer')">3. Diff SCADA Fuzzer</button>
-                            <button class="lab-btn" onclick="injectLab('blast')">4. Wire-Speed Blaster</button>
-                            <button class="lab-btn" onclick="injectLab('evasion')">5. Grammar Mutation</button>
-                            <button class="lab-btn" onclick="injectLab('5g_slice_hop')">6. 5G Slice-Hop</button>
-                            <button class="lab-btn" onclick="injectLab('trism_jailbreak')">7. AI TRiSM
-                                Jailbreak</button>
-                            <button class="lab-btn lab-btn-spike" onclick="injectLab('heater_spike')">🔥 Thermal
-                                Spike</button>
-                            <button class="lab-btn lab-btn-success" onclick="injectLab('heater_normal')">❄️ Thermal
-                                Safe</button>
-                            <button class="lab-btn lab-btn-danger" style="grid-column: span 3;"
-                                onclick="injectLab('reset')">⏹ Emergency All-Stop &amp; Clear Log</button>
+
+                        <!-- ECharts Container for EVT Gumbel Distribution -->
+                        <div id="evtEchart"
+                            style="width: 100%; height: 200px; background: #050811; border-radius: 4px; border: 1px solid var(--hairline);">
                         </div>
-                        <div style="font-size: 10px; color: var(--muted); margin-top: 8px; text-align: center;">
-                            Trigger actions asynchronously and stream scientific output into the console below.
+
+                        <!-- High-Density Telemetry Metrics Row -->
+                        <div class="lab-metrics-row"
+                            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; text-align: center;">
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div id="val-wcet" class="lab-metric-val"
+                                    style="font-size: 15px; font-weight: 800; color: var(--ink); font-family: monospace;">
+                                    1.82 &mu;s</div>
+                                <div class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">p99.999%
+                                    WCET</div>
+                            </div>
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div id="val-ipc" class="lab-metric-val"
+                                    style="font-size: 15px; font-weight: 800; color: var(--kernel); font-family: monospace;">
+                                    2.42</div>
+                                <div class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">PMU IPC
+                                </div>
+                            </div>
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div id="val-llc" class="lab-metric-val"
+                                    style="font-size: 15px; font-weight: 800; color: var(--kernel); font-family: monospace;">
+                                    1.24%</div>
+                                <div class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">LLC Cache
+                                    Miss</div>
+                            </div>
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div id="val-drop" class="lab-metric-val"
+                                    style="font-size: 15px; font-weight: 800; color: var(--accent); font-family: monospace;">
+                                    0.84 &mu;s</div>
+                                <div class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">eBPF Drop
+                                    SLA</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- PANE 5: LIVE REAL-TIME TERMINAL LOG CONSOLE -->
-                <div class="lab-terminal">
-                    <div class="lab-terminal-header">
-                        <span>LIVE RESEARCH MODULE EXECUTION CONSOLE (STDOUT / STDERR)</span>
-                        <span id="lab-log-status">POLLING ACTIVE</span>
+                <!-- STAGE 2: TRI-PANE OPERATIONAL & TELEMETRY DECK (45% SCREEN HEIGHT) -->
+                <div class="lab-stage-deck"
+                    style="display: grid; grid-template-columns: 1.15fr 1fr 1.35fr; gap: 12px; margin-bottom: 12px;">
+
+                    <!-- DECK A: 4-TIER CATEGORIZED STRESS ENGINE -->
+                    <div class="lab-card"
+                        style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span
+                                style="font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 0.05em;">SCIENTIFIC
+                                STRESS ENGINE</span>
+                            <span id="deck-status" class="badge badge-cyan" style="font-size: 9px;">READY</span>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto;">
+                            <!-- Tier 1 -->
+                            <div>
+                                <div
+                                    style="font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">
+                                    Tier 1: Silicon &amp; Kernel</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                                    <button class="lab-btn" onclick="injectLab('blast')"
+                                        style="padding: 6px; font-size: 9px; text-align: left;">⚡ 40M EPS
+                                        Blaster</button>
+                                    <button class="lab-btn" onclick="injectLab('cbf')"
+                                        style="padding: 6px; font-size: 9px; text-align: left;">🛡️ CBF Stress
+                                        Test</button>
+                                </div>
+                            </div>
+
+                            <!-- Tier 2 -->
+                            <div>
+                                <div
+                                    style="font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">
+                                    Tier 2: CPS &amp; SCADA Fuzzing</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                                    <button class="lab-btn" onclick="injectLab('fuzzer')"
+                                        style="padding: 6px; font-size: 9px; text-align: left;">🌀 SCADA Diff
+                                        Fuzzer</button>
+                                    <button class="lab-btn" onclick="injectLab('evasion')"
+                                        style="padding: 6px; font-size: 9px; text-align: left;">🧬 Grammar
+                                        Mutator</button>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;">
+                                    <button class="lab-btn lab-btn-spike" onclick="injectLab('heater_spike')"
+                                        style="padding: 5px; font-size: 9px;">🔥 Thermal Spike</button>
+                                    <button class="lab-btn lab-btn-success" onclick="injectLab('heater_normal')"
+                                        style="padding: 5px; font-size: 9px;">❄️ Thermal Safe</button>
+                                </div>
+                            </div>
+
+                            <!-- Tier 3 -->
+                            <div>
+                                <div
+                                    style="font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">
+                                    Tier 3: AI TRiSM &amp; 5G Slicing</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                                    <button class="lab-btn" onclick="injectLab('5g_slice_hop')"
+                                        style="padding: 6px; font-size: 9px; text-align: left;">📡 5G Slice-Hop</button>
+                                    <button class="lab-btn" onclick="injectLab('trism_jailbreak')"
+                                        style="padding: 6px; font-size: 9px; text-align: left;">🤖 AI TRiSM
+                                        Jailbreak</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="labTerminalBody" class="lab-terminal-body">[*] Sentinel-Lab live log buffer initialized.
-                        Click any injection button to execute.</div>
+
+                    <!-- DECK B: 13-NODE TOPOLOGY & KERNEL INVARIANT MESH -->
+                    <div class="lab-card"
+                        style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span
+                                    style="font-size: 11px; font-weight: 800; color: var(--kernel); letter-spacing: 0.05em;">FORMAL
+                                    FLEET MESH</span>
+                                <span class="badge badge-green" style="font-size: 9px;">13 NODES ONLINE</span>
+                            </div>
+
+                            <!-- Interactive Compact Node Chip Matrix -->
+                            <div
+                                style="background: #050811; padding: 8px; border-radius: 4px; border: 1px solid var(--hairline); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; font-family: monospace; font-size: 9px;">
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">nexus
+                                    :10</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">edge-01
+                                    :101</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">cam
+                                    :75</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">mock-plc
+                                    :150</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">edge-02
+                                    :102</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">vib
+                                    :76</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">forge
+                                    :20</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">edge-03
+                                    :103</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">pwr
+                                    :78</span>
+                                <span class="badge badge-purple" style="padding: 2px 4px; text-align: center;">adv
+                                    :99</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">traffic
+                                    :50</span>
+                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">mon
+                                    :60</span>
+                            </div>
+
+                            <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
+                                <span class="badge badge-green" style="font-size: 8px;">3GPP 5G Slicing</span>
+                                <span class="badge badge-green" style="font-size: 8px;">Live-SBOM W^X</span>
+                                <span class="badge badge-green" style="font-size: 8px;">AI TRiSM Guard</span>
+                                <span class="badge badge-green" style="font-size: 8px;">Space CCSDS</span>
+                            </div>
+                        </div>
+
+                        <!-- Formal Invariant Stats -->
+                        <div
+                            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; text-align: center;">
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 4px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div
+                                    style="font-size: 13px; font-weight: 800; color: var(--ink); font-family: monospace;">
+                                    40.0M+</div>
+                                <div style="font-size: 8px; color: var(--muted);">RSS LINE RATE</div>
+                            </div>
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 4px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div
+                                    style="font-size: 13px; font-weight: 800; color: var(--kernel); font-family: monospace;">
+                                    0 B</div>
+                                <div style="font-size: 8px; color: var(--muted);">MEMORY DRIFT</div>
+                            </div>
+                            <div
+                                style="background: rgba(13,17,26,0.6); padding: 4px; border-radius: 3px; border: 1px solid var(--hairline);">
+                                <div
+                                    style="font-size: 13px; font-weight: 800; color: var(--kernel); font-family: monospace;">
+                                    0</div>
+                                <div style="font-size: 8px; color: var(--muted);">5G VIOLATIONS</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DECK C: LIVE SCIENTIFIC EXECUTION FLIGHT RECORDER -->
+                    <div class="lab-card"
+                        style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span
+                                style="font-size: 11px; font-weight: 800; color: var(--ink); letter-spacing: 0.05em;">SCIENTIFIC
+                                FLIGHT RECORDER (STDOUT / STDERR)</span>
+                            <span id="lab-log-status" class="badge badge-cyan" style="font-size: 8px;">POLLING
+                                ACTIVE</span>
+                        </div>
+                        <div id="labTerminalBody"
+                            style="flex: 1; min-height: 180px; max-height: 220px; overflow-y: auto; background: #04060a; border: 1px solid var(--hairline); border-radius: 3px; padding: 8px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.5; color: #00F0FF; white-space: pre-wrap; word-break: break-all;">
+                            [*] Sentinel-Lab live telemetry initialized. Ready for research module execution.
+                        </div>
+                    </div>
                 </div>
+
+                <!-- MODAL: LATEX SCORECARD EXPORT MODAL -->
+                <div id="modal-latex-export"
+                    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                    <div
+                        style="background: var(--panel); border: 1px solid var(--accent); border-radius: 6px; width: 680px; max-width: 90vw; padding: 20px; box-shadow: 0 0 30px rgba(0,229,255,0.25);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span
+                                style="font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: 0.08em;">📄
+                                IEEE / ACM LATEX BENCHMARK SCORECARD</span>
+                            <button onclick="document.getElementById('modal-latex-export').style.display='none'"
+                                style="background: transparent; border: none; color: var(--muted); font-size: 16px; cursor: pointer;">&times;</button>
+                        </div>
+                        <p style="font-size: 11px; color: var(--muted); margin-bottom: 10px;">Generated from live
+                            empirical testbed metrics (CERN / Zenodo DOI: 10.5281/zenodo.23598779):</p>
+                        <textarea id="latex-code-area" readonly
+                            style="width: 100%; height: 220px; background: #04060a; border: 1px solid var(--hairline); border-radius: 4px; color: var(--accent); font-family: monospace; font-size: 10px; padding: 10px; box-sizing: border-box; resize: none;"></textarea>
+                        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                            <button id="btn-copy-latex"
+                                style="background: var(--kernel); color: #000; font-weight: 800; font-size: 11px; padding: 6px 14px; border-radius: 3px; border: none; cursor: pointer;">
+                                Copy to Clipboard
+                            </button>
+                            <button onclick="document.getElementById('modal-latex-export').style.display='none'"
+                                style="background: #111827; border: 1px solid var(--hairline); color: var(--ink); font-size: 11px; padding: 6px 14px; border-radius: 3px; cursor: pointer;">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
 
             <!-- TAB 1: FLEET TOPOLOGY -->
             <div class="tab-pane" id="tab-topology">
