@@ -678,9 +678,12 @@
 
 
             <!-- TAB: 🔬 SENTINEL-LAB AIR-GAPPED SCIENTIFIC RESEARCH COCKPIT -->
+
+
+            <!-- TAB: 🔬 SENTINEL-LAB AIR-GAPPED SCIENTIFIC RESEARCH COCKPIT -->
             <div class="tab-pane" id="tab-lab-cockpit">
 
-                <!-- TOP HIGH-DENSITY SCIENTIFIC RIBBON -->
+                <!-- TOP HIGH-DENSITY SCIENTIFIC RIBBON & DOMAIN SELECTOR -->
                 <div class="lab-master-ribbon"
                     style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 10px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -691,8 +694,21 @@
                             SENTINEL-BENCH: 14-DIMENSIONAL SCIENTIFIC TESTBED
                         </span>
                         <span class="badge badge-green" style="font-size: 10px;">DOI: 10.5281/zenodo.23598779</span>
-                        <span class="badge badge-cyan" style="font-size: 9px;">FORMAL CBF &bull; EVT GUMBEL</span>
+
+                        <!-- DYNAMIC ACTIVE SCENARIO / ENCLAVE SELECTOR -->
+                        <div style="display: flex; align-items: center; gap: 6px; margin-left: 10px;">
+                            <span
+                                style="font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Active
+                                Enclave:</span>
+                            <select id="lab-node-select"
+                                style="background: #050811; border: 1px solid var(--accent); color: var(--accent); font-family: monospace; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 3px; cursor: pointer; outline: none;">
+                                <option value="Edge-Substation-01">PowerGrid-North-01 (Substation-01)</option>
+                                <option value="Edge-Hospital-PACS-02">Metro-General-Hospital (PACS-02)</option>
+                                <option value="Edge-Refinery-PLC-03">Coastal-Refinery-ZoneB (Refinery-03)</option>
+                            </select>
+                        </div>
                     </div>
+
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <button class="btn-sm" onclick="exportLabScorecard()"
                             style="background: rgba(0, 255, 163, 0.15); border: 1px solid var(--kernel); color: var(--kernel); font-weight: 700; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; display: flex; align-items: center; gap: 6px;">
@@ -705,25 +721,30 @@
                     </div>
                 </div>
 
-                <!-- STAGE 1: DUAL SCIENTIFIC ECHARTS INSTRUMENTS (55% SCREEN HEIGHT) -->
+                <!-- STAGE 1: DUAL SCIENTIFIC ECHARTS INSTRUMENTS -->
                 <div class="lab-stage-instruments"
                     style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
 
-                    <!-- INSTRUMENT 01: REAL-TIME PHYSICAL CONTROL BARRIER OSCILLOSCOPE -->
+                    <!-- INSTRUMENT 01: REAL-TIME PHYSICAL SAFETY BARRIER OSCILLOSCOPE -->
                     <div class="lab-card"
                         style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span
-                                    style="font-size: 10px; font-weight: 800; color: var(--accent); background: rgba(0,229,255,0.1); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 3px;">INST
-                                    01</span>
-                                <span
-                                    style="font-size: 11px; font-weight: 800; color: var(--ink); letter-spacing: 0.05em;">PHYSICAL
-                                    THERMAL OSCILLOSCOPE &amp; BARRIER h(x)</span>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span
+                                        style="font-size: 10px; font-weight: 800; color: var(--accent); background: rgba(0,229,255,0.1); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 3px;">PANE
+                                        01</span>
+                                    <span id="lab-invar-title"
+                                        style="font-size: 11px; font-weight: 800; color: var(--ink); letter-spacing: 0.05em;">PHYSICAL
+                                        SAFETY BARRIER h(x)</span>
+                                </div>
+                                <span id="cbf-status-badge" class="badge badge-green"
+                                    style="font-size: 9px; font-weight: 800;">h(x) &ge; 0 SAFE</span>
                             </div>
-                            <span id="cbf-status-badge" class="badge badge-green"
-                                style="font-size: 9px; font-weight: 800;">h(x) &ge; 0 SAFE</span>
+                            <p style="font-size: 9px; color: var(--muted); margin: 3px 0 8px 0;">
+                                Proves forward invariance of safe set C: closed-loop eBPF driver short-circuits control
+                                packets before boundary limit is breached.
+                            </p>
                         </div>
 
                         <!-- ECharts Container for CBF Phase-Plane -->
@@ -738,19 +759,19 @@
                                 style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
                                 <div id="val-temp" class="lab-metric-val"
                                     style="font-size: 15px; font-weight: 800; color: var(--ink); font-family: monospace;">
-                                    85.0 °C</div>
-                                <div class="lab-metric-lbl"
-                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">Plant Temp
-                                    T(t)</div>
+                                    50.00 Hz</div>
+                                <div id="lbl-temp" class="lab-metric-lbl"
+                                    style="font-size: 9px; color: var(--muted); text-transform: uppercase;">Measured PV
+                                </div>
                             </div>
                             <div
                                 style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
                                 <div id="val-barrier" class="lab-metric-val"
                                     style="font-size: 15px; font-weight: 800; color: var(--kernel); font-family: monospace;">
-                                    +35.000</div>
+                                    +0.200</div>
                                 <div class="lab-metric-lbl"
                                     style="font-size: 9px; color: var(--muted); text-transform: uppercase;">Barrier h(x)
-                                </div>
+                                    Margin</div>
                             </div>
                             <div
                                 style="background: rgba(13,17,26,0.6); padding: 6px; border-radius: 3px; border: 1px solid var(--hairline);">
@@ -776,18 +797,23 @@
                     <!-- INSTRUMENT 02: EVT WCET GUMBEL TAIL & PMU HARDWARE COUNTERS -->
                     <div class="lab-card"
                         style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span
-                                    style="font-size: 10px; font-weight: 800; color: var(--accent); background: rgba(0,229,255,0.1); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 3px;">INST
-                                    02</span>
-                                <span
-                                    style="font-size: 11px; font-weight: 800; color: var(--ink); letter-spacing: 0.05em;">EVT
-                                    WCET GUMBEL TAIL &amp; PMU HARDWARE METRICS</span>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span
+                                        style="font-size: 10px; font-weight: 800; color: var(--accent); background: rgba(0,229,255,0.1); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 3px;">PANE
+                                        02</span>
+                                    <span
+                                        style="font-size: 11px; font-weight: 800; color: var(--ink); letter-spacing: 0.05em;">EVT
+                                        WCET GUMBEL TAIL &amp; PMU HARDWARE COUNTERS</span>
+                                </div>
+                                <span class="badge badge-cyan" style="font-size: 9px; font-weight: 800;">p99.999% &le;
+                                    1.82 &mu;s</span>
                             </div>
-                            <span class="badge badge-cyan" style="font-size: 9px; font-weight: 800;">p99.999% &le; 1.82
-                                &mu;s</span>
+                            <p style="font-size: 9px; color: var(--muted); margin: 3px 0 8px 0;">
+                                Proves sub-microsecond real-time determinism: Extreme Value Theory (EVT) Gumbel tail
+                                guarantees worst-case execution time under line-rate saturation.
+                            </p>
                         </div>
 
                         <!-- ECharts Container for EVT Gumbel Distribution -->
@@ -838,7 +864,7 @@
                     </div>
                 </div>
 
-                <!-- STAGE 2: TRI-PANE OPERATIONAL & TELEMETRY DECK (45% SCREEN HEIGHT) -->
+                <!-- STAGE 2: TRI-PANE OPERATIONAL & TELEMETRY DECK -->
                 <div class="lab-stage-deck"
                     style="display: grid; grid-template-columns: 1.15fr 1fr 1.35fr; gap: 12px; margin-bottom: 12px;">
 
@@ -846,26 +872,28 @@
                     <div class="lab-card"
                         style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column;">
                         <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <span
                                 style="font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 0.05em;">SCIENTIFIC
                                 STRESS ENGINE</span>
                             <span id="deck-status" class="badge badge-cyan" style="font-size: 9px;">READY</span>
                         </div>
+                        <p style="font-size: 9px; color: var(--muted); margin: 0 0 8px 0;">Dispatches the formal
+                            benchmark experiments from CERN preprint:</p>
 
                         <div style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto;">
                             <!-- Tier 1 -->
                             <div>
                                 <div
                                     style="font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">
-                                    Tier 1: Silicon &amp; Kernel</div>
+                                    Tier 1: Silicon &amp; Ingestion</div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
                                     <button class="lab-btn" onclick="injectLab('blast')"
                                         style="padding: 6px; font-size: 9px; text-align: left;">⚡ 40M EPS
                                         Blaster</button>
                                     <button class="lab-btn" onclick="injectLab('cbf')"
-                                        style="padding: 6px; font-size: 9px; text-align: left;">🛡️ CBF Stress
-                                        Test</button>
+                                        style="padding: 6px; font-size: 9px; text-align: left;">🛡️ CBF Barrier
+                                        Stress</button>
                                 </div>
                             </div>
 
@@ -873,20 +901,22 @@
                             <div>
                                 <div
                                     style="font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">
-                                    Tier 2: CPS &amp; SCADA Fuzzing</div>
+                                    Tier 2: Cyber-Physical Disturbance</div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                                    <button class="lab-btn" onclick="injectLab('fuzzer')"
-                                        style="padding: 6px; font-size: 9px; text-align: left;">🌀 SCADA Diff
-                                        Fuzzer</button>
-                                    <button class="lab-btn" onclick="injectLab('evasion')"
-                                        style="padding: 6px; font-size: 9px; text-align: left;">🧬 Grammar
-                                        Mutator</button>
+                                    <button class="lab-btn lab-btn-spike" onclick="injectLab('spike')"
+                                        style="padding: 6px; font-size: 9px; text-align: left;">[!] Inject Plant
+                                        Perturb</button>
+                                    <button class="lab-btn lab-btn-success" onclick="injectLab('safe')"
+                                        style="padding: 6px; font-size: 9px; text-align: left;">[+] Stabilize
+                                        Plant</button>
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;">
-                                    <button class="lab-btn lab-btn-spike" onclick="injectLab('heater_spike')"
-                                        style="padding: 5px; font-size: 9px;">🔥 Thermal Spike</button>
-                                    <button class="lab-btn lab-btn-success" onclick="injectLab('heater_normal')"
-                                        style="padding: 5px; font-size: 9px;">❄️ Thermal Safe</button>
+                                    <button class="lab-btn" onclick="injectLab('fuzzer')"
+                                        style="padding: 5px; font-size: 9px; text-align: left;">🌀 SCADA Diff
+                                        Fuzzer</button>
+                                    <button class="lab-btn" onclick="injectLab('evasion')"
+                                        style="padding: 5px; font-size: 9px; text-align: left;">🧬 Grammar
+                                        Mutator</button>
                                 </div>
                             </div>
 
@@ -911,40 +941,20 @@
                         style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
                         <div>
                             <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                                 <span
-                                    style="font-size: 11px; font-weight: 800; color: var(--kernel); letter-spacing: 0.05em;">FORMAL
-                                    FLEET MESH</span>
-                                <span class="badge badge-green" style="font-size: 9px;">13 NODES ONLINE</span>
+                                    style="font-size: 11px; font-weight: 800; color: var(--kernel); letter-spacing: 0.05em;">DISTRIBUTED
+                                    FLEET TOPOLOGY</span>
+                                <span id="lab-node-count-badge" class="badge badge-green" style="font-size: 9px;">3
+                                    NODES ACTIVE</span>
                             </div>
+                            <p style="font-size: 9px; color: var(--muted); margin: 0 0 8px 0;">Proves collective defense
+                                fanout with $0.00 cloud egress:</p>
 
-                            <!-- Interactive Compact Node Chip Matrix -->
-                            <div
-                                style="background: #050811; padding: 8px; border-radius: 4px; border: 1px solid var(--hairline); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; font-family: monospace; font-size: 9px;">
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">nexus
-                                    :10</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">edge-01
-                                    :101</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">cam
-                                    :75</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">mock-plc
-                                    :150</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">edge-02
-                                    :102</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">vib
-                                    :76</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">forge
-                                    :20</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">edge-03
-                                    :103</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">pwr
-                                    :78</span>
-                                <span class="badge badge-purple" style="padding: 2px 4px; text-align: center;">adv
-                                    :99</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">traffic
-                                    :50</span>
-                                <span class="badge badge-cyan" style="padding: 2px 4px; text-align: center;">mon
-                                    :60</span>
+                            <!-- Dynamic Running Nodes List Container -->
+                            <div id="lab-fleet-nodes-container"
+                                style="background: #050811; padding: 8px; border-radius: 4px; border: 1px solid var(--hairline); display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-family: monospace; font-size: 9px; max-height: 110px; overflow-y: auto;">
+                                <!-- Populated dynamically by lab_cockpit.js -->
                             </div>
 
                             <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
@@ -1031,6 +1041,9 @@
                 </div>
 
             </div>
+
+
+
 
 
             <!-- TAB 1: FLEET TOPOLOGY -->

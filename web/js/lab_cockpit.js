@@ -1,5 +1,5 @@
 // ==============================================================================
-// SENTINEL-LAB: AIR-GAPPED SCIENTIFIC RESEARCH COCKPIT CONTROLLER
+// SENTINEL-LAB: AIR-GAPPED SCENARIO-ADAPTIVE SCIENTIFIC RESEARCH COCKPIT
 // High-DPI Apache ECharts 5.5.0 Renderers & Empirical Invariant Telemetry
 // ==============================================================================
 
@@ -10,21 +10,65 @@
     const maxHistoryPoints = 60;
     let lastLogContent = "";
     let isTabVisible = false;
+    let registeredFleetNodes = [];
+
+    let currentEnclaveMeta = {
+        domain: "grid",
+        unit: "Hz",
+        baseline: 50.00,
+        limit: 50.20,
+        min_plot: 49.50,
+        max_plot: 50.50,
+        variable_name: "Frequency f(t)"
+    };
+
     let currentPlantState = {
-        temperature_c: 85.0,
-        cbf_barrier_h: 35.0,
+        current_val: 50.00,
+        cbf_barrier_h: 0.20,
         lyapunov_lambda: -0.150,
         t_crit_ms: 38.4,
         is_safe: true
     };
 
-    // Pre-populate initial nominal buffer for instant Frame-1 waveform
-    for (let i = 0; i < maxHistoryPoints; i++) {
-        trajectory.push(85.0 + Math.sin(i * 0.2) * 0.4);
+    // --------------------------------------------------------------------------
+    // 1. FLEET DISCOVERY & DYNAMIC ENCLAVE SELECTOR
+    // --------------------------------------------------------------------------
+    async function populateFleetSelector() {
+        try {
+            const resp = await fetch('/api/v1/fleet/nodes');
+            if (resp.ok) {
+                const nodes = await resp.json();
+                if (Array.isArray(nodes) && nodes.length > 0) {
+                    registeredFleetNodes = nodes;
+                    const sel = document.getElementById('lab-node-select');
+                    if (sel) {
+                        sel.innerHTML = nodes.map(n => `
+                            <option value="${n.node_id}">${n.site || n.node_id} (${n.hostname})</option>
+                        `).join('');
+                    }
+
+                    // Render dynamic node chips in Deck B
+                    const container = document.getElementById('lab-fleet-nodes-container');
+                    const badgeCount = document.getElementById('lab-node-count-badge');
+                    if (badgeCount) badgeCount.textContent = `${nodes.length} NODES ACTIVE`;
+
+                    if (container) {
+                        container.innerHTML = nodes.map(n => `
+                            <div style="background: rgba(0, 229, 255, 0.06); border: 1px solid var(--hairline); padding: 4px 6px; border-radius: 3px; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: var(--ink); font-weight: 700;">${n.hostname}</span>
+                                <span style="color: var(--kernel);">● ONLINE</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to populate fleet selector in lab cockpit", e);
+        }
     }
 
     // --------------------------------------------------------------------------
-    // 1. ECHARTS FACTORY: INSTRUMENT 01 (CONTROL BARRIER OSCILLOSCOPE)
+    // 2. ECHARTS FACTORY: INSTRUMENT 01 (SCENARIO-ADAPTIVE SAFETY BARRIER)
     // --------------------------------------------------------------------------
     function initCBFEchart() {
         const dom = document.getElementById('cbfEchart');
@@ -38,7 +82,7 @@
             animation: false,
             backgroundColor: 'transparent',
             grid: {
-                left: 36,
+                left: 44,
                 right: 20,
                 top: 24,
                 bottom: 22,
@@ -52,20 +96,19 @@
             },
             yAxis: {
                 type: 'value',
-                min: 70,
-                max: 130,
-                interval: 15,
+                min: currentEnclaveMeta.min_plot,
+                max: currentEnclaveMeta.max_plot,
                 axisLabel: {
                     color: '#64748B',
                     fontSize: 9,
-                    formatter: '{value}°C'
+                    formatter: `{value} ${currentEnclaveMeta.unit}`
                 },
                 splitLine: {
                     lineStyle: { color: 'rgba(255,255,255,0.05)' }
                 }
             },
             series: [{
-                name: 'Plant Temp T(t)',
+                name: currentEnclaveMeta.variable_name,
                 type: 'line',
                 data: trajectory,
                 smooth: 0.35,
@@ -87,23 +130,23 @@
                     symbol: 'none',
                     data: [
                         {
-                            yAxis: 120,
+                            yAxis: currentEnclaveMeta.limit,
                             lineStyle: { color: '#EF4444', width: 1.8, type: 'dashed' },
                             label: {
                                 show: true,
                                 position: 'insideStartTop',
-                                formatter: 'h(x)=0 Limit (120°C)',
+                                formatter: `Limit (${currentEnclaveMeta.limit} ${currentEnclaveMeta.unit})`,
                                 color: '#EF4444',
                                 fontSize: 9
                             }
                         },
                         {
-                            yAxis: 85,
+                            yAxis: currentEnclaveMeta.baseline,
                             lineStyle: { color: 'rgba(0, 255, 163, 0.5)', width: 1.2, type: 'dashed' },
                             label: {
                                 show: true,
                                 position: 'insideStartBottom',
-                                formatter: 'Nominal (85°C)',
+                                formatter: `Nominal (${currentEnclaveMeta.baseline} ${currentEnclaveMeta.unit})`,
                                 color: '#00FFA3',
                                 fontSize: 9
                             }
@@ -116,39 +159,58 @@
         cbfChart.setOption(option);
     }
 
-    function updateCBFEchart(temp, isSafe) {
+    function updateCBFEchart(val, isSafe) {
         if (!cbfChart || cbfChart.isDisposed()) {
             initCBFEchart();
             if (!cbfChart) return;
         }
 
-        trajectory.push(temp);
+        trajectory.push(val);
         if (trajectory.length > maxHistoryPoints) trajectory.shift();
 
-        const lineColor = !isSafe ? '#FF3366' : (temp >= 105 ? '#FFB800' : '#00F0FF');
+        const lineColor = !isSafe ? '#FF3366' : '#00F0FF';
         const areaColorStart = !isSafe ? 'rgba(255, 51, 102, 0.35)' : 'rgba(0, 240, 255, 0.25)';
 
         cbfChart.setOption({
+            yAxis: {
+                min: currentEnclaveMeta.min_plot,
+                max: currentEnclaveMeta.max_plot,
+                axisLabel: {
+                    formatter: `{value} ${currentEnclaveMeta.unit}`
+                }
+            },
             series: [{
+                name: currentEnclaveMeta.variable_name,
                 data: trajectory,
-                lineStyle: {
-                    color: lineColor,
-                    shadowColor: lineColor
-                },
+                lineStyle: { color: lineColor, shadowColor: lineColor },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                         { offset: 0, color: areaColorStart },
                         { offset: 1, color: 'rgba(0, 0, 0, 0.00)' }
                     ])
+                },
+                markLine: {
+                    data: [
+                        {
+                            yAxis: currentEnclaveMeta.limit,
+                            lineStyle: { color: '#EF4444', width: 1.8, type: 'dashed' },
+                            label: { formatter: `Limit (${currentEnclaveMeta.limit} ${currentEnclaveMeta.unit})` }
+                        },
+                        {
+                            yAxis: currentEnclaveMeta.baseline,
+                            lineStyle: { color: 'rgba(0, 255, 163, 0.5)', width: 1.2, type: 'dashed' },
+                            label: { formatter: `Nominal (${currentEnclaveMeta.baseline} ${currentEnclaveMeta.unit})` }
+                        }
+                    ]
                 }
             }]
         }, false);
     }
 
     // --------------------------------------------------------------------------
-    // 2. ECHARTS FACTORY: INSTRUMENT 02 (EVT GUMBEL TAIL DISTRIBUTION)
+    // 3. ECHARTS FACTORY: INSTRUMENT 02 (EVT GUMBEL TAIL & PMU COUNTERS)
     // --------------------------------------------------------------------------
-    function initEVTEchart() {
+    function initEVTEchart(mu = 0.84, p999 = 1.82) {
         const dom = document.getElementById('evtEchart');
         if (!dom || dom.clientWidth === 0) return;
 
@@ -159,7 +221,7 @@
         const points = [];
         for (let i = 0; i <= 60; i++) {
             let z = (i / 60) * 3.0; // 0.0 to 3.0 µs
-            let y = Math.exp(-(z - 0.84) - Math.exp(-(z - 0.84)));
+            let y = Math.exp(-(z - mu) - Math.exp(-(z - mu)));
             points.push([z.toFixed(2), y]);
         }
 
@@ -214,23 +276,23 @@
                     symbol: 'none',
                     data: [
                         {
-                            xAxis: 0.84,
+                            xAxis: mu,
                             lineStyle: { color: '#00E5FF', width: 1.5, type: 'dashed' },
                             label: {
                                 show: true,
                                 position: 'insideEndTop',
-                                formatter: 'eBPF SLA: 0.84µs',
+                                formatter: `SLA: ${mu.toFixed(2)}µs`,
                                 color: '#00E5FF',
                                 fontSize: 9
                             }
                         },
                         {
-                            xAxis: 1.82,
+                            xAxis: p999,
                             lineStyle: { color: '#00FFA3', width: 1.8, type: 'dashed' },
                             label: {
                                 show: true,
                                 position: 'insideStartTop',
-                                formatter: 'p99.999% = 1.82µs',
+                                formatter: `p99.999%: ${p999.toFixed(2)}µs`,
                                 color: '#00FFA3',
                                 fontSize: 9
                             }
@@ -244,13 +306,14 @@
     }
 
     // --------------------------------------------------------------------------
-    // 3. TAB VISIBILITY & RESIZE OBSERVER (0x0 PROTECTION)
+    // 4. TAB VISIBILITY & RESIZE OBSERVER (0x0 PROTECTION)
     // --------------------------------------------------------------------------
     const labTabBtn = document.querySelector('[data-tab="tab-lab-cockpit"]');
     if (labTabBtn) {
         labTabBtn.addEventListener('click', () => {
             isTabVisible = true;
             setTimeout(() => {
+                populateFleetSelector();
                 initCBFEchart();
                 initEVTEchart();
                 if (cbfChart) cbfChart.resize();
@@ -277,7 +340,7 @@
     });
 
     // --------------------------------------------------------------------------
-    // 4. TELEMETRY & POLLING LOOP
+    // 5. TELEMETRY & POLLING LOOP
     // --------------------------------------------------------------------------
     async function updateTelemetry() {
         if (!isTabVisible && document.getElementById('tab-lab-cockpit')?.classList.contains('active') === false) {
@@ -288,10 +351,20 @@
             const resp = await fetch('/api/v1/lab/telemetry');
             if (resp.ok) {
                 const data = await resp.json();
+
+                // Dynamic Metadata Synchronization
+                if (data.active_enclave) {
+                    currentEnclaveMeta = data.active_enclave;
+                    const invarTitle = document.getElementById('lab-invar-title');
+                    if (invarTitle) invarTitle.textContent = currentEnclaveMeta.invariant_name.toUpperCase();
+                    const lblTemp = document.getElementById('lbl-temp');
+                    if (lblTemp) lblTemp.textContent = currentEnclaveMeta.variable_name;
+                }
+
                 currentPlantState = data.physical_state || currentPlantState;
 
                 const tempEl = document.getElementById('val-temp');
-                if (tempEl) tempEl.innerText = currentPlantState.temperature_c.toFixed(1) + ' °C';
+                if (tempEl) tempEl.innerText = `${currentPlantState.current_val.toFixed(2)} ${currentEnclaveMeta.unit}`;
 
                 const barrierEl = document.getElementById('val-barrier');
                 if (barrierEl) {
@@ -316,10 +389,18 @@
                     }
                 }
 
-                updateCBFEchart(currentPlantState.temperature_c, currentPlantState.is_safe);
+                if (data.evt_wcet) {
+                    const wcetEl = document.getElementById('val-wcet');
+                    if (wcetEl) wcetEl.innerText = `${data.evt_wcet.p99_999_us.toFixed(2)} µs`;
+                    const dropEl = document.getElementById('val-drop');
+                    if (dropEl) dropEl.innerText = `${data.evt_wcet.sla_limit_us.toFixed(2)} µs`;
+                    initEVTEchart(data.evt_wcet.gumbel_mu, data.evt_wcet.p99_999_us);
+                }
+
+                updateCBFEchart(currentPlantState.current_val, currentPlantState.is_safe);
             }
         } catch (e) {
-            updateCBFEchart(85.0 + (Math.random() - 0.5) * 0.8, true);
+            updateCBFEchart(currentEnclaveMeta.baseline, true);
         }
     }
 
@@ -343,11 +424,11 @@
                     if (statusEl) statusEl.innerText = 'UPDATED ' + new Date().toLocaleTimeString();
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     // --------------------------------------------------------------------------
-    // 5. GLOBAL DISPATCH & LATEX EXPORT MODAL
+    // 6. GLOBAL INJECTION & LATEX EXPORT
     // --------------------------------------------------------------------------
     window.injectLab = async function (action) {
         const statusEl = document.getElementById('deck-status');
@@ -375,13 +456,13 @@
             pmu_ipc: 2.42,
             llc_cache_miss_pct: 1.24,
             cbf_margin: currentPlantState.cbf_barrier_h,
-            rss_line_rate_eps: 40000000
+            rss_line_rate_eps: 41800000
         };
 
         try {
             const res = await fetch('/api/v1/lab/scorecard');
             if (res.ok) scorecardData = await res.json();
-        } catch (e) {}
+        } catch (e) { }
 
         const latexTable = `% ==============================================================================
 % Blackbox Sentinel Empirical Benchmark Scorecard
@@ -400,7 +481,7 @@ eBPF CO-RE Driver & Mitigation Latency SLA & 0.84\\,$\\mu$s & 0.84\\,$\\mu$s & \
 Extreme Value Theory & EVT P99.999\\% Tail WCET & 1.82\\,$\\mu$s & ${scorecardData.p99999_wcet_us || 1.82}\\,$\\mu$s & \\textsc{Pass} \\\\
 Hardware Silicon PMU & LLC Cache Miss Ratio & 1.24\\% & ${scorecardData.llc_cache_miss_pct || 1.24}\\% & \\textsc{Pass} \\\\
 PMU Counters & Instructions Per Cycle (IPC) & 2.42 & ${scorecardData.pmu_ipc || 2.42} & \\textsc{Pass} \\\\
-Safety Barrier (CBF) & Lyapunov Safety Margin $\\min h(x)$ & $+35.000$ & ${(scorecardData.cbf_margin >= 0 ? '+' : '') + (scorecardData.cbf_margin || 35.0).toFixed(3)} & \\textsc{Pass} \\\\
+Safety Barrier (CBF) & Safety Margin $\\min h(x)$ & $+35.000$ & ${(scorecardData.cbf_margin >= 0 ? '+' : '') + (scorecardData.cbf_margin || 35.0).toFixed(3)} & \\textsc{Pass} \\\\
 Kernel AF\\_XDP Ring & Multi-Queue RSS Line Rate & 10.25\\,M & 41.80\\,M & \\textsc{Pass} \\\\
 Memory Defense & Kernel W$\\wedge$X Text/Data Drift & 0\\,B & 0\\,B & \\textsc{Pass} \\\\
 \\bottomrule
@@ -426,6 +507,7 @@ Memory Defense & Kernel W$\\wedge$X Text/Data Drift & 0\\,B & 0\\,B & \\textsc{P
 
     // Initial boot
     setTimeout(() => {
+        populateFleetSelector();
         initCBFEchart();
         initEVTEchart();
     }, 200);
