@@ -1,15 +1,25 @@
 // ==============================================================================
-// SENTINEL-LAB: AIR-GAPPED MASTER-DETAIL SCIENTIFIC RESEARCH COCKPIT
-// High-DPI Apache ECharts 5.5.0 Renderers & Empirical Invariant Telemetry
+// SENTINEL-LAB: TABBED SPECIALIST SCIENTIFIC INSPECTOR (OPTION B)
+// 6 High-DPI Apache ECharts 5.5.0 Renderers & Empirical Telemetry
 // ==============================================================================
 
 (function () {
-    let cbfChart = null;
-    let evtChart = null;
+    // 6 Specialized ECharts Instances
+    let cbfChart = null;      // Inst 01: CBF Oscilloscope
+    let phaseChart = null;    // Inst 02: 2D Phase-Plane Orbit (x vs dx/dt)
+    let evtChart = null;      // Inst 03: EVT Gumbel Tail Distribution
+    let pmuChart = null;      // Inst 04: PMU Waterfall (IPC vs LLC Miss)
+    let rssChart = null;      // Inst 05: AF_XDP Multi-Queue RSS Saturation
+    let fusionChart = null;   // Inst 06: Sensor Fusion Residual & Chi2
+
     let trajectory = [];
+    let phaseOrbit = [];
+    let pmuHistory = { ipc: [], llc: [] };
+    let fusionHistory = { measured: [], predicted: [], residual: [] };
     const maxHistoryPoints = 60;
     let lastLogContent = "";
     let isTabVisible = false;
+    let currentActiveStage = "stage-physics";
     let registeredFleetNodes = [];
     let activeLabNodeId = null;
 
@@ -25,6 +35,7 @@
 
     let currentPlantState = {
         current_val: 50.00,
+        dx_dt: 0.0,
         cbf_barrier_h: 0.20,
         lyapunov_lambda: -0.150,
         t_crit_ms: 38.4,
@@ -32,7 +43,7 @@
     };
 
     // --------------------------------------------------------------------------
-    // 1. MASTER SENTRY RAIL CONTROLLER (PARITY WITH MISSION CONTROL)
+    // 1. MASTER SENTRY RAIL CONTROLLER
     // --------------------------------------------------------------------------
     async function loadLabFleetRail() {
         try {
@@ -48,7 +59,6 @@
                     if (railCount) railCount.textContent = `${nodes.length} ONLINE`;
                     if (badgeCount) badgeCount.textContent = `${nodes.length} NODES ACTIVE`;
 
-                    // Render dynamic node chips in Deck B
                     const container = document.getElementById('lab-fleet-nodes-container');
                     if (container) {
                         container.innerHTML = nodes.map(n => `
@@ -109,14 +119,13 @@
         if (!nodeId) return;
         activeLabNodeId = nodeId;
 
-        // Notify backend of selected enclave
         try {
             await fetch('/api/v1/lab/inject', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'select_enclave', node_id: nodeId })
             });
-        } catch (e) { }
+        } catch (e) {}
 
         const targetNode = registeredFleetNodes.find(n => n.node_id === nodeId);
         const titleEl = document.getElementById('lab-sentry-header-title');
@@ -126,7 +135,6 @@
             if (hostEl) hostEl.textContent = `${targetNode.hostname} (${targetNode.node_id.slice(0, 10)})`;
         }
 
-        // Re-render highlight on rail
         document.querySelectorAll('.lab-rail-card').forEach(card => {
             const isSelected = (card.getAttribute('data-id') === nodeId);
             card.style.border = isSelected ? "1px solid #00E5FF" : "1px solid #1A2232";
@@ -134,48 +142,85 @@
         });
 
         trajectory = [];
+        phaseOrbit = [];
         updateTelemetry();
     }
 
     // --------------------------------------------------------------------------
-    // 2. ECHARTS FACTORY: INSTRUMENT 01 (SCENARIO-ADAPTIVE SAFETY BARRIER)
+    // 2. SUB-TAB SPECIALIST SWITCHER LOGIC
     // --------------------------------------------------------------------------
+    function initSubTabSwitcher() {
+        document.querySelectorAll('.lab-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.lab-tab-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'var(--panel)';
+                    b.style.borderColor = 'var(--hairline)';
+                    b.style.color = 'var(--muted)';
+                });
+                document.querySelectorAll('.lab-stage-view').forEach(v => v.style.display = 'none');
+
+                btn.classList.add('active');
+                btn.style.background = 'rgba(0, 229, 255, 0.12)';
+                btn.style.borderColor = 'var(--accent)';
+                btn.style.color = 'var(--ink)';
+
+                const targetStage = btn.getAttribute('data-stage');
+                currentActiveStage = targetStage;
+
+                if (targetStage === 'stage-physics') {
+                    const el = document.getElementById('view-lab-physics');
+                    if (el) el.style.display = 'grid';
+                    setTimeout(() => {
+                        initCBFEchart();
+                        initPhaseEchart();
+                        cbfChart && cbfChart.resize();
+                        phaseChart && phaseChart.resize();
+                    }, 50);
+                } else if (targetStage === 'stage-timing') {
+                    const el = document.getElementById('view-lab-timing');
+                    if (el) el.style.display = 'grid';
+                    setTimeout(() => {
+                        initEVTEchart();
+                        initPMUEchart();
+                        evtChart && evtChart.resize();
+                        pmuChart && pmuChart.resize();
+                    }, 50);
+                } else if (targetStage === 'stage-network') {
+                    const el = document.getElementById('view-lab-network');
+                    if (el) el.style.display = 'grid';
+                    setTimeout(() => {
+                        initRSSEchart();
+                        initFusionEchart();
+                        rssChart && rssChart.resize();
+                        fusionChart && fusionChart.resize();
+                    }, 50);
+                }
+            });
+        });
+    }
+
+    // --------------------------------------------------------------------------
+    // 3. ECHARTS FACTORIES (ALL 6 INSTRUMENTS)
+    // --------------------------------------------------------------------------
+
+    // INST 01: CBF Oscilloscope
     function initCBFEchart() {
         const dom = document.getElementById('cbfEchart');
         if (!dom || dom.clientWidth === 0) return;
+        if (!cbfChart || cbfChart.isDisposed()) cbfChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
 
-        if (!cbfChart || cbfChart.isDisposed()) {
-            cbfChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
-        }
-
-        const option = {
+        cbfChart.setOption({
             animation: false,
             backgroundColor: 'transparent',
-            grid: {
-                left: 44,
-                right: 20,
-                top: 24,
-                bottom: 22,
-                containLabel: false
-            },
-            xAxis: {
-                type: 'category',
-                boundaryGap: false,
-                data: Array.from({ length: maxHistoryPoints }, (_, i) => i),
-                show: false
-            },
+            grid: { left: 44, right: 20, top: 24, bottom: 22 },
+            xAxis: { type: 'category', boundaryGap: false, data: Array.from({ length: maxHistoryPoints }, (_, i) => i), show: false },
             yAxis: {
                 type: 'value',
                 min: currentEnclaveMeta.min_plot,
                 max: currentEnclaveMeta.max_plot,
-                axisLabel: {
-                    color: '#64748B',
-                    fontSize: 9,
-                    formatter: `{value} ${currentEnclaveMeta.unit}`
-                },
-                splitLine: {
-                    lineStyle: { color: 'rgba(255,255,255,0.05)' }
-                }
+                axisLabel: { color: '#64748B', fontSize: 9, formatter: `{value} ${currentEnclaveMeta.unit}` },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
             },
             series: [{
                 name: currentEnclaveMeta.variable_name,
@@ -183,12 +228,7 @@
                 data: trajectory,
                 smooth: 0.35,
                 showSymbol: false,
-                lineStyle: {
-                    width: 2.5,
-                    color: '#00F0FF',
-                    shadowColor: '#00F0FF',
-                    shadowBlur: 8
-                },
+                lineStyle: { width: 2.5, color: '#00F0FF', shadowColor: '#00F0FF', shadowBlur: 8 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                         { offset: 0, color: 'rgba(0, 240, 255, 0.25)' },
@@ -199,222 +239,166 @@
                     silent: true,
                     symbol: 'none',
                     data: [
-                        {
-                            yAxis: currentEnclaveMeta.limit,
-                            lineStyle: { color: '#EF4444', width: 1.8, type: 'dashed' },
-                            label: {
-                                show: true,
-                                position: 'insideStartTop',
-                                formatter: `Limit (${currentEnclaveMeta.limit} ${currentEnclaveMeta.unit})`,
-                                color: '#EF4444',
-                                fontSize: 9
-                            }
-                        },
-                        {
-                            yAxis: currentEnclaveMeta.baseline,
-                            lineStyle: { color: 'rgba(0, 255, 163, 0.5)', width: 1.2, type: 'dashed' },
-                            label: {
-                                show: true,
-                                position: 'insideStartBottom',
-                                formatter: `Nominal (${currentEnclaveMeta.baseline} ${currentEnclaveMeta.unit})`,
-                                color: '#00FFA3',
-                                fontSize: 9
-                            }
-                        }
+                        { yAxis: currentEnclaveMeta.limit, lineStyle: { color: '#EF4444', width: 1.8, type: 'dashed' }, label: { formatter: `Limit (${currentEnclaveMeta.limit} ${currentEnclaveMeta.unit})` } },
+                        { yAxis: currentEnclaveMeta.baseline, lineStyle: { color: 'rgba(0, 255, 163, 0.5)', width: 1.2, type: 'dashed' }, label: { formatter: `Nominal (${currentEnclaveMeta.baseline} ${currentEnclaveMeta.unit})` } }
                     ]
                 }
             }]
-        };
-
-        cbfChart.setOption(option);
+        });
     }
 
-    function updateCBFEchart(val, isSafe) {
-        if (!cbfChart || cbfChart.isDisposed()) {
-            initCBFEchart();
-            if (!cbfChart) return;
-        }
+    // INST 02: 2D Phase-Plane Orbit (x vs dx/dt)
+    function initPhaseEchart() {
+        const dom = document.getElementById('phaseEchart');
+        if (!dom || dom.clientWidth === 0) return;
+        if (!phaseChart || phaseChart.isDisposed()) phaseChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
 
-        trajectory.push(val);
-        if (trajectory.length > maxHistoryPoints) trajectory.shift();
-
-        const lineColor = !isSafe ? '#FF3366' : '#00F0FF';
-        const areaColorStart = !isSafe ? 'rgba(255, 51, 102, 0.35)' : 'rgba(0, 240, 255, 0.25)';
-
-        cbfChart.setOption({
-            yAxis: {
+        phaseChart.setOption({
+            animation: false,
+            backgroundColor: 'transparent',
+            grid: { left: 44, right: 20, top: 24, bottom: 24 },
+            xAxis: {
+                type: 'value',
                 min: currentEnclaveMeta.min_plot,
                 max: currentEnclaveMeta.max_plot,
-                axisLabel: {
-                    formatter: `{value} ${currentEnclaveMeta.unit}`
-                }
+                axisLabel: { color: '#64748B', fontSize: 9, formatter: `{value}` },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
+            },
+            yAxis: {
+                type: 'value',
+                axisLabel: { color: '#64748B', fontSize: 9, formatter: `{value}` },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
             },
             series: [{
-                name: currentEnclaveMeta.variable_name,
-                data: trajectory,
-                lineStyle: { color: lineColor, shadowColor: lineColor },
-                areaStyle: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: areaColorStart },
-                        { offset: 1, color: 'rgba(0, 0, 0, 0.00)' }
-                    ])
-                },
-                markLine: {
-                    data: [
-                        {
-                            yAxis: currentEnclaveMeta.limit,
-                            lineStyle: { color: '#EF4444', width: 1.8, type: 'dashed' },
-                            label: { formatter: `Limit (${currentEnclaveMeta.limit} ${currentEnclaveMeta.unit})` }
-                        },
-                        {
-                            yAxis: currentEnclaveMeta.baseline,
-                            lineStyle: { color: 'rgba(0, 255, 163, 0.5)', width: 1.2, type: 'dashed' },
-                            label: { formatter: `Nominal (${currentEnclaveMeta.baseline} ${currentEnclaveMeta.unit})` }
-                        }
-                    ]
-                }
+                name: 'Phase Orbit (x vs dx/dt)',
+                type: 'line',
+                data: phaseOrbit,
+                smooth: 0.35,
+                showSymbol: false,
+                lineStyle: { width: 2.2, color: '#00FFA3', shadowColor: '#00FFA3', shadowBlur: 6 }
             }]
-        }, false);
+        });
     }
 
-    // --------------------------------------------------------------------------
-    // 3. ECHARTS FACTORY: INSTRUMENT 02 (EVT GUMBEL TAIL & PMU COUNTERS)
-    // --------------------------------------------------------------------------
-    // --------------------------------------------------------------------------
-    // 3. ECHARTS FACTORY: INSTRUMENT 02 (EVT GUMBEL TAIL & PMU COUNTERS)
-    // --------------------------------------------------------------------------
+    // INST 03: EVT Gumbel Distribution
     function initEVTEchart() {
         const dom = document.getElementById('evtEchart');
         if (!dom || dom.clientWidth === 0) return;
+        if (!evtChart || evtChart.isDisposed()) evtChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
 
-        if (!evtChart || evtChart.isDisposed()) {
-            evtChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
-        }
-
-        const option = {
+        evtChart.setOption({
             animation: false,
             backgroundColor: 'transparent',
-            grid: {
-                left: 36,
-                right: 24,
-                top: 24,
-                bottom: 22,
-                containLabel: false
-            },
+            grid: { left: 36, right: 24, top: 24, bottom: 22 },
             xAxis: {
                 type: 'value',
                 min: 0.0,
                 max: 3.5,
                 interval: 0.5,
-                axisLabel: {
-                    color: '#64748B',
-                    fontSize: 9,
-                    formatter: '{value}µs'
-                },
-                splitLine: {
-                    lineStyle: { color: 'rgba(255,255,255,0.05)' }
-                }
+                axisLabel: { color: '#64748B', fontSize: 9, formatter: '{value}µs' },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
             },
-            yAxis: {
-                type: 'value',
-                show: false
-            },
+            yAxis: { type: 'value', show: false },
             series: [{
                 name: 'Extreme Value Tail',
                 type: 'line',
                 data: [],
                 smooth: 0.4,
                 showSymbol: false,
-                lineStyle: {
-                    width: 2.2,
-                    color: '#00FFA3',
-                    shadowColor: '#00FFA3',
-                    shadowBlur: 8
-                },
+                lineStyle: { width: 2.2, color: '#00FFA3' },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                         { offset: 0, color: 'rgba(0, 255, 163, 0.30)' },
                         { offset: 1, color: 'rgba(0, 255, 163, 0.00)' }
                     ])
                 },
-                markLine: {
-                    silent: true,
-                    symbol: 'none',
-                    data: []
-                }
+                markLine: { silent: true, symbol: 'none', data: [] }
             }]
-        };
-
-        evtChart.setOption(option);
+        });
     }
 
-    function updateEVTEchart(mu, p999, sigma, isSafe) {
-        if (!evtChart || evtChart.isDisposed()) {
-            initEVTEchart();
-            if (!evtChart) return;
-        }
+    // INST 04: PMU Waterfall Stream (IPC vs LLC Miss)
+    function initPMUEchart() {
+        const dom = document.getElementById('pmuEchart');
+        if (!dom || dom.clientWidth === 0) return;
+        if (!pmuChart || pmuChart.isDisposed()) pmuChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
 
-        const points = [];
-        const s = sigma || 0.125;
-        for (let i = 0; i <= 70; i++) {
-            let z = (i / 70) * 3.5; // 0.0 to 3.5 µs
-            let norm = (z - mu) / s;
-            let y = Math.exp(-norm - Math.exp(-norm));
-            points.push([z.toFixed(2), y]);
-        }
+        pmuChart.setOption({
+            animation: false,
+            backgroundColor: 'transparent',
+            grid: { left: 36, right: 36, top: 24, bottom: 22 },
+            xAxis: { type: 'category', boundaryGap: false, data: Array.from({ length: 40 }, (_, i) => i), show: false },
+            yAxis: [
+                { type: 'value', min: 0.0, max: 4.0, axisLabel: { color: '#00E5FF', fontSize: 8, formatter: '{value} IPC' }, splitLine: { show: false } },
+                { type: 'value', min: 0.0, max: 10.0, axisLabel: { color: '#FFB800', fontSize: 8, formatter: '{value}% LLC' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } }
+            ],
+            series: [
+                { name: 'PMU IPC', type: 'line', yAxisIndex: 0, data: pmuHistory.ipc, smooth: 0.3, showSymbol: false, lineStyle: { width: 2.0, color: '#00E5FF' } },
+                { name: 'LLC Miss %', type: 'line', yAxisIndex: 1, data: pmuHistory.llc, smooth: 0.3, showSymbol: false, lineStyle: { width: 2.0, color: '#FFB800' } }
+            ]
+        });
+    }
 
-        const curveColor = isSafe ? '#00FFA3' : '#FFB800';
-        const areaColor = isSafe ? 'rgba(0, 255, 163, 0.30)' : 'rgba(255, 184, 0, 0.30)';
+    // INST 05: AF_XDP Multi-Queue RSS Saturation
+    function initRSSEchart() {
+        const dom = document.getElementById('rssEchart');
+        if (!dom || dom.clientWidth === 0) return;
+        if (!rssChart || rssChart.isDisposed()) rssChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
 
-        evtChart.setOption({
+        rssChart.setOption({
+            animation: false,
+            backgroundColor: 'transparent',
+            grid: { left: 42, right: 16, top: 20, bottom: 24 },
+            xAxis: { type: 'category', data: ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'], axisLabel: { color: '#64748B', fontSize: 9 } },
+            yAxis: { type: 'value', axisLabel: { color: '#64748B', fontSize: 8, formatter: v => (v >= 1e6 ? (v/1e6).toFixed(1) + 'M' : (v/1e3).toFixed(0) + 'k') }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
             series: [{
-                data: points,
-                lineStyle: { color: curveColor, shadowColor: curveColor },
-                areaStyle: {
+                name: 'RX Queue EPS',
+                type: 'bar',
+                barWidth: '45%',
+                data: [0, 0, 0, 0, 0, 0, 0, 0],
+                itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: areaColor },
-                        { offset: 1, color: 'rgba(0, 0, 0, 0.00)' }
-                    ])
-                },
-                markLine: {
-                    data: [
-                        {
-                            xAxis: mu,
-                            lineStyle: { color: '#00E5FF', width: 1.5, type: 'dashed' },
-                            label: {
-                                show: true,
-                                position: 'insideEndTop',
-                                formatter: `SLA: ${mu.toFixed(2)}µs`,
-                                color: '#00E5FF',
-                                fontSize: 9
-                            }
-                        },
-                        {
-                            xAxis: p999,
-                            lineStyle: { color: isSafe ? '#00FFA3' : '#FF3366', width: 1.8, type: 'dashed' },
-                            label: {
-                                show: true,
-                                position: 'insideStartTop',
-                                formatter: `p99.999%: ${p999.toFixed(2)}µs`,
-                                color: isSafe ? '#00FFA3' : '#FF3366',
-                                fontSize: 9
-                            }
-                        }
-                    ]
+                        { offset: 0, color: '#00E5FF' },
+                        { offset: 1, color: '#00E5FF22' }
+                    ]),
+                    borderRadius: [3, 3, 0, 0]
                 }
             }]
-        }, false);
+        });
+    }
+
+    // INST 06: Sensor Fusion Residual & Chi2 Detector
+    function initFusionEchart() {
+        const dom = document.getElementById('fusionEchart');
+        if (!dom || dom.clientWidth === 0) return;
+        if (!fusionChart || fusionChart.isDisposed()) fusionChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
+
+        fusionChart.setOption({
+            animation: false,
+            backgroundColor: 'transparent',
+            grid: { left: 40, right: 16, top: 22, bottom: 22 },
+            xAxis: { type: 'category', boundaryGap: false, data: Array.from({ length: 40 }, (_, i) => i), show: false },
+            yAxis: { type: 'value', axisLabel: { color: '#64748B', fontSize: 8 }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+            series: [
+                {
+                    name: 'Residual r(t)',
+                    type: 'line',
+                    data: fusionHistory.residual,
+                    smooth: 0.3,
+                    showSymbol: false,
+                    lineStyle: { width: 2.2, color: '#00FFA3' },
+                    markLine: {
+                        silent: true,
+                        symbol: 'none',
+                        data: [{ yAxis: 0.08, lineStyle: { color: '#EF4444', width: 1.5, type: 'dashed' }, label: { formatter: 'χ² Alarm Threshold', fontSize: 8 } }]
+                    }
+                }
+            ]
+        });
     }
 
     // --------------------------------------------------------------------------
-    // 5. TELEMETRY & POLLING LOOP
-    // --------------------------------------------------------------------------
-
-
-
-
-    // --------------------------------------------------------------------------
-    // 4. TAB VISIBILITY & RESIZE OBSERVER (0x0 PROTECTION)
+    // 4. TAB VISIBILITY & RESIZE OBSERVER
     // --------------------------------------------------------------------------
     const labTabBtn = document.querySelector('[data-tab="tab-lab-cockpit"]');
     if (labTabBtn) {
@@ -422,10 +406,11 @@
             isTabVisible = true;
             setTimeout(() => {
                 loadLabFleetRail();
+                initSubTabSwitcher();
                 initCBFEchart();
-                initEVTEchart();
-                if (cbfChart) cbfChart.resize();
-                if (evtChart) evtChart.resize();
+                initPhaseEchart();
+                cbfChart && cbfChart.resize();
+                phaseChart && phaseChart.resize();
                 updateTelemetry();
                 pollLogs();
             }, 60);
@@ -434,16 +419,18 @@
 
     document.querySelectorAll('.admin-nav-item').forEach(tab => {
         if (tab !== labTabBtn) {
-            tab.addEventListener('click', () => {
-                isTabVisible = false;
-            });
+            tab.addEventListener('click', () => { isTabVisible = false; });
         }
     });
 
     window.addEventListener('resize', () => {
         if (isTabVisible) {
-            if (cbfChart) cbfChart.resize();
-            if (evtChart) evtChart.resize();
+            cbfChart && cbfChart.resize();
+            phaseChart && phaseChart.resize();
+            evtChart && evtChart.resize();
+            pmuChart && pmuChart.resize();
+            rssChart && rssChart.resize();
+            fusionChart && fusionChart.resize();
         }
     });
 
@@ -471,6 +458,7 @@
 
                 currentPlantState = data.physical_state || currentPlantState;
 
+                // Update Metric HUD
                 const tempEl = document.getElementById('val-temp');
                 if (tempEl) tempEl.innerText = `${currentPlantState.current_val.toFixed(2)} ${currentEnclaveMeta.unit}`;
 
@@ -486,6 +474,9 @@
                 const tcritEl = document.getElementById('val-tcrit');
                 if (tcritEl) tcritEl.innerText = currentPlantState.t_crit_ms.toFixed(1) + ' ms';
 
+                const velEl = document.getElementById('val-velocity');
+                if (velEl) velEl.innerText = `${(currentPlantState.dx_dt >= 0 ? '+' : '') + currentPlantState.dx_dt.toFixed(3)} ${currentEnclaveMeta.unit}/s`;
+
                 const badge = document.getElementById('cbf-status-badge');
                 if (badge) {
                     if (currentPlantState.is_safe) {
@@ -497,40 +488,135 @@
                     }
                 }
 
-                // DYNAMIC EVT WCET LATENCY & PMU COUNTERS
-                if (data.evt_wcet) {
+                // Update History Buffers
+                trajectory.push(currentPlantState.current_val);
+                if (trajectory.length > maxHistoryPoints) trajectory.shift();
+
+                phaseOrbit.push([currentPlantState.current_val, currentPlantState.dx_dt]);
+                if (phaseOrbit.length > 50) phaseOrbit.shift();
+
+                // 1. Update Physics Stage if visible
+                if (currentActiveStage === 'stage-physics') {
+                    if (!cbfChart) initCBFEchart();
+                    if (!phaseChart) initPhaseEchart();
+
+                    const lineColor = !currentPlantState.is_safe ? '#FF3366' : '#00F0FF';
+                    cbfChart.setOption({
+                        yAxis: { min: currentEnclaveMeta.min_plot, max: currentEnclaveMeta.max_plot, axisLabel: { formatter: `{value} ${currentEnclaveMeta.unit}` } },
+                        series: [{
+                            name: currentEnclaveMeta.variable_name,
+                            data: trajectory,
+                            lineStyle: { color: lineColor, shadowColor: lineColor },
+                            markLine: {
+                                data: [
+                                    { yAxis: currentEnclaveMeta.limit, lineStyle: { color: '#EF4444', width: 1.8, type: 'dashed' }, label: { formatter: `Limit (${currentEnclaveMeta.limit} ${currentEnclaveMeta.unit})` } },
+                                    { yAxis: currentEnclaveMeta.baseline, lineStyle: { color: 'rgba(0, 255, 163, 0.5)', width: 1.2, type: 'dashed' }, label: { formatter: `Nominal (${currentEnclaveMeta.baseline} ${currentEnclaveMeta.unit})` } }
+                                ]
+                            }
+                        }]
+                    }, false);
+
+                    phaseChart.setOption({
+                        xAxis: { min: currentEnclaveMeta.min_plot, max: currentEnclaveMeta.max_plot },
+                        series: [{ data: phaseOrbit, lineStyle: { color: currentPlantState.is_safe ? '#00FFA3' : '#FF3366' } }]
+                    }, false);
+                }
+
+                // 2. Update Timing Stage if visible
+                if (currentActiveStage === 'stage-timing' && data.evt_wcet && data.pmu_metrics) {
+                    if (!evtChart) initEVTEchart();
+                    if (!pmuChart) initPMUEchart();
+
                     const wcetEl = document.getElementById('val-wcet');
-                    if (wcetEl) {
-                        wcetEl.innerText = `${data.evt_wcet.p99_999_us.toFixed(2)} µs`;
-                        wcetEl.style.color = currentPlantState.is_safe ? 'var(--ink)' : 'var(--threat)';
-                    }
+                    if (wcetEl) wcetEl.innerText = `${data.evt_wcet.p99_999_us.toFixed(2)} µs`;
                     const dropEl = document.getElementById('val-drop');
                     if (dropEl) dropEl.innerText = `${data.evt_wcet.sla_limit_us.toFixed(2)} µs`;
 
-                    updateEVTEchart(data.evt_wcet.gumbel_mu, data.evt_wcet.p99_999_us, data.evt_wcet.gumbel_sigma, currentPlantState.is_safe);
-                }
-
-                if (data.pmu_metrics) {
                     const ipcEl = document.getElementById('val-ipc');
-                    if (ipcEl) {
-                        ipcEl.innerText = data.pmu_metrics.ipc.toFixed(2);
-                        ipcEl.style.color = (data.pmu_metrics.ipc >= 2.0) ? 'var(--kernel)' : '#f59e0b';
-                    }
+                    if (ipcEl) ipcEl.innerText = data.pmu_metrics.ipc.toFixed(2);
                     const llcEl = document.getElementById('val-llc');
-                    if (llcEl) {
-                        llcEl.innerText = `${data.pmu_metrics.llc_miss_pct.toFixed(2)}%`;
-                        llcEl.style.color = (data.pmu_metrics.llc_miss_pct > 3.0) ? 'var(--threat)' : 'var(--kernel)';
+                    if (llcEl) llcEl.innerText = `${data.pmu_metrics.llc_miss_pct.toFixed(2)}%`;
+                    const lockEl = document.getElementById('val-buslocks');
+                    if (lockEl) lockEl.innerText = data.pmu_metrics.bus_lock_stalls;
+
+                    pmuHistory.ipc.push(data.pmu_metrics.ipc);
+                    if (pmuHistory.ipc.length > 40) pmuHistory.ipc.shift();
+                    pmuHistory.llc.push(data.pmu_metrics.llc_miss_pct);
+                    if (pmuHistory.llc.length > 40) pmuHistory.llc.shift();
+
+                    pmuChart.setOption({
+                        series: [{ data: pmuHistory.ipc }, { data: pmuHistory.llc }]
+                    }, false);
+
+                    // Re-evaluate Gumbel Points
+                    const points = [];
+                    const mu = data.evt_wcet.gumbel_mu;
+                    const s = data.evt_wcet.gumbel_sigma || 0.125;
+                    for (let i = 0; i <= 60; i++) {
+                        let z = (i / 60) * 3.5;
+                        let norm = (z - mu) / s;
+                        let y = Math.exp(-norm - Math.exp(-norm));
+                        points.push([z.toFixed(2), y]);
                     }
+
+                    evtChart.setOption({
+                        series: [{
+                            data: points,
+                            lineStyle: { color: currentPlantState.is_safe ? '#00FFA3' : '#FFB800' },
+                            markLine: {
+                                data: [
+                                    { xAxis: mu, lineStyle: { color: '#00E5FF', width: 1.5, type: 'dashed' }, label: { formatter: `SLA: ${mu.toFixed(2)}µs` } },
+                                    { xAxis: data.evt_wcet.p99_999_us, lineStyle: { color: currentPlantState.is_safe ? '#00FFA3' : '#FF3366', width: 1.8, type: 'dashed' }, label: { formatter: `p99.999%: ${data.evt_wcet.p99_999_us.toFixed(2)}µs` } }
+                                ]
+                            }
+                        }]
+                    }, false);
                 }
 
-                updateCBFEchart(currentPlantState.current_val, currentPlantState.is_safe);
+                // 3. Update Network & Fusion Stage if visible
+                if (currentActiveStage === 'stage-network' && data.rss_multi_queue && data.sensor_fusion) {
+                    if (!rssChart) initRSSEchart();
+                    if (!fusionChart) initFusionEchart();
+
+                    const totEpsEl = document.getElementById('val-tot-eps');
+                    if (totEpsEl) totEpsEl.innerText = `${(data.rss_multi_queue.total_eps / 1e6).toFixed(2)}M EPS`;
+
+                    const resEl = document.getElementById('val-residual');
+                    if (resEl) resEl.innerText = data.sensor_fusion.residual_r.toFixed(3);
+                    const chiEl = document.getElementById('val-chi2-thresh');
+                    if (chiEl) chiEl.innerText = data.sensor_fusion.chi2_threshold.toFixed(3);
+
+                    const fusionBadge = document.getElementById('fusion-status-badge');
+                    if (fusionBadge) {
+                        if (data.sensor_fusion.chi2_alarm) {
+                            fusionBadge.className = 'badge badge-red';
+                            fusionBadge.innerText = 'CHI² ALARM: FDI DETECTED';
+                        } else {
+                            fusionBadge.className = 'badge badge-green';
+                            fusionBadge.innerText = 'CONCORDANT';
+                        }
+                    }
+
+                    fusionHistory.residual.push(data.sensor_fusion.residual_r);
+                    if (fusionHistory.residual.length > 40) fusionHistory.residual.shift();
+
+                    rssChart.setOption({
+                        series: [{ data: data.rss_multi_queue.queues }]
+                    }, false);
+
+                    fusionChart.setOption({
+                        series: [{
+                            data: fusionHistory.residual,
+                            lineStyle: { color: data.sensor_fusion.chi2_alarm ? '#FF3366' : '#00FFA3' },
+                            markLine: { data: [{ yAxis: data.sensor_fusion.chi2_threshold }] }
+                        }]
+                    }, false);
+                }
             }
         } catch (e) {
-            updateCBFEchart(currentEnclaveMeta.baseline, true);
+            console.warn("Lab telemetry update failed", e);
         }
     }
-
-
 
     async function pollLogs() {
         if (!isTabVisible && document.getElementById('tab-lab-cockpit')?.classList.contains('active') === false) {
@@ -552,7 +638,7 @@
                     if (statusEl) statusEl.innerText = 'UPDATED ' + new Date().toLocaleTimeString();
                 }
             }
-        } catch (e) { }
+        } catch (e) {}
     }
 
     // --------------------------------------------------------------------------
@@ -577,8 +663,6 @@
         setTimeout(pollLogs, 800);
     };
 
-
-
     window.exportLabScorecard = async function () {
         let scorecardData = {
             mitigation_sla_us: 0.84,
@@ -592,7 +676,7 @@
         try {
             const res = await fetch('/api/v1/lab/scorecard');
             if (res.ok) scorecardData = await res.json();
-        } catch (e) { }
+        } catch (e) {}
 
         const targetNode = registeredFleetNodes.find(n => n.node_id === activeLabNodeId) || {};
         const siteLabel = targetNode.site || currentEnclaveMeta.site || "PowerGrid-North-01";
@@ -639,11 +723,12 @@ Memory Defense & Kernel W$\\wedge$X Text/Data Drift & 0\\,B & 0\\,B & \\textsc{P
         }
     };
 
-    // Initial boot
+    // Boot Routine
     setTimeout(() => {
         loadLabFleetRail();
+        initSubTabSwitcher();
         initCBFEchart();
-        initEVTEchart();
+        initPhaseEchart();
     }, 200);
 
     setInterval(updateTelemetry, 400);
