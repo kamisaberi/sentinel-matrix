@@ -418,11 +418,11 @@
         }
 
         try {
-            const resp = await fetch('/api/v1/lab/telemetry');
+            const url = activeLabNodeId ? `/api/v1/lab/telemetry?node_id=${encodeURIComponent(activeLabNodeId)}` : '/api/v1/lab/telemetry';
+            const resp = await fetch(url);
             if (resp.ok) {
                 const data = await resp.json();
 
-                // Dynamic Metadata Synchronization
                 if (data.active_enclave) {
                     currentEnclaveMeta = data.active_enclave;
                     const invarTitle = document.getElementById('lab-invar-title');
@@ -474,6 +474,8 @@
         }
     }
 
+
+
     async function pollLogs() {
         if (!isTabVisible && document.getElementById('tab-lab-cockpit')?.classList.contains('active') === false) {
             return;
@@ -518,6 +520,8 @@
         setTimeout(pollLogs, 250);
         setTimeout(pollLogs, 800);
     };
+
+
 
     window.exportLabScorecard = async function () {
         let scorecardData = {
