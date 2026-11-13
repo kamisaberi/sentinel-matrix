@@ -1,5 +1,5 @@
 // ==============================================================================
-// SENTINEL-LAB: AIR-GAPPED SCENARIO-ADAPTIVE SCIENTIFIC RESEARCH COCKPIT
+// SENTINEL-LAB: AIR-GAPPED MASTER-DETAIL SCIENTIFIC RESEARCH COCKPIT
 // High-DPI Apache ECharts 5.5.0 Renderers & Empirical Invariant Telemetry
 // ==============================================================================
 
@@ -11,6 +11,7 @@
     let lastLogContent = "";
     let isTabVisible = false;
     let registeredFleetNodes = [];
+    let activeLabNodeId = null;
 
     let currentEnclaveMeta = {
         domain: "grid",
@@ -31,27 +32,24 @@
     };
 
     // --------------------------------------------------------------------------
-    // 1. FLEET DISCOVERY & DYNAMIC ENCLAVE SELECTOR
+    // 1. MASTER SENTRY RAIL CONTROLLER (PARITY WITH MISSION CONTROL)
     // --------------------------------------------------------------------------
-    async function populateFleetSelector() {
+    async function loadLabFleetRail() {
         try {
             const resp = await fetch('/api/v1/fleet/nodes');
             if (resp.ok) {
                 const nodes = await resp.json();
                 if (Array.isArray(nodes) && nodes.length > 0) {
                     registeredFleetNodes = nodes;
-                    const sel = document.getElementById('lab-node-select');
-                    if (sel) {
-                        sel.innerHTML = nodes.map(n => `
-                            <option value="${n.node_id}">${n.site || n.node_id} (${n.hostname})</option>
-                        `).join('');
-                    }
+                    const rail = document.getElementById('lab-sentry-rail');
+                    const railCount = document.getElementById('lab-rail-count');
+                    const badgeCount = document.getElementById('lab-node-count-badge');
+
+                    if (railCount) railCount.textContent = `${nodes.length} ONLINE`;
+                    if (badgeCount) badgeCount.textContent = `${nodes.length} NODES ACTIVE`;
 
                     // Render dynamic node chips in Deck B
                     const container = document.getElementById('lab-fleet-nodes-container');
-                    const badgeCount = document.getElementById('lab-node-count-badge');
-                    if (badgeCount) badgeCount.textContent = `${nodes.length} NODES ACTIVE`;
-
                     if (container) {
                         container.innerHTML = nodes.map(n => `
                             <div style="background: rgba(0, 229, 255, 0.06); border: 1px solid var(--hairline); padding: 4px 6px; border-radius: 3px; display: flex; justify-content: space-between; align-items: center;">
@@ -60,11 +58,83 @@
                             </div>
                         `).join('');
                     }
+
+                    if (rail) {
+                        rail.innerHTML = nodes.map(n => {
+                            const isSelected = (n.node_id === activeLabNodeId);
+                            const borderStyle = isSelected ? "border: 1px solid #00E5FF; background: rgba(0,229,255,0.08);" : "border: 1px solid #1A2232; background: #0D111A;";
+                            let domainTag = "GRID 50Hz";
+                            const siteLow = (n.site || "").toLowerCase();
+                            if (siteLow.includes("refinery") || siteLow.includes("reactor")) domainTag = "REACTOR PSI";
+                            else if (siteLow.includes("hospital") || siteLow.includes("pacs")) domainTag = "OPTIC / CRYO";
+
+                            return `
+                                <div class="lab-rail-card" data-id="${n.node_id}" style="${borderStyle} border-radius: 4px; padding: 10px 12px; cursor: pointer; transition: all 0.15s ease;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="font-size: 11px; font-weight: 800; color: #F0F4F8; text-transform: uppercase;">
+                                            ${n.site || n.node_id}
+                                        </span>
+                                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #00FFA3; box-shadow: 0 0 8px #00FFA3;"></span>
+                                    </div>
+                                    <div style="font-family: monospace; font-size: 10px; color: #8A99AD; margin: 4px 0;">
+                                        ${n.hostname}
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9px;">
+                                        <span class="badge badge-cyan" style="font-size: 8px; padding: 1px 4px;">${domainTag}</span>
+                                        <span style="color: #8A99AD;">SLA: <b style="color: #00E5FF;">${n.mitigation_latency_us || 0.84}µs</b></span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join("");
+
+                        rail.querySelectorAll('.lab-rail-card').forEach(card => {
+                            card.addEventListener('click', () => {
+                                const nid = card.getAttribute('data-id');
+                                selectLabSentry(nid);
+                            });
+                        });
+                    }
+
+                    if (!activeLabNodeId || !nodes.some(n => n.node_id === activeLabNodeId)) {
+                        selectLabSentry(nodes[0].node_id);
+                    }
                 }
             }
         } catch (e) {
-            console.warn("Failed to populate fleet selector in lab cockpit", e);
+            console.warn("Failed to load fleet rail in lab cockpit", e);
         }
+    }
+
+    async function selectLabSentry(nodeId) {
+        if (!nodeId) return;
+        activeLabNodeId = nodeId;
+
+        // Notify backend of selected enclave
+        try {
+            await fetch('/api/v1/lab/inject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'select_enclave', node_id: nodeId })
+            });
+        } catch (e) { }
+
+        const targetNode = registeredFleetNodes.find(n => n.node_id === nodeId);
+        const titleEl = document.getElementById('lab-sentry-header-title');
+        const hostEl = document.getElementById('lab-sentry-header-host');
+        if (targetNode) {
+            if (titleEl) titleEl.textContent = targetNode.site || targetNode.node_id;
+            if (hostEl) hostEl.textContent = `${targetNode.hostname} (${targetNode.node_id.slice(0, 10)})`;
+        }
+
+        // Re-render highlight on rail
+        document.querySelectorAll('.lab-rail-card').forEach(card => {
+            const isSelected = (card.getAttribute('data-id') === nodeId);
+            card.style.border = isSelected ? "1px solid #00E5FF" : "1px solid #1A2232";
+            card.style.background = isSelected ? "rgba(0,229,255,0.08)" : "#0D111A";
+        });
+
+        trajectory = [];
+        updateTelemetry();
     }
 
     // --------------------------------------------------------------------------
@@ -313,7 +383,7 @@
         labTabBtn.addEventListener('click', () => {
             isTabVisible = true;
             setTimeout(() => {
-                populateFleetSelector();
+                loadLabFleetRail();
                 initCBFEchart();
                 initEVTEchart();
                 if (cbfChart) cbfChart.resize();
@@ -438,7 +508,7 @@
             const res = await fetch('/api/v1/lab/inject', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: action })
+                body: JSON.stringify({ action: action, node_id: activeLabNodeId })
             });
             const d = await res.json();
             if (statusEl) statusEl.innerText = 'ACTIVE: ' + d.action.toUpperCase();
@@ -464,9 +534,13 @@
             if (res.ok) scorecardData = await res.json();
         } catch (e) { }
 
+        const targetNode = registeredFleetNodes.find(n => n.node_id === activeLabNodeId) || {};
+        const siteLabel = targetNode.site || currentEnclaveMeta.site || "PowerGrid-North-01";
+
         const latexTable = `% ==============================================================================
 % Blackbox Sentinel Empirical Benchmark Scorecard
 % CERN / Zenodo Permanent DOI: 10.5281/zenodo.23598779
+% Enclave Target: ${siteLabel} (${currentEnclaveMeta.domain})
 % Generated: ${new Date().toISOString()}
 % ==============================================================================
 \\begin{table}[t]
@@ -507,7 +581,7 @@ Memory Defense & Kernel W$\\wedge$X Text/Data Drift & 0\\,B & 0\\,B & \\textsc{P
 
     // Initial boot
     setTimeout(() => {
-        populateFleetSelector();
+        loadLabFleetRail();
         initCBFEchart();
         initEVTEchart();
     }, 200);
