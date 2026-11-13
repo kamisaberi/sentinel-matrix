@@ -280,19 +280,15 @@
     // --------------------------------------------------------------------------
     // 3. ECHARTS FACTORY: INSTRUMENT 02 (EVT GUMBEL TAIL & PMU COUNTERS)
     // --------------------------------------------------------------------------
-    function initEVTEchart(mu = 0.84, p999 = 1.82) {
+    // --------------------------------------------------------------------------
+    // 3. ECHARTS FACTORY: INSTRUMENT 02 (EVT GUMBEL TAIL & PMU COUNTERS)
+    // --------------------------------------------------------------------------
+    function initEVTEchart() {
         const dom = document.getElementById('evtEchart');
         if (!dom || dom.clientWidth === 0) return;
 
         if (!evtChart || evtChart.isDisposed()) {
             evtChart = echarts.init(dom, 'dark', { renderer: 'canvas' });
-        }
-
-        const points = [];
-        for (let i = 0; i <= 60; i++) {
-            let z = (i / 60) * 3.0; // 0.0 to 3.0 µs
-            let y = Math.exp(-(z - mu) - Math.exp(-(z - mu)));
-            points.push([z.toFixed(2), y]);
         }
 
         const option = {
@@ -308,7 +304,7 @@
             xAxis: {
                 type: 'value',
                 min: 0.0,
-                max: 3.0,
+                max: 3.5,
                 interval: 0.5,
                 axisLabel: {
                     color: '#64748B',
@@ -326,7 +322,7 @@
             series: [{
                 name: 'Extreme Value Tail',
                 type: 'line',
-                data: points,
+                data: [],
                 smooth: 0.4,
                 showSymbol: false,
                 lineStyle: {
@@ -344,6 +340,43 @@
                 markLine: {
                     silent: true,
                     symbol: 'none',
+                    data: []
+                }
+            }]
+        };
+
+        evtChart.setOption(option);
+    }
+
+    function updateEVTEchart(mu, p999, sigma, isSafe) {
+        if (!evtChart || evtChart.isDisposed()) {
+            initEVTEchart();
+            if (!evtChart) return;
+        }
+
+        const points = [];
+        const s = sigma || 0.125;
+        for (let i = 0; i <= 70; i++) {
+            let z = (i / 70) * 3.5; // 0.0 to 3.5 µs
+            let norm = (z - mu) / s;
+            let y = Math.exp(-norm - Math.exp(-norm));
+            points.push([z.toFixed(2), y]);
+        }
+
+        const curveColor = isSafe ? '#00FFA3' : '#FFB800';
+        const areaColor = isSafe ? 'rgba(0, 255, 163, 0.30)' : 'rgba(255, 184, 0, 0.30)';
+
+        evtChart.setOption({
+            series: [{
+                data: points,
+                lineStyle: { color: curveColor, shadowColor: curveColor },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: areaColor },
+                        { offset: 1, color: 'rgba(0, 0, 0, 0.00)' }
+                    ])
+                },
+                markLine: {
                     data: [
                         {
                             xAxis: mu,
@@ -358,22 +391,27 @@
                         },
                         {
                             xAxis: p999,
-                            lineStyle: { color: '#00FFA3', width: 1.8, type: 'dashed' },
+                            lineStyle: { color: isSafe ? '#00FFA3' : '#FF3366', width: 1.8, type: 'dashed' },
                             label: {
                                 show: true,
                                 position: 'insideStartTop',
                                 formatter: `p99.999%: ${p999.toFixed(2)}µs`,
-                                color: '#00FFA3',
+                                color: isSafe ? '#00FFA3' : '#FF3366',
                                 fontSize: 9
                             }
                         }
                     ]
                 }
             }]
-        };
-
-        evtChart.setOption(option);
+        }, false);
     }
+
+    // --------------------------------------------------------------------------
+    // 5. TELEMETRY & POLLING LOOP
+    // --------------------------------------------------------------------------
+
+
+
 
     // --------------------------------------------------------------------------
     // 4. TAB VISIBILITY & RESIZE OBSERVER (0x0 PROTECTION)
@@ -459,12 +497,30 @@
                     }
                 }
 
+                // DYNAMIC EVT WCET LATENCY & PMU COUNTERS
                 if (data.evt_wcet) {
                     const wcetEl = document.getElementById('val-wcet');
-                    if (wcetEl) wcetEl.innerText = `${data.evt_wcet.p99_999_us.toFixed(2)} µs`;
+                    if (wcetEl) {
+                        wcetEl.innerText = `${data.evt_wcet.p99_999_us.toFixed(2)} µs`;
+                        wcetEl.style.color = currentPlantState.is_safe ? 'var(--ink)' : 'var(--threat)';
+                    }
                     const dropEl = document.getElementById('val-drop');
                     if (dropEl) dropEl.innerText = `${data.evt_wcet.sla_limit_us.toFixed(2)} µs`;
-                    initEVTEchart(data.evt_wcet.gumbel_mu, data.evt_wcet.p99_999_us);
+
+                    updateEVTEchart(data.evt_wcet.gumbel_mu, data.evt_wcet.p99_999_us, data.evt_wcet.gumbel_sigma, currentPlantState.is_safe);
+                }
+
+                if (data.pmu_metrics) {
+                    const ipcEl = document.getElementById('val-ipc');
+                    if (ipcEl) {
+                        ipcEl.innerText = data.pmu_metrics.ipc.toFixed(2);
+                        ipcEl.style.color = (data.pmu_metrics.ipc >= 2.0) ? 'var(--kernel)' : '#f59e0b';
+                    }
+                    const llcEl = document.getElementById('val-llc');
+                    if (llcEl) {
+                        llcEl.innerText = `${data.pmu_metrics.llc_miss_pct.toFixed(2)}%`;
+                        llcEl.style.color = (data.pmu_metrics.llc_miss_pct > 3.0) ? 'var(--threat)' : 'var(--kernel)';
+                    }
                 }
 
                 updateCBFEchart(currentPlantState.current_val, currentPlantState.is_safe);
