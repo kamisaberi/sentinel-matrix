@@ -1,6 +1,8 @@
+// File: /home/kami/sentinel-nexus/web/js/mission_control.js
+
 /**
- * ARYORITHM SENTINEL NEXUS: MISSION CONTROL MASTER-DETAIL TWO-PANE CONTROLLER
- * Zero Mocks, Zero Hardcoded Objects, Real gRPC/REST Telemetry & Full System Lockout
+ * ARYORITHM SENTINEL NEXUS: MISSION CONTROL MASTER-DETAIL TWO-PANE COCKPIT
+ * Micro-Frontend Plugin Support, Dynamic Templates, and Isolated Per-Device Faults
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,16 +10,13 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeNodeId = null;
     let activeNodeData = null;
     let isSystemOffline = false;
-    let isThermalAnomaly = false;   // <--- ADD THIS VARIABLE DECLARATION!
-
+    let isThermalAnomaly = false;
 
     let activeSensors = [];
     const sensorHistories = {};
     const echartsInstances = {};
-    const activeSensorFaults = {}; // Per-sensor isolated chaos dictionary
+    const activeSensorFaults = {}; // Per-node, per-sensor isolated chaos dictionary
     let canvasAnimId = null;
-
-    const sentryAnomalyStates = {}; // Strictly isolated per sentry: { [nodeId]: boolean }
 
     // DOM Elements
     const sentryRail = document.getElementById("mc-sentry-rail");
@@ -32,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const dropFeed = document.getElementById("mc-drop-feed");
 
     // ========================================================================
-    // 1. FLEET DISCOVERY & MASTER SENTRY RAIL (No Hardcoding)
+    // 1. FLEET DISCOVERY & MASTER SENTRY RAIL
     // ========================================================================
     let consecutiveFailures = 0;
 
@@ -61,11 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     renderSentryRail();
 
-                    // RESILIENCE FIX: If no sentry is selected, OR if the right workspace failed to load sensors, reload!
                     if (!activeNodeId || !liveNodes.some(n => n.node_id === activeNodeId)) {
                         selectSentry(liveNodes[0].node_id);
                     } else if (!activeNodeData || activeSensors.length === 0) {
-                        // Automatically heal blank panes if a previous fetch lagged
                         selectSentry(activeNodeId);
                     }
                     return;
@@ -76,11 +73,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         consecutiveFailures++;
-        // Require 2 consecutive failures before declaring a full system outage
         if (consecutiveFailures >= 2) {
             triggerSystemOutage("ZERO EDGE SENTRIES RESPONDING IN NEXUS C2");
         }
     }
+
     function renderSentryRail() {
         if (!sentryRail) return;
         if (sentryRailCount) sentryRailCount.textContent = `${liveNodes.length} NODES`;
@@ -144,14 +141,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const isOnline = (activeNodeData.status === "ONLINE");
                 if (pipEl) pipEl.style.background = isOnline ? "#00FFA3" : "#FF3366";
 
-
-
-
-                // Check if a registered plugin matches this node
+                // Check for dynamic Micro-Frontend UI Adapter
                 const adapter = (window.SentinelUI && window.SentinelUI.getNodeAdapter) ?
                     window.SentinelUI.getNodeAdapter(activeNodeData) : null;
 
-                // 1. Render Pane 1 (Primary Apparatus) - Title comes dynamically from node data
+                // 1. Render Pane 1 (Primary Physical Apparatus)
                 if (adapter && adapter.renderPrimaryInstrument) {
                     updatePrimaryInstrumentCustom(adapter, activeNodeData);
                 } else {
@@ -177,9 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     renderContextualAttacks([]);
                 }
 
-
-
-                // 4. Force initial chart draw immediately after layout settles (no 300ms delay)
+                // Force initial chart draw immediately after layout settles
                 setTimeout(() => {
                     activeSensors.forEach(s => {
                         const sid = s.sensor_id;
@@ -194,32 +186,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function updatePrimaryInstrumentCustom(adapter, node) {
-        const titleEl = document.getElementById("mc-frame1-title");
-        const tagEl = document.getElementById("mc-frame1-tag");
-        const actionsEl = document.getElementById("mc-frame1-actions");
-        const canvasEl = document.getElementById("thermal-canvas");
-        const videoEl = document.getElementById("thermal-video");
-
-        if (titleEl) titleEl.textContent = (node.primary_instrument && node.primary_instrument.title) ?
-            node.primary_instrument.title : (adapter.instrumentTitle || "PRIMARY PHYSICAL APPARATUS"); if (tagEl) tagEl.textContent = adapter.instrumentTag || "TACTICAL";
-
-        if (actionsEl && adapter.getPrimaryActions) {
-            actionsEl.innerHTML = adapter.getPrimaryActions(node);
-            if (adapter.bindPrimaryActions) adapter.bindPrimaryActions(actionsEl, logEvent);
-        }
-
-        if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
-        if (canvasEl) {
-            if (videoEl) videoEl.style.display = "none";
-            canvasEl.style.display = "block";
-            function runAnim() {
-                adapter.renderPrimaryInstrument(canvasEl, node, isThermalAnomaly);
-                canvasAnimId = requestAnimationFrame(runAnim);
-            }
-            runAnim();
-        }
-    }
     // ========================================================================
     // 2. OUTAGE AND LOCKOUT CONTROLLER
     // ========================================================================
@@ -233,7 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sentryRail) {
             sentryRail.innerHTML = `<div style="padding:14px; color:#FF3366; font-size:11px; font-family:monospace; border:1px solid #FF3366; border-radius:4px;">[OUTAGE] All Sentries Disconnected</div>`;
         }
-        // Disable action buttons
         document.querySelectorAll(".btn-attack, .btn-ctrl, .btn-fault-inject").forEach(b => {
             b.style.pointerEvents = "none";
             b.style.opacity = "0.35";
@@ -269,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     initVideoWall();
 
+    // Standard Generic Instrument Updater
     function updatePrimaryInstrument(inst) {
         const titleEl = document.getElementById("mc-frame1-title");
         const tagEl = document.getElementById("mc-frame1-tag");
@@ -285,47 +251,68 @@ document.addEventListener("DOMContentLoaded", () => {
                     <button class="btn-attack btn-attack-danger" id="btn-act-grid-fault" style="flex:1; padding:6px; font-size:10px;">[!] INJECT HARMONIC DISTORTION</button>
                     <button class="btn-attack btn-attack-success" id="btn-act-grid-rst" style="flex:1; padding:6px; font-size:10px;">[+] RESTORE 50.00 Hz SYNCH</button>
                 `;
-                document.getElementById("btn-act-grid-fault")?.addEventListener("click", () => {
-                    if (activeNodeId) sentryAnomalyStates[activeNodeId] = true;
-                    logEvent(`[PANE 01] Grid harmonic distortion injected on ${activeNodeData?.site || activeNodeId} (THD > 18%)`, "text-yellow");
-                });
-                document.getElementById("btn-act-grid-rst")?.addEventListener("click", () => {
-                    if (activeNodeId) delete sentryAnomalyStates[activeNodeId];
-                    logEvent(`[PANE 01] Grid synchronized to nominal 50.00 Hz on ${activeNodeData?.site || activeNodeId}`, "text-green");
-                });
+                document.getElementById("btn-act-grid-fault")?.addEventListener("click", () => { isThermalAnomaly = true; logEvent("[PANE 01] Grid harmonic distortion injected (THD > 18%)", "text-yellow"); });
+                document.getElementById("btn-act-grid-rst")?.addEventListener("click", () => { isThermalAnomaly = false; logEvent("[PANE 01] Grid synchronized to nominal 50.00 Hz", "text-green"); });
             } else if (inst.type === "video") {
                 actionsEl.innerHTML = `
                     <button class="btn-attack btn-attack-danger" id="btn-act-therm-spike" style="flex:1; padding:6px; font-size:10px;">[!] TRIGGER THERMAL RUNAWAY</button>
                     <button class="btn-attack btn-attack-success" id="btn-act-therm-rst" style="flex:1; padding:6px; font-size:10px;">[+] RESTORE OPTICAL BASELINE</button>
                 `;
-                document.getElementById("btn-act-therm-spike")?.addEventListener("click", () => {
-                    if (activeNodeId) sentryAnomalyStates[activeNodeId] = true;
-                    logEvent(`[PANE 01] Thermal runaway induced on infrared optics (>118°C) on ${activeNodeData?.site || activeNodeId}`, "text-yellow");
-                });
-                document.getElementById("btn-act-therm-rst")?.addEventListener("click", () => {
-                    if (activeNodeId) delete sentryAnomalyStates[activeNodeId];
-                    logEvent(`[PANE 01] Optical baseline restored on ${activeNodeData?.site || activeNodeId}`, "text-green");
-                });
+                document.getElementById("btn-act-therm-spike")?.addEventListener("click", () => { isThermalAnomaly = true; logEvent("[PANE 01] Thermal runaway induced on infrared optics (>118°C)", "text-yellow"); });
+                document.getElementById("btn-act-therm-rst")?.addEventListener("click", () => { isThermalAnomaly = false; logEvent("[PANE 01] Optical baseline restored", "text-green"); });
             } else {
                 actionsEl.innerHTML = `
                     <button class="btn-attack btn-attack-danger" id="btn-act-rx-run" style="flex:1; padding:6px; font-size:10px;">[!] EXOTHERMIC REACTOR SPIKE</button>
                     <button class="btn-attack btn-attack-success" id="btn-act-rx-rst" style="flex:1; padding:6px; font-size:10px;">[+] NITROGEN QUENCH DUMP</button>
                 `;
-                document.getElementById("btn-act-rx-run")?.addEventListener("click", () => {
-                    if (activeNodeId) sentryAnomalyStates[activeNodeId] = true;
-                    logEvent(`[PANE 01] Exothermic chemical runaway initiated on ${activeNodeData?.site || activeNodeId}`, "text-yellow");
-                });
-                document.getElementById("btn-act-rx-rst")?.addEventListener("click", () => {
-                    if (activeNodeId) delete sentryAnomalyStates[activeNodeId];
-                    logEvent(`[PANE 01] Reactor cooled with emergency nitrogen quench on ${activeNodeData?.site || activeNodeId}`, "text-green");
-                });
+                document.getElementById("btn-act-rx-run")?.addEventListener("click", () => { isThermalAnomaly = true; logEvent("[PANE 01] Exothermic chemical runaway initiated", "text-yellow"); });
+                document.getElementById("btn-act-rx-rst")?.addEventListener("click", () => { isThermalAnomaly = false; logEvent("[PANE 01] Reactor cooled with emergency nitrogen quench", "text-green"); });
             }
         }
+
         if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
         if (canvasEl) {
             videoEl.style.display = "none";
             canvasEl.style.display = "block";
             startInstrumentSimulation(canvasEl, inst.type || "grid");
+        }
+    }
+
+    // Dynamic Micro-Frontend Custom Instrument Updater
+    function updatePrimaryInstrumentCustom(adapter, node) {
+        const titleEl = document.getElementById("mc-frame1-title");
+        const tagEl = document.getElementById("mc-frame1-tag");
+        const actionsEl = document.getElementById("mc-frame1-actions");
+        const canvasEl = document.getElementById("thermal-canvas");
+        const videoEl = document.getElementById("thermal-video");
+
+        // DYNAMIC NODE TITLE BINDING: Prioritize the exact title from the node template engine
+        if (titleEl) {
+            titleEl.textContent = (node.primary_instrument && node.primary_instrument.title)
+                ? node.primary_instrument.title
+                : (adapter.instrumentTitle || "PRIMARY PHYSICAL APPARATUS");
+        }
+
+        if (tagEl) {
+            tagEl.textContent = (node.primary_instrument && node.primary_instrument.protocol)
+                ? node.primary_instrument.protocol
+                : (adapter.instrumentTag || "TACTICAL");
+        }
+
+        if (actionsEl && adapter.getPrimaryActions) {
+            actionsEl.innerHTML = adapter.getPrimaryActions(node);
+            if (adapter.bindPrimaryActions) adapter.bindPrimaryActions(actionsEl, logEvent);
+        }
+
+        if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
+        if (canvasEl) {
+            if (videoEl) videoEl.style.display = "none";
+            canvasEl.style.display = "block";
+            function runAnim() {
+                adapter.renderPrimaryInstrument(canvasEl, node, isThermalAnomaly);
+                canvasAnimId = requestAnimationFrame(runAnim);
+            }
+            runAnim();
         }
     }
 
@@ -336,22 +323,21 @@ document.addEventListener("DOMContentLoaded", () => {
             tick += 0.04;
             const w = canvas.width;
             const h = canvas.height;
-            const isAnomaly = !!(activeNodeId && sentryAnomalyStates[activeNodeId]);
 
             if (type === "grid") {
                 ctx.fillStyle = "#05080C";
                 ctx.fillRect(0, 0, w, h);
-                ctx.strokeStyle = isAnomaly ? "#EF4444" : "#00F0FF";
+                ctx.strokeStyle = isThermalAnomaly ? "#EF4444" : "#00F0FF";
                 ctx.lineWidth = 2.0;
                 ctx.beginPath();
                 for (let x = 0; x < w; x++) {
-                    const y = (h / 2) + Math.sin((x * 0.02) + (tick * 4)) * (isAnomaly ? 65 : 28);
+                    const y = (h / 2) + Math.sin((x * 0.02) + (tick * 4)) * (isThermalAnomaly ? 65 : 28);
                     if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
                 ctx.stroke();
             } else {
                 const grad = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 1.5);
-                grad.addColorStop(0, isAnomaly ? "#FF3366" : "#00FFA3");
+                grad.addColorStop(0, isThermalAnomaly ? "#FF3366" : "#00FFA3");
                 grad.addColorStop(1, "#05080C");
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, w, h);
@@ -360,8 +346,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         draw();
     }
+
     // ========================================================================
-    // 4. PANE 02: DYNAMIC SENSORY CLUSTER & ISOLATED PER-SENSOR FAULTS
+    // 4. PANE 02: DYNAMIC SENSORY CLUSTER & ISOLATED PER-DEVICE FAULTS
     // ========================================================================
     function renderDynamicSensorCards() {
         if (!sensorGrid) return;
@@ -379,8 +366,9 @@ document.addEventListener("DOMContentLoaded", () => {
             sensorHistories[sid] = sensorHistories[sid] || [];
 
             let color = "#00E5FF";
-            if (s.category === "VIBRATION") color = "#00FFA3";
-            if (s.category === "TEMPERATURE") color = "#FFB800";
+            if (s.category === "VIBRATION" || s.category === "CYBER") color = "#00FFA3";
+            if (s.category === "TEMPERATURE" || s.category === "AVIONICS") color = "#FFB800";
+            if (s.category === "RELAY") color = "#A855F7";
 
             return `
                 <div class="sensor-card" id="card-${sid}" style="background:#080C13; border:1px solid #1A2232; border-radius:4px; padding:10px; display:flex; flex-direction:column; justify-content:space-between;">
@@ -409,25 +397,46 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         }).join("");
 
-        // Attach STRICTLY ISOLATED per-sensor fault triggers
+        // STRICTLY ISOLATED PER-DEVICE FAULT INJECTION (Zero Cross-Bleeding)
         document.querySelectorAll(".btn-sensor-fault").forEach(btn => {
             btn.addEventListener("click", () => {
                 const sid = btn.getAttribute("data-id");
-                activeSensorFaults[sid] = { active: true, mult: 2.2 };
-                logEvent(`[PHYSICAL ANOMALY] Injected localized fault on sensor: ${sid}`, "text-yellow");
+                const faultKey = `${activeNodeId}::${sid}`;
+                activeSensorFaults[faultKey] = { active: true, mult: 2.5 };
+
+                const sensorObj = activeSensors.find(s => s.sensor_id === sid);
+                const targetIp = (sensorObj && sensorObj.interface) ? sensorObj.interface : "";
+
+                logEvent(`[PHYSICAL ANOMALY] Injected localized fault on ${sid} (Device: ${activeNodeId})`, "text-yellow");
+
+                fetch("/api/v1/sensors/fault", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sensor_id: sid, action: "spike", target_ip: targetIp })
+                }).catch(() => { });
             });
         });
 
         document.querySelectorAll(".btn-sensor-reset").forEach(btn => {
             btn.addEventListener("click", () => {
                 const sid = btn.getAttribute("data-id");
-                delete activeSensorFaults[sid];
-                logEvent(`[PHYSICAL RESTORE] Baseline restored on sensor: ${sid}`, "text-green");
+                const faultKey = `${activeNodeId}::${sid}`;
+                delete activeSensorFaults[faultKey];
+
+                const sensorObj = activeSensors.find(s => s.sensor_id === sid);
+                const targetIp = (sensorObj && sensorObj.interface) ? sensorObj.interface : "";
+
+                logEvent(`[PHYSICAL RESTORE] Baseline restored on ${sid} (Device: ${activeNodeId})`, "text-green");
+
+                fetch("/api/v1/sensors/fault", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sensor_id: sid, action: "reset", target_ip: targetIp })
+                }).catch(() => { });
             });
         });
     }
 
-    // --- REPLACE updateSensorEChart() IN mission_control.js ---
     function updateSensorEChart(sid, s, val, history) {
         const chartDom = document.getElementById(`echart-${sid}`);
         if (!chartDom || chartDom.clientWidth === 0) return;
@@ -437,45 +446,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const chart = echartsInstances[sid];
 
-        const isFaulted = (activeSensorFaults[sid] && activeSensorFaults[sid].active);
-        const lineColor = isFaulted ? "#FF3366" : (s.category === "VIBRATION" ? "#00FFA3" : "#00E5FF");
+        const faultKey = `${activeNodeId}::${sid}`;
+        const isFaulted = (activeSensorFaults[faultKey] && activeSensorFaults[faultKey].active);
+        const lineColor = isFaulted ? "#FF3366" : (s.category === "VIBRATION" || s.category === "CYBER" ? "#00FFA3" : "#00E5FF");
         const minV = (s.min_val !== undefined) ? s.min_val : 0;
         const maxV = (s.max_val !== undefined) ? s.max_val : 100;
 
         const option = {
-            animation: false, // <--- INSTANT RENDER (Zero initial loading sweep)
-
             backgroundColor: 'transparent',
-            // ZERO MARGIN: Stretches the line from absolute left edge to absolute right edge
-            grid: {
-                left: 0,
-                right: 0,
-                top: 4,
-                bottom: 0,
-                containLabel: false
-            },
-            xAxis: {
-                type: 'category',
-                boundaryGap: false, // Eliminates left and right gaps
-                show: false
-            },
-            yAxis: {
-                type: 'value',
-                min: minV,
-                max: maxV,
-                show: false
-            },
+            grid: { left: 0, right: 0, top: 4, bottom: 0, containLabel: false },
+            xAxis: { type: 'category', boundaryGap: false, show: false },
+            yAxis: { type: 'value', min: minV, max: maxV, show: false },
             series: [{
                 data: history,
                 type: 'line',
-                smooth: 0.35,       // Fluid cubic spline interpolation
+                smooth: 0.35,
                 showSymbol: false,
-                lineStyle: {
-                    width: 2.2,
-                    color: lineColor,
-                    shadowColor: lineColor,
-                    shadowBlur: 8
-                },
+                lineStyle: { width: 2.2, color: lineColor, shadowColor: lineColor, shadowBlur: 8 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                         { offset: 0, color: lineColor + "44" },
@@ -483,25 +470,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     ])
                 }
             }],
-            // Fluid streaming animation
             animationDurationUpdate: 300,
             animationEasingUpdate: 'linear'
         };
 
-        // notMerge = false allows ECharts to smoothly slide points without redrawing
         chart.setOption(option, false);
     }
-    // Live Telemetry Stepper Loop (1000ms) - FREEZES COMPLETELY IF OFFLINE
+
+    // Live Telemetry Stepper Loop (300ms) - Scoped per Active Node
     setInterval(() => {
         if (isSystemOffline || !activeSensors || activeSensors.length === 0) return;
 
         activeSensors.forEach(s => {
             const sid = s.sensor_id;
             const base = parseFloat(s.baseline) || 10.0;
-            const fault = activeSensorFaults[sid];
+            const faultKey = `${activeNodeId}::${sid}`;
+            const fault = activeSensorFaults[faultKey];
             let val = base + (Math.sin(Date.now() / 2000) * (base * 0.02)) + ((Math.random() - 0.5) * (base * 0.01));
 
-            // Apply ONLY localized fault for this specific sensor
+            // Apply ONLY localized fault for this specific sensor on this specific node
             if (fault && fault.active) {
                 val = base * fault.mult;
             }
@@ -539,10 +526,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.getElementById("btn-emergency-all-stop")?.addEventListener("click", () => {
-        for (const k in sentryAnomalyStates) delete sentryAnomalyStates[k];
+        isThermalAnomaly = false;
         for (const k in activeSensorFaults) delete activeSensorFaults[k];
-        logEvent("[EMERGENCY ALL-STOP] Physical plant state stabilized fleet-wide. All chaos hooks cleared.", "text-green");
+        logEvent("[EMERGENCY ALL-STOP] Physical state stabilized. All chaos hooks cleared.", "text-green");
     });
+
     // ========================================================================
     // 6. PANE 04: CONTEXTUAL PROTOCOL ATTACK DISPATCH
     // ========================================================================
