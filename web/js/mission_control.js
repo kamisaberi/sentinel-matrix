@@ -151,23 +151,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 const adapter = (window.SentinelUI && window.SentinelUI.getNodeAdapter) ?
                     window.SentinelUI.getNodeAdapter(activeNodeData) : null;
 
-                // 1. Render Pane 1 (Primary Apparatus)
+                // 1. Render Pane 1 (Primary Apparatus) - Title comes dynamically from node data
                 if (adapter && adapter.renderPrimaryInstrument) {
                     updatePrimaryInstrumentCustom(adapter, activeNodeData);
                 } else {
                     updatePrimaryInstrument(activeNodeData.primary_instrument || {});
                 }
 
-                // 2. Render Pane 2 (Field Sensors)
-                activeSensors = (adapter && adapter.getSensors) ?
-                    adapter.getSensors(activeNodeData) : (activeNodeData.sensors || []);
+                // 2. Render Pane 2 (Field Sensors) - Prioritize backend template engine
+                if (activeNodeData.sensors && activeNodeData.sensors.length > 0) {
+                    activeSensors = activeNodeData.sensors;
+                } else if (adapter && adapter.getSensors) {
+                    activeSensors = adapter.getSensors(activeNodeData);
+                } else {
+                    activeSensors = [];
+                }
                 renderDynamicSensorCards();
 
-                // 3. Render Pane 4 (Target Protocol Exploits)
-                const attacks = (adapter && adapter.getAttacks) ?
-                    adapter.getAttacks(activeNodeData) : (activeNodeData.attacks || []);
-                renderContextualAttacks(attacks);
-
+                // 3. Render Pane 4 (Target Protocol Exploits) - Prioritize backend template engine
+                if (activeNodeData.attacks && activeNodeData.attacks.length > 0) {
+                    renderContextualAttacks(activeNodeData.attacks);
+                } else if (adapter && adapter.getAttacks) {
+                    renderContextualAttacks(adapter.getAttacks(activeNodeData));
+                } else {
+                    renderContextualAttacks([]);
+                }
 
 
 
@@ -193,8 +201,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const canvasEl = document.getElementById("thermal-canvas");
         const videoEl = document.getElementById("thermal-video");
 
-        if (titleEl) titleEl.textContent = adapter.instrumentTitle || "PRIMARY PHYSICAL APPARATUS";
-        if (tagEl) tagEl.textContent = adapter.instrumentTag || "TACTICAL";
+        if (titleEl) titleEl.textContent = (node.primary_instrument && node.primary_instrument.title) ?
+            node.primary_instrument.title : (adapter.instrumentTitle || "PRIMARY PHYSICAL APPARATUS"); if (tagEl) tagEl.textContent = adapter.instrumentTag || "TACTICAL";
 
         if (actionsEl && adapter.getPrimaryActions) {
             actionsEl.innerHTML = adapter.getPrimaryActions(node);
