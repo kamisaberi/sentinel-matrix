@@ -1,0 +1,45 @@
+# File: /home/kami/sentinel-nexus/configs/ui_templates/aerospace_uav.yaml
+
+primary_instrument:
+  title: "TACTICAL 360° UAV SWARM RADAR & WAYPOINT ENVELOPE"
+  protocol: "STANAG 4586 / UDP :50050"
+  type: "radar"
+
+sensors:
+  - sensor_id: "stanag_telecommand"
+    name: "NATO STANAG 4586 Telecommand Link"
+    category: "CYBER"
+    port: 50050
+    unit: "Seq/s"
+    baseline: 10.0
+    min_val: 0.0
+    max_val: 100.0
+    interface: "eth0"
+  - sensor_id: "gps_drift_barrier"
+    name: "GPS Kinematic Envelope Barrier"
+    category: "CPS"
+    port: 50050
+    unit: "m/s"
+    baseline: 12.4
+    min_val: 0.0
+    max_val: 150.0
+    interface: "eth0"
+  - sensor_id: "actuator_airgap_relay"
+    name: "Hardware Actuator Air-Gap Relay"
+    category: "RELAY"
+    port: 50050
+    unit: "LATCH"
+    baseline: 0.0
+    min_val: 0.0
+    max_val: 1.0
+    interface: "relay17"
+
+attacks:
+  - id: "stanag_replay"
+    name: "[!] STANAG 4586 Replay Blast"
+  - id: "gps_teleport"
+    name: "[!] GPS Teleportation Jump"
+  - id: "timestamp_desync"
+    name: "[!] Telemetry Clock Desync"
+  - id: "ccsds_tamper"
+    name: "[!] CCSDS 133 Frame Tampering"

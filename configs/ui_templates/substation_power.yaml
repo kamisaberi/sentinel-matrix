@@ -1,0 +1,43 @@
+# File: /home/kami/sentinel-nexus/configs/ui_templates/substation_power.yaml
+
+primary_instrument:
+  title: "POWER QUALITY & SYNCHROPHASOR SCOPE"
+  protocol: "IEEE C37.118 / MODBUS :15501"
+  type: "grid"
+
+sensors:
+  - sensor_id: "main_transformer_plc"
+    name: "Main Transformer PLC (Siemens S7)"
+    category: "ELECTRICAL"
+    port: 502
+    unit: "units"
+    baseline: 49.2
+    min_val: 0.0
+    max_val: 100.0
+    interface: "s7comm"
+  - sensor_id: "cooling_valve_pressure"
+    name: "Cooling Valve Pressure Actuator"
+    category: "PRESSURE"
+    port: 502
+    unit: "units"
+    baseline: 49.2
+    min_val: 0.0
+    max_val: 100.0
+    interface: "modbus"
+  - sensor_id: "substation_thermal_cam"
+    name: "Substation Yard Thermal Camera"
+    category: "VISION"
+    port: 502
+    unit: "FPS"
+    baseline: 14.8
+    min_val: 0.0
+    max_val: 60.0
+    interface: "rtsp"
+
+attacks:
+  - id: "modbus_coil_spoof"
+    name: "[!] Modbus Coil Override Attack"
+  - id: "iec104_spurious"
+    name: "[!] IEC-60870-5-104 Spurious Trip"
+  - id: "synchrophasor_desync"
+    name: "[!] PMU Angle Desynchronization"
