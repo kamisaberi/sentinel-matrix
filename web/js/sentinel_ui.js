@@ -1,17 +1,11 @@
 // File: /home/kami/sentinel-nexus/web/js/sentinel_ui.js
 
-/**
- * ARYORITHM SENTINEL NEXUS: MICRO-FRONTEND EXTENSION ENGINE
- * Enables zero-copy dynamic plugin loading on HTML, JS, and CSS
- */
-
 (function () {
     const SentinelUI = {
         nodeAdapters: [],
         customTabs: [],
 
         registerNodeAdapter(adapter) {
-            // adapter: { id, matches(node), renderPrimaryInstrument, getSensors, getAttacks, getPrimaryActions }
             this.nodeAdapters.push(adapter);
             console.log(`[SentinelUI] Registered node adapter: ${adapter.id}`);
         },
@@ -22,7 +16,6 @@
         },
 
         registerTab(tabConfig) {
-            // tabConfig: { id, label, icon, group, renderView }
             this.customTabs.push(tabConfig);
             this._injectTab(tabConfig);
         },
@@ -32,24 +25,20 @@
             const viewport = document.querySelector(".dashboard-viewport");
             if (!nav || !viewport) return;
 
-            // Check if already injected
             if (document.getElementById(tabConfig.id)) return;
 
-            // 1. Create Nav Button
             const btn = document.createElement("button");
             btn.className = "admin-nav-item nav-tab";
             btn.setAttribute("data-tab", tabConfig.id);
             btn.innerHTML = `<span>${tabConfig.icon || "🧩"}</span><span>${tabConfig.label}</span>`;
             nav.appendChild(btn);
 
-            // 2. Create Tab Pane Viewport
             const pane = document.createElement("div");
             pane.className = "tab-pane";
             pane.id = tabConfig.id;
             pane.innerHTML = `<div id="${tabConfig.id}-container" style="min-height: 600px;"></div>`;
             viewport.appendChild(pane);
 
-            // 3. Attach click listener
             btn.addEventListener("click", (e) => {
                 e.preventDefault();
                 document.querySelectorAll(".admin-nav-item").forEach(b => b.classList.remove("active"));
@@ -64,10 +53,20 @@
             console.log(`[SentinelUI] Injected dynamic tab: ${tabConfig.label}`);
         },
 
+        loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement("script");
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.body.appendChild(s);
+            });
+        },
+
         async initPlugins() {
             try {
                 const resp = await fetch("/plugins/manifest.json");
-                if (!resp.ok) return; // No plugins installed, clean fallback
+                if (!resp.ok) return;
                 const data = await resp.json();
                 if (!data || !Array.isArray(data.plugins)) return;
 
@@ -78,10 +77,11 @@
                         link.href = `/plugins/${p.style}`;
                         document.head.appendChild(link);
                     }
+                    if (p.vendor) {
+                        await this.loadScript(`/plugins/${p.vendor}`);
+                    }
                     if (p.script) {
-                        const script = document.createElement("script");
-                        script.src = `/plugins/${p.script}`;
-                        document.body.appendChild(script);
+                        await this.loadScript(`/plugins/${p.script}`);
                     }
                 }
                 console.log(`[SentinelUI] Loaded ${data.plugins.length} external UI plugin(s).`);
