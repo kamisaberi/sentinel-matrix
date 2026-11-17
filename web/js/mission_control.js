@@ -449,12 +449,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const faultKey = `${activeNodeId}::${sid}`;
         const isFaulted = (activeSensorFaults[faultKey] && activeSensorFaults[faultKey].active);
         const lineColor = isFaulted ? "#FF3366" : (s.category === "VIBRATION" || s.category === "CYBER" ? "#00FFA3" : "#00E5FF");
-        const minV = (s.min_val !== undefined) ? s.min_val : 0;
-        const maxV = (s.max_val !== undefined) ? s.max_val : 100;
+
+        // Dynamic Y-Axis auto-centering around baseline & live history (handles negative dBm & >100 values)
+        const base = parseFloat(s.baseline) || 10.0;
+        const absSpan = Math.max(Math.abs(base) * 0.35, 10.0);
+        const histMin = (history && history.length > 0) ? Math.min(...history) : base;
+        const histMax = (history && history.length > 0) ? Math.max(...history) : base;
+
+        const minV = Math.min(base - absSpan, histMin - absSpan * 0.2);
+        const maxV = Math.max(base + absSpan, histMax + absSpan * 0.2);
 
         const option = {
             backgroundColor: 'transparent',
-            grid: { left: 0, right: 0, top: 4, bottom: 0, containLabel: false },
+            grid: { left: 0, right: 0, top: 6, bottom: 2, containLabel: false },
             xAxis: { type: 'category', boundaryGap: false, show: false },
             yAxis: { type: 'value', min: minV, max: maxV, show: false },
             series: [{
@@ -464,6 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 showSymbol: false,
                 lineStyle: { width: 2.2, color: lineColor, shadowColor: lineColor, shadowBlur: 8 },
                 areaStyle: {
+                    origin: 'start',
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                         { offset: 0, color: lineColor + "44" },
                         { offset: 1, color: lineColor + "00" }
