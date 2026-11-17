@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
     tshark \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir --break-system-packages scapy requests
+RUN pip3 install --break-system-packages scapy requests
 
 COPY src/traffic/live_adversary_daemon.py /app/adversary_daemon.py
 
