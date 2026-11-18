@@ -1,297 +1,417 @@
+// File: /home/kami/sentinel-nexus/web/js/blueprint_studio.js
 // ==============================================================================
-// ARYORITHM SENTINEL NEXUS: BLUEPRINT STUDIO (DAG DEFENSE COMPILER & PACKAGER)
+// ARYORITHM SENTINEL NEXUS: SCENARIO-DRIVEN BLUEPRINT STUDIO (DAG COMPILER)
+// Zero Hardcoding: Hydrated from /api/v1/blueprints/context
 // ==============================================================================
 
 class ThreatBlueprintStudio {
     constructor() {
-        this.engine = new VisioStudioEngine("blueprint-studio-container", {
-            paletteTitle: "PIPELINE STAGES & DEFENSE",
+        this.engine = new VisioStudioEngine('blueprint-studio-container', {
+            paletteTitle: 'PIPELINE STAGES & ASSETS',
             createNodeFromType: this.createNodeDefinition.bind(this),
             renderInspector: this.renderInspector.bind(this)
         });
 
-        // Catalog of available edge assets on host
-        this.availableModels = [
-            "network_threat_int8.onnx",
-            "network_threat_detector.onnx",
-            "power_quality_anomaly.onnx",
-            "vibration_spectral_ae.onnx",
-            "thermal_anomaly_vision.onnx",
-            "lidar_spatial_detector.onnx"
+        this.availableModels = [];
+        this.availablePackages = [];
+        this.availablePlugins = [];
+        this.availableNics = [];
+        this.contextNodes = [];
+        this.selectedContextNode = null;
+
+        this.siliconTargets = [
+            'INTEL_OPENVINO',
+            'NVIDIA_TENSORRT',
+            'ROCKCHIP_RKNN',
+            'AMD_VITIS_AI',
+            'QUALCOMM_QNN',
+            'APPLE_COREML',
+            'AMD_RYZEN_AI',
+            'HAILO',
+            'EDGE_TPU'
         ];
 
-        this.availableRules = [
-            "modbus_rate_limiter.spkg",
-            "modbus_guard.spkg",
-            "s7comm_guard.spkg",
-            "log4j_fast_drop.spkg",
-            "dicom_phi_guard.spkg"
-        ];
+        this.initToolbar();
+        this.loadContextAndRender();
+    }
 
-        this.availableNics = ["ens160", "eth0", "ens33", "gtp5g0", "lo"];
+    async loadContextAndRender() {
+        try {
+            const resp = await fetch('/api/v1/blueprints/context');
+            if (resp.ok) {
+                const ctx = await resp.json();
+                this.availableModels = Array.isArray(ctx.models) ? ctx.models : [];
+                this.availablePackages = Array.isArray(ctx.packages) ? ctx.packages : [];
+                this.availablePlugins = Array.isArray(ctx.plugins) ? ctx.plugins : [];
+                this.availableNics = Array.isArray(ctx.nics) ? ctx.nics : [];
+                this.contextNodes = Array.isArray(ctx.nodes) ? ctx.nodes : [];
+            }
+        } catch (e) {
+            console.warn('[BlueprintStudio] Context discovery deferred:', e);
+        }
 
         this.initPalette();
-        this.initToolbar();
-        this.loadDefaultDag();
+        this.populateNodeSelector();
+        this.loadSelectedNodeDag();
     }
 
     initPalette() {
-        const palette = document.getElementById("blueprint-studio-container-palette");
+        const palette = document.getElementById('blueprint-studio-container-palette');
+        if (!palette) return;
+
         const categories = [
             {
-                title: "INGESTION & HARDWARE",
+                title: 'STAGE 0: HARDWARE INGRESS',
+                nodes: (this.availableNics.length > 0 ? this.availableNics : ['eth0']).slice(0, 3).map(nic => ({
+                    key: `hw_nic::${nic}`,
+                    name: `NIC Ingest (${nic})`,
+                    sub: 'AF_XDP / SKB Ring',
+                    color: '#94A3B8'
+                }))
+            },
+            {
+                title: 'STAGE 1: REFLEX & DISSECTORS',
                 nodes: [
-                    { key: "hw_nic", name: "Physical NIC Ingest", sub: "AF_XDP Driver Ring", color: "#94A3B8" }
+                    ...this.availablePlugins.map(p => ({
+                        key: `plugin::${p}`,
+                        name: p,
+                        sub: 'Native Dissector Plugin',
+                        color: '#00FF88'
+                    })),
+                    ...this.availablePackages.map(pkg => ({
+                        key: `package::${pkg}`,
+                        name: pkg.split('.').pop(),
+                        sub: pkg,
+                        color: '#10B981'
+                    })),
+                    { key: 'reflex_custom', name: 'Custom Dissector Stage', sub: 'Tier-1 Reflex Gate', color: '#00B4D8' }
                 ]
             },
             {
-                title: "STAGE 1: REFLEX (eBPF)",
-                nodes: [
-                    { key: "reflex_lua", name: "LuaJIT Fast Rule", sub: "RCU Swapped (<350ns)", color: "#10B981" },
-                    { key: "reflex_cpp", name: "Native C++ Dissector", sub: "Direct Memory (<88ns)", color: "#00FF88" }
-                ]
+                title: 'STAGE 2: NEURAL INFERENCE',
+                nodes: (this.availableModels.length > 0
+                    ? this.availableModels.map(m => ({
+                        key: `model::${m}`,
+                        name: m,
+                        sub: 'libxinfer ONNX Stage',
+                        color: '#00F0FF'
+                    }))
+                    : [{ key: 'model_custom', name: 'ONNX Inference Stage', sub: 'libxinfer.so', color: '#00F0FF' }])
             },
             {
-                title: "STAGE 2: PROTOCOL DISSECTORS",
+                title: 'STAGE 4: PHYSICAL FUSION',
                 nodes: [
-                    { key: "parse_modbus", name: "Modbus TCP Parser", sub: "FC05 / Register Check", color: "#00B4D8" },
-                    { key: "parse_s7", name: "Siemens S7Comm Parser", sub: "CPU STOP / Memory Read", color: "#0077B6" },
-                    { key: "parse_iec104", name: "IEC-104 Grid Dissector", sub: "ASDU Telecontrol", color: "#023E8A" },
-                    { key: "parse_5g", name: "3GPP 5G GTP-U Slicer", sub: "N3 TEID Guard (<0.84µs)", color: "#3B82F6" },
-                    { key: "parse_ccsds", name: "CCSDS Space Dissector", sub: "APID Anti-Spoof (<120ns)", color: "#6366F1" }
-                ]
-            },
-            {
-                title: "STAGE 3: NEURAL AI",
-                nodes: [
-                    { key: "model_int8", name: "INT8 Anomaly Model", sub: "libxinfer (<20µs)", color: "#00F0FF" },
-                    { key: "model_vision", name: "Thermal Vision Vision", sub: "RTSP / TensorRT", color: "#7928CA" }
-                ]
-            },
-            {
-                title: "STAGE 4: PHYSICAL SAFETY",
-                nodes: [
-                    { key: "cbf_barrier", name: "Control Barrier Guard", sub: "Nagumo Invariant h(x)>=0", color: "#A855F7" },
-                    { key: "honeynet_redirect", name: "Deception Honeytap", sub: "Vaccine Synthesis Loop", color: "#EC4899" }
+                    { key: 'fusion_guard', name: 'Cross-Modal Fusion', sub: 'ThreatCorrelator Invariant', color: '#A855F7' }
                 ]
             }
         ];
 
         palette.innerHTML = categories.map(cat => `
-            <div class="palette-category-title">${cat.title}</div>
+            <div class="palette-category-title">${this.escapeHtml(cat.title)}</div>
             ${cat.nodes.map(n => `
-                <div class="palette-node-item" draggable="true" data-key="${n.key}">
+                <div class="palette-node-item" draggable="true" data-key="${this.escapeHtml(n.key)}">
                     <div class="palette-node-icon" style="background:${n.color}"></div>
                     <div class="palette-node-info">
-                        <span class="palette-node-title">${n.name}</span>
-                        <span class="palette-node-sub">${n.sub}</span>
+                        <span class="palette-node-title">${this.escapeHtml(n.name)}</span>
+                        <span class="palette-node-sub">${this.escapeHtml(n.sub)}</span>
                     </div>
                 </div>
-            `).join("")}
-        `).join("");
+            `).join('')}
+        `).join('');
 
-        palette.querySelectorAll(".palette-node-item").forEach(item => {
-            item.addEventListener("dragstart", (e) => {
-                e.dataTransfer.setData("node_type", item.getAttribute("data-key"));
+        palette.querySelectorAll('.palette-node-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('node_type', item.getAttribute('data-key'));
             });
         });
     }
 
     initToolbar() {
-        const toolbar = document.getElementById("blueprint-studio-container-toolbar");
+        const toolbar = document.getElementById('blueprint-studio-container-toolbar');
+        if (!toolbar) return;
+
         toolbar.innerHTML = `
             <div class="studio-toolbar-group">
-                <button class="btn-tb btn-tb-green" id="btn-bp-validate" title="Validate DAG connection topology and latency SLA">
-                    [✓] VALIDATE DAG
-                </button>
-                <button class="btn-tb btn-tb-dark" id="btn-bp-export-yaml" title="Export compiled model_routes.yaml file">
-                    EXPORT YAML
-                </button>
+                <span style="font-size:10px; font-weight:700; color:#94A3B8; font-family:monospace;">SENTRY:</span>
+                <select id="bp-node-select" class="form-select-sm" style="min-width:170px;"></select>
+                <button class="btn-tb btn-tb-dark" id="btn-bp-refresh" title="Reload scenario blueprint context">SYNC</button>
             </div>
             <div class="studio-toolbar-group">
-                <button class="btn-tb btn-tb-purple" id="btn-bp-pack-ref" title="Pack lightweight blueprint (~10KB) with declarative references">
-                    PACK (REFERENCED)
-                </button>
-                <button class="btn-tb btn-tb-purple" id="btn-bp-pack-embed" title="Pack standalone blueprint with embedded .spkg rules & .onnx models">
-                    PACK (EMBEDDED)
-                </button>
+                <button class="btn-tb btn-tb-green" id="btn-bp-validate">[✓] VALIDATE DAG</button>
+                <button class="btn-tb btn-tb-dark" id="btn-bp-export-yaml">EXPORT YAML</button>
+            </div>
+            <div class="studio-toolbar-group">
+                <button class="btn-tb btn-tb-purple" id="btn-bp-pack-ref">PACK (REF)</button>
+                <button class="btn-tb btn-tb-purple" id="btn-bp-pack-embed">PACK (EMBED)</button>
             </div>
             <div class="studio-toolbar-group" style="border-right:none;">
-                <button class="btn-tb btn-tb-cyan" id="btn-bp-deploy" title="Deploy to /etc/sentinel/ and trigger RCU hot-reload (<2ms)">
-                    DEPLOY TO EDGE (< 2ms)
-                </button>
-                <button class="btn-tb btn-tb-danger" id="btn-bp-rollback" title="Emergency rollback to previous stable configuration">
-                    ROLLBACK BACKUP
-                </button>
+                <button class="btn-tb btn-tb-cyan" id="btn-bp-deploy">STAGE DEPLOY</button>
+                <button class="btn-tb btn-tb-danger" id="btn-bp-rollback">ROLLBACK</button>
             </div>
         `;
 
-        document.getElementById("btn-bp-validate").addEventListener("click", () => this.validateDag());
-        document.getElementById("btn-bp-export-yaml").addEventListener("click", () => this.exportYaml());
-        document.getElementById("btn-bp-pack-ref").addEventListener("click", () => this.packBlueprint(false));
-        document.getElementById("btn-bp-pack-embed").addEventListener("click", () => this.packBlueprint(true));
-        document.getElementById("btn-bp-deploy").addEventListener("click", () => this.deployToLocalEdge());
-        document.getElementById("btn-bp-rollback").addEventListener("click", () => this.rollbackBackup());
+        document.getElementById('bp-node-select')?.addEventListener('change', (e) => {
+            const nid = e.target.value;
+            this.selectedContextNode = this.contextNodes.find(n => n.node_id === nid) || null;
+            this.loadSelectedNodeDag();
+        });
+        document.getElementById('btn-bp-refresh')?.addEventListener('click', () => this.loadContextAndRender());
+        document.getElementById('btn-bp-validate')?.addEventListener('click', () => this.validateDag());
+        document.getElementById('btn-bp-export-yaml')?.addEventListener('click', () => this.exportYaml());
+        document.getElementById('btn-bp-pack-ref')?.addEventListener('click', () => this.packBlueprint(false));
+        document.getElementById('btn-bp-pack-embed')?.addEventListener('click', () => this.packBlueprint(true));
+        document.getElementById('btn-bp-deploy')?.addEventListener('click', () => this.deployToLocalEdge());
+        document.getElementById('btn-bp-rollback')?.addEventListener('click', () => this.rollbackBackup());
+    }
+
+    populateNodeSelector() {
+        const sel = document.getElementById('bp-node-select');
+        if (!sel) return;
+
+        if (this.contextNodes.length === 0) {
+            sel.innerHTML = '<option value="">No Registered Sentries</option>';
+            this.selectedContextNode = null;
+            return;
+        }
+
+        const prevId = this.selectedContextNode?.node_id;
+        if (!prevId || !this.contextNodes.some(n => n.node_id === prevId)) {
+            this.selectedContextNode = this.contextNodes[0];
+        }
+
+        sel.innerHTML = this.contextNodes.map(n => {
+            const label = `${n.identifier || n.hostname} (${n.primary_backend || 'AUTO'})`;
+            return `<option value="${this.escapeHtml(n.node_id)}" ${n.node_id === this.selectedContextNode.node_id ? 'selected' : ''}>${this.escapeHtml(label)}</option>`;
+        }).join('');
+    }
+
+    clearCanvas() {
+        this.engine.nodes = [];
+        this.engine.connections = [];
+        this.engine.selectedNode = null;
+        if (this.engine.nodesLayer) this.engine.nodesLayer.innerHTML = '';
+        if (this.engine.wiresLayer) this.engine.wiresLayer.innerHTML = '';
+        if (this.engine.inspector) {
+            this.engine.inspector.innerHTML = '<div style="color: #64748B; text-align: center; margin-top: 40px;">Select a node to inspect properties</div>';
+        }
+    }
+
+    loadSelectedNodeDag() {
+        this.clearCanvas();
+        const node = this.selectedContextNode;
+        const defaultNic = this.availableNics[0] || 'eth0';
+
+        if (!node) {
+            return;
+        }
+
+        const route = (Array.isArray(node.routes) && node.routes.length > 0) ? node.routes[0] : null;
+        const fusion = (Array.isArray(node.fusion_rules) && node.fusion_rules.length > 0) ? node.fusion_rules[0] : null;
+
+        const n0 = this.engine.addNode({
+            x: 30, y: 150, width: 185, height: 74,
+            title: route ? route.sensor_id : (node.identifier || 'Wire Ingest'),
+            sub: `${defaultNic} (${node.xdp_driver_mode || 'SKB'})`,
+            color: '#94A3B8',
+            inputs: [], outputs: [1],
+            config: {
+                interface: defaultNic,
+                af_xdp_mode: node.xdp_driver_mode || 'SKB',
+                sensor_id: route ? route.sensor_id : 'ingress_nic0',
+                tpm_attested: 'true'
+            }
+        });
+
+        const n1 = this.engine.addNode({
+            x: 265, y: 150, width: 195, height: 74,
+            title: route && route.plugin_id ? route.plugin_id : 'Tier-1 Reflex Gate',
+            sub: route ? `${(route.transport || 'any').toUpperCase()} :${route.port || 0}` : 'No active route',
+            color: '#00FF88',
+            inputs: [1], outputs: [1],
+            config: {
+                plugin_id: route ? route.plugin_id : (this.availablePlugins[0] || ''),
+                package_id: route ? route.package_id : (this.availablePackages[0] || ''),
+                transport: route ? route.transport : 'udp',
+                port: route ? String(route.port || 0) : '0',
+                latency_budget_ns: route ? String(route.latency_budget_ns || 20000) : '20000'
+            }
+        });
+
+        const n2 = this.engine.addNode({
+            x: 510, y: 150, width: 195, height: 74,
+            title: route && route.model_id ? route.model_id : 'Tier-2 ONNX Stage',
+            sub: `${route?.silicon_target || node.primary_backend || 'INTEL_OPENVINO'} (${route?.precision || 'INT8'})`,
+            color: '#00F0FF',
+            inputs: [1], outputs: [1],
+            config: {
+                model_id: route ? route.model_id : (this.availableModels[0] || ''),
+                silicon_target: route?.silicon_target || node.primary_backend || 'INTEL_OPENVINO',
+                precision: route?.precision || 'INT8',
+                threshold_drop: '0.85'
+            }
+        });
+
+        const n3 = this.engine.addNode({
+            x: 755, y: 150, width: 195, height: 74,
+            title: fusion ? fusion.correlation_id : 'Stage-4 Fusion Guard',
+            sub: fusion ? `${fusion.physical_sensor_id} >= ${fusion.physical_min_temp}` : 'Cross-Modal Correlator',
+            color: '#A855F7',
+            inputs: [1], outputs: [1],
+            config: {
+                correlation_id: fusion ? fusion.correlation_id : 'CROSS_MODAL_INVARIANT',
+                cyber_sensor_id: fusion ? fusion.cyber_sensor_id : (route?.sensor_id || ''),
+                cyber_max_score: fusion ? String(fusion.cyber_max_score) : '0.20',
+                physical_sensor_id: fusion ? fusion.physical_sensor_id : '',
+                physical_min_temp: fusion ? String(fusion.physical_min_temp) : '45.0',
+                action: fusion ? fusion.action : 'KERNEL_DROP_AND_ISOLATE'
+            }
+        });
+
+        this.engine.completeConnection(n0.id, 0, n1.id, 0);
+        this.engine.completeConnection(n1.id, 0, n2.id, 0);
+        this.engine.completeConnection(n2.id, 0, n3.id, 0);
     }
 
     createNodeDefinition(typeKey, x, y) {
-        const templates = {
-            hw_nic: {
-                title: "Physical NIC Ingest", sub: "AF_XDP UMEM Ring", color: "#94A3B8", inputs: [], outputs: [1],
-                config: { interface: "ens160", af_xdp_mode: "SKB", rss_queues: "0, 1, 2, 3", tpm_attested: "true" }
-            },
-            reflex_lua: {
-                title: "LuaJIT Reflex Rule", sub: "Fast Drop (<350ns)", color: "#10B981", inputs: [1], outputs: [1, 2],
-                config: { rule_spkg: "modbus_rate_limiter.spkg", execution_tier: "Tier C (LuaJIT <350ns)", match_action: "XDP_DROP (<0.84µs)", port: "502" }
-            },
-            reflex_cpp: {
-                title: "Native C++ Filter", sub: "Direct Memory (<88ns)", color: "#00FF88", inputs: [1], outputs: [1],
-                config: { rule_spkg: "modbus_guard.spkg", execution_tier: "Tier A (Native C++ <88ns)", match_action: "XDP_DROP (<0.84µs)", port: "502" }
-            },
-            parse_modbus: {
-                title: "Modbus Dissector", sub: "FC05 / Holding Regs", color: "#00B4D8", inputs: [1], outputs: [1],
-                config: { protocol: "MODBUS_TCP", port: "502", dpi_depth: "Full PDU" }
-            },
-            parse_s7: {
-                title: "S7Comm Dissector", sub: "CPU STOP / DB Read", color: "#0077B6", inputs: [1], outputs: [1],
-                config: { protocol: "S7COMM", port: "102", dpi_depth: "Full PDU" }
-            },
-            parse_5g: {
-                title: "5G GTP-U Slicer", sub: "3GPP TEID Guard", color: "#3B82F6", inputs: [1], outputs: [1],
-                config: { protocol: "3GPP_5G_GTPU", port: "2152", sst: "2 (URLLC)", teid_default: "0x00000100" }
-            },
-            parse_ccsds: {
-                title: "Space Telemetry", sub: "CCSDS APID Guard", color: "#6366F1", inputs: [1], outputs: [1],
-                config: { protocol: "CCSDS_SPACE", port: "50100", apid_default: "0x050" }
-            },
-            model_int8: {
-                title: "INT8 Threat Model", sub: "libxinfer (<20µs)", color: "#00F0FF", inputs: [1], outputs: [1],
-                config: { model_file: "network_threat_int8.onnx", precision: "INT8 QDQ (<20µs)", backend: "INTEL_OPENVINO", max_latency_us: "20.0" }
-            },
-            cbf_barrier: {
-                title: "Safety Barrier h(x)", sub: "Lyapunov Invariant", color: "#A855F7", inputs: [1], outputs: [1],
-                config: { safety_function: "Control Barrier Function h(x)>=0", max_temp_limit: "85.0", cbf_alpha: "1.0", critical_clearing_time_ms: "38.4" }
-            },
-            honeynet_redirect: {
-                title: "Honeynet Tap", sub: "Deception & Vaccine", color: "#EC4899", inputs: [1], outputs: [],
-                config: { decoy_ip: "10.240.0.150", auto_vaccine_synthesis: "true" }
-            }
-        };
+        const defaultNic = this.availableNics[0] || 'eth0';
+        const defaultBackend = this.selectedContextNode?.primary_backend || 'INTEL_OPENVINO';
 
-        const t = templates[typeKey] || { title: "Custom Stage", sub: "Pipeline Node", color: "#94A3B8", inputs: [1], outputs: [1], config: {} };
+        if (typeKey.startsWith('hw_nic::')) {
+            const nic = typeKey.slice(8);
+            return {
+                x, y, width: 185, height: 74,
+                title: `NIC Ingest (${nic})`, sub: 'AF_XDP / SKB Ring', color: '#94A3B8',
+                inputs: [], outputs: [1],
+                config: { interface: nic, af_xdp_mode: 'SKB', sensor_id: `sensor_${nic}`, tpm_attested: 'true' }
+            };
+        }
+        if (typeKey.startsWith('plugin::')) {
+            const plugin = typeKey.slice(8);
+            return {
+                x, y, width: 195, height: 74,
+                title: plugin, sub: 'Native Dissector Plugin', color: '#00FF88',
+                inputs: [1], outputs: [1],
+                config: { plugin_id: plugin, package_id: this.availablePackages[0] || '', transport: 'udp', port: '50050', latency_budget_ns: '20000' }
+            };
+        }
+        if (typeKey.startsWith('package::')) {
+            const pkg = typeKey.slice(9);
+            return {
+                x, y, width: 195, height: 74,
+                title: pkg.split('.').pop(), sub: pkg, color: '#10B981',
+                inputs: [1], outputs: [1],
+                config: { package_id: pkg, plugin_id: this.availablePlugins[0] || '', transport: 'udp', port: '50050', latency_budget_ns: '20000' }
+            };
+        }
+        if (typeKey.startsWith('model::')) {
+            const model = typeKey.slice(7);
+            return {
+                x, y, width: 195, height: 74,
+                title: model, sub: `${defaultBackend} ONNX`, color: '#00F0FF',
+                inputs: [1], outputs: [1],
+                config: { model_id: model, silicon_target: defaultBackend, precision: model.includes('int8') ? 'INT8' : 'FP16', threshold_drop: '0.85' }
+            };
+        }
+        if (typeKey === 'fusion_guard') {
+            return {
+                x, y, width: 195, height: 74,
+                title: 'Cross-Modal Fusion', sub: 'ThreatCorrelator', color: '#A855F7',
+                inputs: [1], outputs: [1],
+                config: { correlation_id: 'CUSTOM_FUSION_RULE', cyber_sensor_id: '', cyber_max_score: '0.20', physical_sensor_id: '', physical_min_temp: '45.0', action: 'KERNEL_DROP_AND_ISOLATE' }
+            };
+        }
+
         return {
-            x, y,
-            width: 175,
-            height: 72,
-            title: t.title,
-            sub: t.sub,
-            color: t.color,
-            inputs: t.inputs,
-            outputs: t.outputs,
-            config: t.config
+            x, y, width: 185, height: 74,
+            title: 'Custom Stage', sub: 'Pipeline Component', color: '#00B4D8',
+            inputs: [1], outputs: [1],
+            config: { plugin_id: this.availablePlugins[0] || '', package_id: this.availablePackages[0] || '', transport: 'tcp', port: '502', latency_budget_ns: '25000' }
         };
     }
 
     renderInspector(node, container) {
-        let specializedHtml = "";
+        let specializedHtml = '';
 
-        // Stage 1 Reflex: Package rule selector
-        if (node.config.rule_spkg !== undefined) {
-            specializedHtml += `
-                <div class="inspector-field">
-                    <span class="inspector-label">Select .spkg Reflex Rule</span>
-                    <select class="inspector-select config-select" data-key="rule_spkg">
-                        ${this.availableRules.map(r => `<option value="${r}" ${node.config.rule_spkg === r ? 'selected' : ''}>${r}</option>`).join("")}
-                    </select>
-                </div>
-                <div class="inspector-field">
-                    <span class="inspector-label">Execution Tier</span>
-                    <select class="inspector-select config-select" data-key="execution_tier">
-                        <option value="Tier A (Native C++ <88ns)" ${node.config.execution_tier && node.config.execution_tier.includes("Tier A") ? 'selected' : ''}>Tier A (Native C++ &lt;88ns)</option>
-                        <option value="Tier C (LuaJIT <350ns)" ${node.config.execution_tier && node.config.execution_tier.includes("Tier C") ? 'selected' : ''}>Tier C (LuaJIT &lt;350ns)</option>
-                        <option value="Tier B (Rust Wasm3 <1.5µs)" ${node.config.execution_tier && node.config.execution_tier.includes("Tier B") ? 'selected' : ''}>Tier B (Rust Wasm3 &lt;1.5µs)</option>
-                    </select>
-                </div>
-                <div class="inspector-field">
-                    <span class="inspector-label">Match Mitigation Action</span>
-                    <select class="inspector-select config-select" data-key="match_action">
-                        <option value="XDP_DROP (<0.84µs)" selected>XDP_DROP (&lt;0.84µs Driver Ring)</option>
-                        <option value="REDIRECT_TO_HONEYNET">REDIRECT_TO_HONEYNET (Decoy Tap)</option>
-                        <option value="ALERT_ONLY">ALERT_ONLY (Passive Shadow)</option>
-                    </select>
-                </div>
-            `;
-        }
-
-        // Stage 3 Neural Model selector
-        if (node.config.model_file !== undefined) {
-            specializedHtml += `
-                <div class="inspector-field">
-                    <span class="inspector-label">Select ONNX Neural Model</span>
-                    <select class="inspector-select config-select" data-key="model_file">
-                        ${this.availableModels.map(m => `<option value="${m}" ${node.config.model_file === m ? 'selected' : ''}>${m}</option>`).join("")}
-                    </select>
-                </div>
-                <div class="inspector-field">
-                    <span class="inspector-label">Target Silicon Backend</span>
-                    <select class="inspector-select config-select" data-key="backend">
-                        <option value="INTEL_OPENVINO" selected>Intel OpenVINO (NPU/CPU)</option>
-                        <option value="NVIDIA_TENSORRT">NVIDIA TensorRT (GPU)</option>
-                        <option value="ROCKCHIP_RKNN">Rockchip RKNN (NPU)</option>
-                        <option value="ARM_NEON">ARM NEON Vector Engine</option>
-                    </select>
-                </div>
-                <div class="inspector-field">
-                    <span class="inspector-label">Quantized Precision</span>
-                    <select class="inspector-select config-select" data-key="precision">
-                        <option value="INT8 QDQ (<20µs)" selected>INT8 QDQ (&lt;20µs Latency)</option>
-                        <option value="FP32 Float">FP32 Standard Precision</option>
-                    </select>
-                </div>
-            `;
-        }
-
-        // Physical Hardware Ingestion binding
         if (node.config.interface !== undefined) {
+            const nicOpts = this.availableNics.length > 0 ? this.availableNics : [node.config.interface];
             specializedHtml += `
                 <div class="inspector-field">
-                    <span class="inspector-label">Physical Hardware NIC</span>
+                    <span class="inspector-label">Host Network Interface (/sys/class/net)</span>
                     <select class="inspector-select config-select" data-key="interface">
-                        ${this.availableNics.map(nic => `<option value="${nic}" ${node.config.interface === nic ? 'selected' : ''}>${nic}</option>`).join("")}
+                        ${nicOpts.map(nic => `<option value="${this.escapeHtml(nic)}" ${node.config.interface === nic ? 'selected' : ''}>${this.escapeHtml(nic)}</option>`).join('')}
                     </select>
                 </div>
                 <div class="inspector-field">
                     <span class="inspector-label">AF_XDP Driver Mode</span>
                     <select class="inspector-select config-select" data-key="af_xdp_mode">
-                        <option value="ZEROCOPY" ${node.config.af_xdp_mode === 'ZEROCOPY' ? 'selected' : ''}>XDP_ZEROCOPY (Physical NIC UMEM)</option>
-                        <option value="SKB" ${node.config.af_xdp_mode === 'SKB' ? 'selected' : ''}>XDP_COPY / SKB (VMware/Generic)</option>
+                        <option value="ZEROCOPY" ${node.config.af_xdp_mode === 'ZEROCOPY' ? 'selected' : ''}>ZEROCOPY</option>
+                        <option value="SKB" ${node.config.af_xdp_mode === 'SKB' ? 'selected' : ''}>SKB (Generic / Virtual)</option>
                     </select>
                 </div>
                 <div class="inspector-checkbox-row">
                     <input type="checkbox" id="chk-tpm" ${node.config.tpm_attested === 'true' ? 'checked' : ''} />
-                    <span class="inspector-label" style="margin:0;">Enforce TPM 2.0 Silicon Root</span>
+                    <span class="inspector-label" style="margin:0;">Require Hardware Identity</span>
                 </div>
             `;
         }
 
-        // Generic attributes fallback
+        if (node.config.plugin_id !== undefined || node.config.package_id !== undefined) {
+            const pkgOpts = [...new Set([...this.availablePackages, node.config.package_id].filter(Boolean))];
+            const plugOpts = [...new Set([...this.availablePlugins, node.config.plugin_id].filter(Boolean))];
+            specializedHtml += `
+                <div class="inspector-field">
+                    <span class="inspector-label">Dissector Plugin (.so / .lua / .wasm)</span>
+                    <select class="inspector-select config-select" data-key="plugin_id">
+                        <option value="">(None)</option>
+                        ${plugOpts.map(p => `<option value="${this.escapeHtml(p)}" ${node.config.plugin_id === p ? 'selected' : ''}>${this.escapeHtml(p)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="inspector-field">
+                    <span class="inspector-label">SPKG Package ID</span>
+                    <select class="inspector-select config-select" data-key="package_id">
+                        <option value="">(None)</option>
+                        ${pkgOpts.map(p => `<option value="${this.escapeHtml(p)}" ${node.config.package_id === p ? 'selected' : ''}>${this.escapeHtml(p)}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+        }
+
+        if (node.config.model_id !== undefined) {
+            const modelOpts = [...new Set([...this.availableModels, node.config.model_id].filter(Boolean))];
+            specializedHtml += `
+                <div class="inspector-field">
+                    <span class="inspector-label">Scenario ONNX Model (/api/v1/models)</span>
+                    <select class="inspector-select config-select" data-key="model_id">
+                        ${modelOpts.map(m => `<option value="${this.escapeHtml(m)}" ${node.config.model_id === m ? 'selected' : ''}>${this.escapeHtml(m)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="inspector-field">
+                    <span class="inspector-label">xInfer Silicon Target</span>
+                    <select class="inspector-select config-select" data-key="silicon_target">
+                        ${this.siliconTargets.map(t => `<option value="${t}" ${node.config.silicon_target === t ? 'selected' : ''}>${t}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+        }
+
+        const handledKeys = new Set(['interface', 'af_xdp_mode', 'tpm_attested', 'plugin_id', 'package_id', 'model_id', 'silicon_target']);
         const standardFields = Object.entries(node.config || {})
-            .filter(([k]) => !['rule_spkg', 'execution_tier', 'match_action', 'model_file', 'backend', 'precision', 'interface', 'af_xdp_mode', 'tpm_attested'].includes(k))
+            .filter(([k]) => !handledKeys.has(k))
             .map(([k, v]) => `
                 <div class="inspector-field">
-                    <span class="inspector-label">${k.replace(/_/g, " ")}</span>
-                    <input class="inspector-input config-field" data-key="${k}" value="${v}" />
+                    <span class="inspector-label">${this.escapeHtml(k.replace(/_/g, ' '))}</span>
+                    <input class="inspector-input config-field" data-key="${this.escapeHtml(k)}" value="${this.escapeHtml(v)}" />
                 </div>
-            `).join("");
+            `).join('');
 
         container.innerHTML = `
             <div class="inspector-field">
                 <span class="inspector-label">Stage Component Name</span>
-                <input class="inspector-input" id="inp-node-title" value="${node.title}" />
+                <input class="inspector-input" id="inp-node-title" value="${this.escapeHtml(node.title)}" />
             </div>
             <div class="inspector-field">
                 <span class="inspector-label">Pipeline Subtitle</span>
-                <input class="inspector-input" id="inp-node-sub" value="${node.sub}" />
+                <input class="inspector-input" id="inp-node-sub" value="${this.escapeHtml(node.sub)}" />
             </div>
             <div style="border-top:1px solid #1E293B; margin: 8px 0;"></div>
             <div style="font-weight:700; color:#00F0FF; font-size:10px; margin-bottom:4px;">STAGE SPECIFICATIONS:</div>
@@ -299,126 +419,124 @@ class ThreatBlueprintStudio {
             ${standardFields}
         `;
 
-        document.getElementById("inp-node-title").addEventListener("input", (e) => {
+        document.getElementById('inp-node-title')?.addEventListener('input', (e) => {
             node.title = e.target.value;
             const el = document.getElementById(`node-${node.id}`);
-            if (el) el.querySelector(".graph-node-title").textContent = node.title;
+            if (el) el.querySelector('.graph-node-title').textContent = node.title;
         });
 
-        const chkTpm = document.getElementById("chk-tpm");
-        if (chkTpm) {
-            chkTpm.addEventListener("change", (e) => {
-                node.config.tpm_attested = e.target.checked ? "true" : "false";
-            });
-        }
+        document.getElementById('inp-node-sub')?.addEventListener('input', (e) => {
+            node.sub = e.target.value;
+            const el = document.getElementById(`node-${node.id}`);
+            if (el) el.querySelector('.graph-node-sub').textContent = node.sub;
+        });
 
-        container.querySelectorAll(".config-select").forEach(sel => {
-            sel.addEventListener("change", (e) => {
-                node.config[e.target.getAttribute("data-key")] = e.target.value;
+        document.getElementById('chk-tpm')?.addEventListener('change', (e) => {
+            node.config.tpm_attested = e.target.checked ? 'true' : 'false';
+        });
+
+        container.querySelectorAll('.config-select').forEach(sel => {
+            sel.addEventListener('change', (e) => {
+                node.config[e.target.getAttribute('data-key')] = e.target.value;
             });
         });
 
-        container.querySelectorAll(".config-field").forEach(inp => {
-            inp.addEventListener("input", (e) => {
-                node.config[e.target.getAttribute("data-key")] = e.target.value;
+        container.querySelectorAll('.config-field').forEach(inp => {
+            inp.addEventListener('input', (e) => {
+                node.config[e.target.getAttribute('data-key')] = e.target.value;
             });
         });
-    }
-
-    loadDefaultDag() {
-        const n0 = this.engine.addNode({ x: 40, y: 160, width: 175, height: 72, title: "Physical NIC Ingest", sub: "AF_XDP (Zero-Copy)", color: "#94A3B8", inputs: [], outputs: [1], config: { interface: "ens160", af_xdp_mode: "SKB", rss_queues: "0, 1, 2, 3", tpm_attested: "true" } });
-        const n1 = this.engine.addNode({ x: 260, y: 160, width: 175, height: 72, title: "Modbus Reflex Rule", sub: "Fast Drop (<350ns)", color: "#10B981", inputs: [1], outputs: [1, 2], config: { rule_spkg: "modbus_rate_limiter.spkg", execution_tier: "Tier C (LuaJIT <350ns)", match_action: "XDP_DROP (<0.84µs)", port: "502" } });
-        const n2 = this.engine.addNode({ x: 500, y: 160, width: 175, height: 72, title: "INT8 Threat Model", sub: "libxinfer (<20µs)", color: "#00F0FF", inputs: [1], outputs: [1], config: { model_file: "network_threat_int8.onnx", precision: "INT8 QDQ (<20µs)", backend: "INTEL_OPENVINO", max_latency_us: "20.0" } });
-        const n3 = this.engine.addNode({ x: 740, y: 160, width: 175, height: 72, title: "Safety Barrier h(x)", sub: "Lyapunov Exponent", color: "#A855F7", inputs: [1], outputs: [1], config: { safety_function: "Control Barrier Function h(x)>=0", max_temp_limit: "85.0", cbf_alpha: "1.0", critical_clearing_time_ms: "38.4" } });
-
-        this.engine.completeConnection(n0.id, 0, n1.id, 0);
-        this.engine.completeConnection(n1.id, 0, n2.id, 0);
-        this.engine.completeConnection(n2.id, 0, n3.id, 0);
     }
 
     validateDag() {
         const hasIngest = this.engine.nodes.some(n => n.inputs.length === 0);
-        const hasReflex = this.engine.nodes.some(n => n.title.includes("Reflex"));
-        const hasModel = this.engine.nodes.some(n => n.config.model_file !== undefined);
-
         if (!hasIngest) {
-            alert("[-] DAG Validation Warning: Pipeline is missing a Network Ingest Source.");
+            alert('[-] DAG Validation Error: Pipeline requires an ingress source node.');
             return false;
         }
+        const dissectorNodes = this.engine.nodes.filter(n => n.config.plugin_id !== undefined || n.config.package_id !== undefined);
+        const modelNodes = this.engine.nodes.filter(n => n.config.model_id !== undefined);
 
-        const estLatency = (hasReflex ? 0.35 : 0) + (hasModel ? 18.5 : 0) + 2.0;
-        alert(`[✓] Threat Blueprint DAG Validated!\n` +
-              `• Pipeline Stages: ${this.engine.nodes.length} nodes connected\n` +
-              `• Verified Connections: ${this.engine.connections.length} active Bézier paths\n` +
-              `• Estimated Max Latency: ${estLatency.toFixed(2)} µs (Within < 100 µs SLA Budget)`);
+        alert(`[✓] Blueprint DAG Validated!\n` +
+              `• Target Sentry: ${this.selectedContextNode?.identifier || 'Custom'}\n` +
+              `• Pipeline Stages: ${this.engine.nodes.length} nodes (${this.engine.connections.length} links)\n` +
+              `• Tier-1 Dissectors: ${dissectorNodes.length} | Tier-2 ONNX Models: ${modelNodes.length}`);
         return true;
+    }
+
+    generateModelRoutesYaml() {
+        const ingest = this.engine.nodes.find(n => n.config.interface !== undefined);
+        const tier1 = this.engine.nodes.find(n => n.config.plugin_id !== undefined || n.config.package_id !== undefined);
+        const modelNodes = this.engine.nodes.filter(n => n.config.model_id !== undefined);
+        const fusionNodes = this.engine.nodes.filter(n => n.config.correlation_id !== undefined);
+
+        const sensorId = ingest?.config?.sensor_id || 'sensor_nic_0';
+        const driverMode = ingest?.config?.af_xdp_mode === 'ZEROCOPY' ? 'AF_XDP_UMEM' : 'AF_XDP_SKB';
+
+        const lines = [
+            `# Compiled by Sentinel Nexus Blueprint Studio (${new Date().toISOString()})`,
+            `routes:`,
+            `  - sensor_id: ${sensorId}`,
+            `    sensor_type: EDGE_INGRESS`,
+            `    driver_mode: ${driverMode}`,
+            `    match:`,
+            `      port: ${tier1?.config?.port || 0}`,
+            `      transport: ${tier1?.config?.transport || 'udp'}`,
+            `      package_id: ${tier1?.config?.package_id || ''}`,
+            `      plugin_id: ${tier1?.config?.plugin_id || ''}`,
+            `      execution_mode: CASCADE_SHORT_CIRCUIT`
+        ];
+
+        modelNodes.forEach(m => {
+            lines.push(`      model_id: ${m.config.model_id || ''}`);
+            lines.push(`      silicon_target: ${m.config.silicon_target || 'INTEL_OPENVINO'}`);
+            lines.push(`      format: ONNX`);
+            lines.push(`      precision: ${m.config.precision || 'INT8'}`);
+            lines.push(`      latency_budget_ns: ${tier1?.config?.latency_budget_ns || 20000}`);
+            lines.push(`      threshold_drop: ${m.config.threshold_drop || 0.85}`);
+        });
+
+        if (fusionNodes.length > 0) {
+            lines.push('');
+            lines.push('fusion_rules:');
+            fusionNodes.forEach(f => {
+                lines.push(`  - correlation_id: ${f.config.correlation_id}`);
+                lines.push(`    cyber_sensor_id: ${f.config.cyber_sensor_id || sensorId}`);
+                lines.push(`    cyber_max_score: ${f.config.cyber_max_score || '0.20'}`);
+                lines.push(`    physical_sensor_id: ${f.config.physical_sensor_id || ''}`);
+                lines.push(`    physical_min_temp: ${f.config.physical_min_temp || '45.0'}`);
+                lines.push(`    action: ${f.config.action || 'KERNEL_DROP_AND_ISOLATE'}`);
+            });
+        }
+
+        return lines.join('\n') + '\n';
     }
 
     exportYaml() {
         const yaml = this.generateModelRoutesYaml();
-        const blob = new Blob([yaml], { type: "text/yaml" });
+        const blob = new Blob([yaml], { type: 'text/yaml' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
-        a.download = "model_routes.yaml";
+        a.download = 'model_routes.yaml';
         a.click();
         URL.revokeObjectURL(url);
     }
 
-    generateModelRoutesYaml() {
-        const yamlLines = [
-            "# ==============================================================================",
-            "# ARYORITHM PRODUCTION 4-STAGE PIPELINE DAG (model_routes.yaml)",
-            "# Generated by Sentinel Nexus Visual Threat Blueprint Studio",
-            "# ==============================================================================",
-            "pipeline:",
-            "  stage_1_reflex:",
-            "    enabled: true",
-            "    rules:"
-        ];
-
-        this.engine.nodes.forEach(n => {
-            if (n.config.rule_spkg) {
-                const tier = (n.config.execution_tier && n.config.execution_tier.includes("Native")) ? "native" : "lua";
-                yamlLines.push(`      - name: "${n.config.rule_spkg.replace('.spkg', '')}"`);
-                yamlLines.push(`        port: ${n.config.port || 502}`);
-                yamlLines.push(`        tier: "${tier}"`);
-            }
-        });
-
-        yamlLines.push("  stage_2_dissectors:");
-        yamlLines.push("    enabled: true");
-        yamlLines.push("    protocols: [\"MODBUS\", \"S7COMM\", \"IEC104\", \"GTPU\", \"CCSDS\"]");
-
-        yamlLines.push("  stage_3_inference:");
-        yamlLines.push("    enabled: true");
-        yamlLines.push("    primary_backend: \"INTEL_OPENVINO\"");
-        yamlLines.push("    models:");
-        this.engine.nodes.forEach(n => {
-            if (n.config.model_file) {
-                const prec = (n.config.precision && n.config.precision.includes("INT8")) ? "INT8" : "FP32";
-                yamlLines.push(`      - name: "${n.config.model_file.replace('.onnx', '')}"`);
-                yamlLines.push(`        precision: "${prec}"`);
-            }
-        });
-
-        yamlLines.push("  stage_4_fusion:");
-        yamlLines.push("    enabled: true");
-        yamlLines.push("    correlator_mode: \"CROSS_MODAL_PHYSICS\"");
-        yamlLines.push("    cbf_safety_barrier: true");
-        return yamlLines.join("\n");
-    }
-
     packBlueprint(embedMode = false) {
-        const name = prompt("Enter Blueprint Name for Packaging:", "production_water_substation");
+        const defaultSlug = (this.selectedContextNode?.site || this.selectedContextNode?.identifier || 'edge_blueprint')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+        const name = prompt('Enter Blueprint Name for Packaging:', defaultSlug);
         if (!name) return;
 
-        const cmd = embedMode ?
-            `aryo blueprint pack ${name} --embed` :
-            `aryo blueprint pack ${name}`;
+        const cmd = embedMode
+            ? `aryo blueprint pack ${name} --embed`
+            : `aryo blueprint pack ${name}`;
 
-        navigator.clipboard.writeText(cmd).catch(() => {});
-        alert(`[+] Packaging Command Copied to Clipboard!\n\nMode: ${embedMode ? "STANDALONE EMBEDDED (--embed)" : "DECLARATIVE REFERENCED"}\nCommand:\n${cmd}\n\nRun this on your terminal to create the verified .blueprint bundle.`);
+        navigator.clipboard?.writeText(cmd).catch(() => {});
+        alert(`[+] Packaging Command:\n${cmd}`);
     }
 
     async deployToLocalEdge() {
@@ -426,23 +544,31 @@ class ThreatBlueprintStudio {
         const yaml = this.generateModelRoutesYaml();
 
         try {
-            const res = await fetch("/api/v1/blueprints/deploy", {
-                method: "POST",
-                headers: { "Content-Type": "text/yaml" },
+            const res = await fetch('/api/v1/blueprints/deploy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/yaml' },
                 body: yaml
             });
-            if (res.ok) {
-                alert("[+] Live Edge Deployment Successful!\nActive configuration hot-reloaded via RCU pointer swap in < 2 ms.");
-            } else {
-                alert("[+] Blueprint staged to /etc/sentinel/model_routes.yaml (Local fallback mode active).");
-            }
+            const data = await res.json();
+            alert(`[+] Blueprint Stage Response (${data.status}):\nPath: ${data.path}\nBytes: ${data.bytes}`);
         } catch (e) {
-            alert("[+] Staged model_routes.yaml directly into appliance runtime.");
+            alert(`[-] Stage deployment failed: ${e.message}`);
         }
     }
 
     async rollbackBackup() {
-        if (!confirm("Are you sure you want to trigger an immediate RCU rollback to the previous configuration?")) return;
-        alert("[+] Emergency Rollback Signal Sent!\nLive Sentinel daemon reverted to /etc/sentinel/.blueprint_backup/ in < 2 ms.");
+        if (!confirm('Revert staged model_routes.yaml to previous backup?')) return;
+        try {
+            const res = await fetch('/api/v1/blueprints/rollback', { method: 'POST' });
+            const data = await res.json();
+            alert(`[+] Rollback Status: ${data.status}\n${data.message || data.path || ''}`);
+        } catch (e) {
+            alert(`[-] Rollback failed: ${e.message}`);
+        }
+    }
+
+    escapeHtml(str) {
+        if (typeof str !== 'string') return String(str || '');
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 }
