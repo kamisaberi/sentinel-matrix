@@ -1,6 +1,6 @@
 // File: sentinel-nexus/web/js/lab_cockpit.js
 // Aryorithm Sentinel Nexus — Dynamic Air-Gapped Scientific Research Cockpit
-// Zero Hardcoding: Strictly Capability-Driven via /api/v1/fleet/nodes & window.SentinelUI
+// Per-Device State Isolation: Dedicated Charts, Invariants & Buffers per Node
 
 (function () {
     'use strict';
@@ -12,22 +12,9 @@
     let logPollTimer = null;
     let lastLogContent = '';
 
-    // Physical Plant & Barrier Dynamics State
-    let plantState = {
-        name: 'FLIGHT AIRSPEED KINEMATICS',
-        pv: 24.2,
-        baseline: 24.2,
-        unit: 'm/s',
-        limit: 80.0,
-        yMin: 0.0,
-        yMax: 100.0,
-        velocity: 0.0,
-        barrier_h: 55.8,
-        lyapunov: -0.15,
-        t_crit: 38.4,
-        is_perturbed: false,
-        phase_angle: 0.0
-    };
+    // Isolated Per-Node State Store
+    const NODE_LAB_STATES = new Map();
+    const MAX_POINTS = 60;
 
     // ECharts Instances
     let cbfChart = null;
@@ -37,14 +24,99 @@
     let rssChart = null;
     let fusionChart = null;
 
-    // Rolling Data Buffers
-    const MAX_POINTS = 60;
-    let cbfData = [];
-    let residualData = [];
-    let simTime = 0.0;
+    // =========================================================================
+    // 1. PER-NODE STATE FACTORY & RESOLVER
+    // =========================================================================
+    function getOrCreateNodeState(nodeId, nodeDetail = null) {
+        if (NODE_LAB_STATES.has(nodeId)) {
+            return NODE_LAB_STATES.get(nodeId);
+        }
+
+        // Derive physical plant configuration from node sensors
+        const sensors = Array.isArray(nodeDetail?.sensors) ? nodeDetail.sensors : [];
+        let physicalSensor = null;
+
+        for (const s of sensors) {
+            const cat = (s.category || '').toUpperCase();
+            if (['AVIONICS', 'KINEMATIC', 'THERMAL', 'ELECTRICAL', 'MECHANICAL'].includes(cat)) {
+                physicalSensor = s;
+                break;
+            }
+        }
+        if (!physicalSensor && sensors.length > 0) {
+            physicalSensor = sensors.find(s => (s.baseline || 0) > 0) || sensors[0];
+        }
+
+        let name = 'AIRFRAME FLIGHT KINEMATICS';
+        let baseline = 24.2;
+        let unit = 'm/s';
+        let limit = 80.0;
+        let yMin = 0.0;
+        let yMax = 100.0;
+
+        if (physicalSensor && typeof physicalSensor.baseline === 'number') {
+            name = physicalSensor.name || 'PHYSICAL INVARIANT';
+            baseline = physicalSensor.baseline;
+            unit = physicalSensor.unit || '';
+
+            if (unit === 'knots') {
+                limit = 160.0; yMin = 70.0; yMax = 180.0;
+            } else if (unit === 'deg/s') {
+                limit = 35.0; yMin = 0.0; yMax = 45.0;
+            } else if (unit === 'm') {
+                limit = 200.0; yMin = 80.0; yMax = 220.0;
+            } else if (unit === 'Hz') {
+                limit = 50.8; yMin = 48.8; yMax = 51.5;
+            } else if (unit === '°C') {
+                limit = 120.0; yMin = 60.0; yMax = 140.0;
+            } else {
+                limit = baseline > 0 ? (baseline * 1.35) : (baseline * 0.7);
+                yMin = baseline > 0 ? Math.max(0, baseline * 0.5) : (baseline * 1.5);
+                yMax = baseline > 0 ? (baseline * 1.5) : Math.min(0, baseline * 0.5);
+            }
+        } else {
+            // Context variation by node identifier if no explicit sensor
+            const idLower = (nodeId || '').toLowerCase();
+            if (idLower.includes('bravo') || idLower.includes('02')) {
+                name = '3-AXIS MEMS GYRO OSCILLATION';
+                baseline = 12.4; unit = 'deg/s'; limit = 35.0; yMin = 0.0; yMax = 45.0;
+            } else if (idLower.includes('charlie') || idLower.includes('03')) {
+                name = 'LIDAR ALTIMETER KINEMATICS';
+                baseline = 120.4; unit = 'm'; limit = 200.0; yMin = 80.0; yMax = 220.0;
+            }
+        }
+
+        // Per-node seeded pseudo-random initial offsets for realistic diversity
+        const seedOffset = Math.sin(nodeId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0));
+        const initPv = baseline + seedOffset * (baseline * 0.02);
+
+        const state = {
+            nodeId: nodeId,
+            name: name,
+            pv: initPv,
+            baseline: baseline,
+            unit: unit,
+            limit: limit,
+            yMin: yMin,
+            yMax: yMax,
+            velocity: 0.0,
+            barrier_h: limit - initPv,
+            lyapunov: -0.15,
+            is_perturbed: false,
+            phase_angle: Math.abs(seedOffset) * Math.PI,
+            simTime: Math.abs(seedOffset) * 10.0,
+            cbfData: Array(MAX_POINTS).fill(initPv),
+            residualData: Array(MAX_POINTS).fill(0.002 + Math.abs(seedOffset) * 0.003),
+            rssQueues: [156, 162, 158, 160, 154, 165, 159, 161].map(v => Math.max(80, Math.floor(v + seedOffset * 20))),
+            pmuCores: [2.42, 2.38, 2.45, 2.40].map(v => +(v + seedOffset * 0.15).toFixed(2))
+        };
+
+        NODE_LAB_STATES.set(nodeId, state);
+        return state;
+    }
 
     // =========================================================================
-    // 1. INITIALIZATION & LIFECYCLE
+    // 2. INITIALIZATION & LIFECYCLE
     // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
         initSubStageTabs();
@@ -58,6 +130,7 @@
                     loadLabFleetRail();
                     setTimeout(() => {
                         ensureCharts();
+                        if (activeNodeId) rebindActiveNodeCharts(activeNodeId);
                         resizeCharts();
                     }, 50);
                 }
@@ -76,7 +149,7 @@
     });
 
     // =========================================================================
-    // 2. DYNAMIC FLEET DISCOVERY & SENTRY RAIL (WITH ACTIVE PSEUDO-SELECTION)
+    // 3. DYNAMIC FLEET DISCOVERY & SENTRY RAIL (PER-DEVICE SELECTION)
     // =========================================================================
     async function loadLabFleetRail() {
         const railEl = document.getElementById('lab-sentry-rail');
@@ -176,7 +249,7 @@
     async function selectLabNode(nodeId) {
         activeNodeId = nodeId;
 
-        // 1. Update Active Visual State on Left Rail Cards
+        // 1. Visual Selection on Rail
         document.querySelectorAll('#lab-sentry-rail .lab-rail-item').forEach(el => {
             const isMatch = el.getAttribute('data-node-id') === nodeId;
             el.classList.toggle('active', isMatch);
@@ -212,16 +285,14 @@
                 invarEl.innerText = pType ? `INVARIANT: ${pType.toUpperCase()}` : 'PHYSICS INVARIANT';
             }
 
-            // Adapt Plant Dynamics to Physical Invariant Sensors
-            adaptPhysicsGauges(activeNodeDetail);
+            // 3. Initialize/Retrieve the Isolated State for THIS Specific Device
+            const nodeState = getOrCreateNodeState(nodeId, activeNodeDetail);
 
-            // Rebuild Stress Engine Deck dynamically
-            buildDynamicStressDeck(activeNodeDetail);
+            // Rebuild Stress Engine Deck dynamically for this node
+            buildDynamicStressDeck(activeNodeDetail, nodeState);
 
-            // Reset charts with new physical bounds
-            resetChartAxes();
-            ensureCharts();
-            resizeCharts();
+            // 4. Immediately Re-bind All 6 Charts to This Node's Isolated Data
+            rebindActiveNodeCharts(nodeId);
 
         } catch (e) {
             console.warn(`[LabCockpit] Failed to fetch node detail for ${nodeId}:`, e);
@@ -229,120 +300,125 @@
     }
 
     // =========================================================================
-    // 3. INTELLIGENT PHYSICAL SENSOR INVARIANT ADAPTATION
+    // 4. CHART RE-BINDING & AXIS ISOLATION PER DEVICE
     // =========================================================================
-    function adaptPhysicsGauges(nodeDetail) {
-        const sensors = Array.isArray(nodeDetail?.sensors) ? nodeDetail.sensors : [];
+    function rebindActiveNodeCharts(nodeId) {
+        if (!NODE_LAB_STATES.has(nodeId)) return;
+        const state = NODE_LAB_STATES.get(nodeId);
 
-        // Priority: Find physical dynamic sensor (AVIONICS, KINEMATIC, THERMAL, ELECTRICAL)
-        // Skip purely passive RF_EM signal strengths (-85 dBm) for physical barrier modeling
-        let physicalSensor = null;
-        for (const s of sensors) {
-            const cat = (s.category || '').toUpperCase();
-            if (['AVIONICS', 'KINEMATIC', 'THERMAL', 'ELECTRICAL', 'MECHANICAL'].includes(cat)) {
-                physicalSensor = s;
-                break;
-            }
-        }
-        if (!physicalSensor && sensors.length > 0) {
-            physicalSensor = sensors.find(s => (s.baseline || 0) > 0) || sensors[0];
-        }
+        ensureCharts();
 
+        // 1. Update DOM Indicators for this Device
         const lblTemp = document.getElementById('lbl-temp');
         const valTemp = document.getElementById('val-temp');
+        const valBarrier = document.getElementById('val-barrier');
+        const valLyap = document.getElementById('val-lyapunov');
+        const valVelocity = document.getElementById('val-velocity');
+        const badgeCBF = document.getElementById('cbf-status-badge');
 
-        if (physicalSensor && typeof physicalSensor.baseline === 'number') {
-            const base = physicalSensor.baseline;
-            const unit = physicalSensor.unit || '';
-            const name = physicalSensor.name || 'PHYSICAL SENSOR';
+        const isSafe = state.barrier_h >= 0;
 
-            plantState.name = name;
-            plantState.baseline = base;
-            plantState.pv = base;
-            plantState.unit = unit;
+        if (lblTemp) lblTemp.innerText = `${state.name} (${state.unit})`;
+        if (valTemp) valTemp.innerText = `${state.pv.toFixed(2)} ${state.unit}`;
+        if (valBarrier) {
+            valBarrier.innerText = `${state.barrier_h >= 0 ? '+' : ''}${state.barrier_h.toFixed(3)}`;
+            valBarrier.style.color = isSafe ? 'var(--kernel)' : 'var(--threat)';
+        }
+        if (valLyap) valLyap.innerText = state.is_perturbed ? '+0.420' : '-0.150';
+        if (valVelocity) valVelocity.innerText = `${state.velocity >= 0 ? '+' : ''}${state.velocity.toFixed(3)} /s`;
 
-            // Compute realistic physical safety bounds
-            if (unit === 'knots') {
-                plantState.limit = 160.0;
-                plantState.yMin = 60.0;
-                plantState.yMax = 180.0;
-            } else if (unit === 'deg/s') {
-                plantState.limit = 35.0;
-                plantState.yMin = 0.0;
-                plantState.yMax = 45.0;
-            } else if (unit === 'm') {
-                plantState.limit = 200.0;
-                plantState.yMin = 80.0;
-                plantState.yMax = 220.0;
-            } else if (unit === 'Hz') {
-                plantState.limit = 50.8;
-                plantState.yMin = 48.8;
-                plantState.yMax = 51.5;
-            } else if (unit === '°C') {
-                plantState.limit = 120.0;
-                plantState.yMin = 60.0;
-                plantState.yMax = 140.0;
-            } else {
-                plantState.limit = base * 1.35;
-                plantState.yMin = Math.max(0, base * 0.5);
-                plantState.yMax = base * 1.5;
-            }
-
-            if (lblTemp) lblTemp.innerText = `${name} (${unit})`;
-            if (valTemp) valTemp.innerText = `${base.toFixed(2)} ${unit}`;
-        } else {
-            // Aerospace default (STANAG 4586 Kinematic Dead-Reckoning: Vmax = 80 m/s)
-            plantState.name = 'AIRFRAME FLIGHT KINEMATICS';
-            plantState.baseline = 24.2;
-            plantState.pv = 24.2;
-            plantState.unit = 'm/s';
-            plantState.limit = 80.0;
-            plantState.yMin = 0.0;
-            plantState.yMax = 100.0;
-
-            if (lblTemp) lblTemp.innerText = 'AIRFRAME VELOCITY (m/s)';
-            if (valTemp) valTemp.innerText = '24.20 m/s';
+        if (badgeCBF) {
+            badgeCBF.className = `badge ${isSafe ? 'badge-green' : 'badge-danger'}`;
+            badgeCBF.innerText = isSafe ? 'h(x) ≥ 0 SAFE' : 'SAFETY BARRIER BREACHED';
+            badgeCBF.style.background = isSafe ? 'rgba(0, 255, 163, 0.15)' : 'rgba(255, 51, 102, 0.2)';
+            badgeCBF.style.color = isSafe ? 'var(--kernel)' : 'var(--threat)';
+            badgeCBF.style.borderColor = isSafe ? 'var(--kernel)' : 'var(--threat)';
         }
 
-        plantState.barrier_h = plantState.limit - plantState.pv;
-        cbfData = Array(MAX_POINTS).fill(plantState.pv);
-    }
-
-    function resetChartAxes() {
-        if (!cbfChart) return;
-        cbfChart.setOption({
-            yAxis: {
-                min: Math.floor(plantState.yMin),
-                max: Math.ceil(plantState.yMax)
-            },
-            series: [{
-                markLine: {
-                    symbol: 'none',
-                    data: [
-                        {
-                            yAxis: plantState.limit,
-                            lineStyle: { color: '#ff3366', type: 'dashed', width: 2 },
-                            label: { formatter: `Barrier Limit: ${plantState.limit} ${plantState.unit}`, color: '#ff3366', fontSize: 9 }
-                        },
-                        {
-                            yAxis: plantState.baseline,
-                            lineStyle: { color: 'rgba(0, 255, 163, 0.4)', type: 'dotted' },
-                            label: { formatter: `Nominal: ${plantState.baseline} ${plantState.unit}`, color: '#00ffa3', fontSize: 9 }
-                        }
-                    ]
+        // 2. Re-bind CBF Oscilloscope to This Node's Physical Scale & MarkLines
+        if (cbfChart) {
+            cbfChart.setOption({
+                yAxis: {
+                    min: Math.floor(state.yMin),
+                    max: Math.ceil(state.yMax),
+                    axisLabel: { color: '#8a99ad', fontSize: 9 }
                 },
-                markArea: {
-                    itemStyle: { color: 'rgba(255, 51, 102, 0.08)' },
-                    data: [[{ yAxis: plantState.limit }, { yAxis: plantState.yMax }]]
-                }
-            }]
-        });
+                series: [{
+                    data: state.cbfData,
+                    lineStyle: { color: isSafe ? '#00ffa3' : '#ff3366', width: 2.5 },
+                    areaStyle: { color: isSafe ? 'rgba(0, 255, 163, 0.08)' : 'rgba(255, 51, 102, 0.15)' },
+                    markLine: {
+                        symbol: 'none',
+                        data: [
+                            {
+                                yAxis: state.limit,
+                                lineStyle: { color: '#ff3366', type: 'dashed', width: 2 },
+                                label: { formatter: `Barrier: ${state.limit} ${state.unit}`, color: '#ff3366', fontSize: 9 }
+                            },
+                            {
+                                yAxis: state.baseline,
+                                lineStyle: { color: 'rgba(0, 255, 163, 0.4)', type: 'dotted' },
+                                label: { formatter: `Nominal: ${state.baseline} ${state.unit}`, color: '#00ffa3', fontSize: 9 }
+                            }
+                        ]
+                    },
+                    markArea: {
+                        itemStyle: { color: 'rgba(255, 51, 102, 0.08)' },
+                        data: [[{ yAxis: state.limit }, { yAxis: state.yMax }]]
+                    }
+                }]
+            });
+        }
+
+        // 3. Re-bind 2D Phase-Plane Orbit for this device
+        if (phaseChart) {
+            phaseChart.setOption({
+                series: [{
+                    data: generateNodePhaseOrbit(state),
+                    lineStyle: { color: isSafe ? '#00e5ff' : '#ff3366', width: 2.5 }
+                }]
+            });
+        }
+
+        // 4. Re-bind Innovation Residual
+        if (fusionChart) {
+            fusionChart.setOption({
+                series: [{
+                    data: state.residualData,
+                    lineStyle: { color: state.is_perturbed ? '#ff3366' : '#ffb800', width: 2 }
+                }]
+            });
+        }
+
+        // 5. Re-bind PMU and RSS
+        if (pmuChart) {
+            pmuChart.setOption({ series: [{ data: state.pmuCores }] });
+        }
+        if (rssChart) {
+            rssChart.setOption({ series: [{ data: state.rssQueues }] });
+        }
+
+        resizeCharts();
+    }
+
+    function generateNodePhaseOrbit(state) {
+        const radius = state.is_perturbed ? 0.085 : 0.038;
+        const stretchY = 1.4;
+        const points = [];
+        const numSamples = 36;
+        for (let i = 0; i <= numSamples; i++) {
+            const theta = state.phase_angle + (i / numSamples) * Math.PI * 2;
+            const x = Math.cos(theta) * radius + (state.is_perturbed ? 0.03 : 0.0);
+            const y = Math.sin(theta) * radius * stretchY;
+            points.push([+x.toFixed(4), +y.toFixed(4)]);
+        }
+        return points;
     }
 
     // =========================================================================
-    // 4. DYNAMIC STRESS ENGINE DECK (DECK A)
+    // 5. DYNAMIC STRESS ENGINE DECK (DECK A)
     // =========================================================================
-    function buildDynamicStressDeck(nodeDetail) {
+    function buildDynamicStressDeck(nodeDetail, nodeState) {
         const deckContainer = document.querySelector('.lab-stage-deck .lab-card:first-child > div:last-child');
         if (!deckContainer) return;
 
@@ -421,11 +497,11 @@
             deckContainer.appendChild(tier2Div);
 
             tier2Div.querySelector('#btn-lab-spike').addEventListener('click', () => {
-                plantState.is_perturbed = true;
+                if (nodeState) nodeState.is_perturbed = true;
                 injectLabAction('spike');
             });
             tier2Div.querySelector('#btn-lab-safe').addEventListener('click', () => {
-                plantState.is_perturbed = false;
+                if (nodeState) nodeState.is_perturbed = false;
                 injectLabAction('safe');
             });
             return;
@@ -456,8 +532,8 @@
             btn.style.cssText = 'padding: 6px; font-size: 9px; text-align: left;';
             btn.innerText = a.name;
             btn.addEventListener('click', () => {
-                if (a.id === 'spike') plantState.is_perturbed = true;
-                if (a.id === 'safe') plantState.is_perturbed = false;
+                if (a.id === 'spike' && nodeState) nodeState.is_perturbed = true;
+                if (a.id === 'safe' && nodeState) nodeState.is_perturbed = false;
                 injectLabAction(a.id);
             });
             genGrid.appendChild(btn);
@@ -468,7 +544,7 @@
     }
 
     // =========================================================================
-    // 5. LIVE TELEMETRY ANIMATION ENGINE (PHYSICS OSCILLOSCOPE & PHASE ATTRACTOR)
+    // 6. MULTI-DEVICE SIMULATION & ANIMATION TICK
     // =========================================================================
     function startLabTelemetryLoop() {
         if (telemetryTimer) clearInterval(telemetryTimer);
@@ -477,43 +553,72 @@
             const labPane = document.getElementById('tab-lab-cockpit');
             if (!labPane || !labPane.classList.contains('active')) return;
 
-            ensureCharts();
-            tickPhysicsSimulation();
-            updateChartRenders();
+            // Step forward physics for all known nodes in memory
+            NODE_LAB_STATES.forEach(state => {
+                tickDevicePhysics(state);
+            });
+
+            // Re-render the active device's charts on screen
+            if (activeNodeId && NODE_LAB_STATES.has(activeNodeId)) {
+                renderActiveDeviceFrame(NODE_LAB_STATES.get(activeNodeId));
+            }
         }, 300);
     }
 
-    function tickPhysicsSimulation() {
-        simTime += 0.3;
+    function tickDevicePhysics(state) {
+        state.simTime += 0.3;
 
         // Target Value: Baseline with natural physical oscillation vs Perturbation Breach
-        const target = plantState.is_perturbed
-            ? (plantState.limit * 1.08)
-            : (plantState.baseline + Math.sin(simTime * 1.5) * (plantState.baseline * 0.04));
+        const naturalSine = Math.sin(state.simTime * 1.5) * (Math.abs(state.baseline) * 0.04);
+        const target = state.is_perturbed
+            ? (state.limit * 1.08)
+            : (state.baseline + naturalSine);
 
         // Smooth 2nd-Order Physics Damping
-        const delta = target - plantState.pv;
-        plantState.velocity = (plantState.velocity * 0.82) + (delta * 0.18) + ((Math.random() - 0.5) * (plantState.baseline * 0.01));
-        plantState.pv += plantState.velocity;
+        const delta = target - state.pv;
+        state.velocity = (state.velocity * 0.82) + (delta * 0.18) + ((Math.random() - 0.5) * (Math.abs(state.baseline) * 0.01));
+        state.pv += state.velocity;
 
         // Control Barrier Margin h(x) = Limit - PV
-        plantState.barrier_h = plantState.limit - plantState.pv;
-        const isSafe = plantState.barrier_h >= 0;
+        state.barrier_h = state.limit - state.pv;
 
-        // Update DOM Indicators
+        // Rotate Phase Angle
+        state.phase_angle = (state.phase_angle + 0.15) % (Math.PI * 2);
+
+        // Buffer Rolling for this node
+        state.cbfData.push(state.pv);
+        if (state.cbfData.length > MAX_POINTS) state.cbfData.shift();
+
+        // Innovation Residual r(t) for this node
+        const residualVal = state.is_perturbed ? (0.12 + Math.random() * 0.08) : (0.002 + Math.random() * 0.004);
+        state.residualData.push(residualVal);
+        if (state.residualData.length > MAX_POINTS) state.residualData.shift();
+
+        // Jitter PMU and RSS queues slightly
+        state.pmuCores = state.pmuCores.map(v => +(v + (Math.random() - 0.5) * 0.06).toFixed(2));
+        state.rssQueues = state.rssQueues.map(v => Math.max(50, v + Math.floor((Math.random() - 0.5) * 8)));
+    }
+
+    function renderActiveDeviceFrame(state) {
+        const isSafe = state.barrier_h >= 0;
+        const waveColor = isSafe ? '#00ffa3' : '#ff3366';
+
+        // Update DOM Indicators for this specific device
         const valTemp = document.getElementById('val-temp');
         const valBarrier = document.getElementById('val-barrier');
         const valLyap = document.getElementById('val-lyapunov');
         const valVelocity = document.getElementById('val-velocity');
         const badgeCBF = document.getElementById('cbf-status-badge');
+        const resEl = document.getElementById('val-residual');
+        const fusionBadge = document.getElementById('fusion-status-badge');
 
-        if (valTemp) valTemp.innerText = `${plantState.pv.toFixed(2)} ${plantState.unit}`;
+        if (valTemp) valTemp.innerText = `${state.pv.toFixed(2)} ${state.unit}`;
         if (valBarrier) {
-            valBarrier.innerText = `${plantState.barrier_h >= 0 ? '+' : ''}${plantState.barrier_h.toFixed(3)}`;
+            valBarrier.innerText = `${state.barrier_h >= 0 ? '+' : ''}${state.barrier_h.toFixed(3)}`;
             valBarrier.style.color = isSafe ? 'var(--kernel)' : 'var(--threat)';
         }
-        if (valLyap) valLyap.innerText = plantState.is_perturbed ? '+0.420' : '-0.150';
-        if (valVelocity) valVelocity.innerText = `${plantState.velocity >= 0 ? '+' : ''}${plantState.velocity.toFixed(3)} /s`;
+        if (valLyap) valLyap.innerText = state.is_perturbed ? '+0.420' : '-0.150';
+        if (valVelocity) valVelocity.innerText = `${state.velocity >= 0 ? '+' : ''}${state.velocity.toFixed(3)} /s`;
 
         if (badgeCBF) {
             badgeCBF.className = `badge ${isSafe ? 'badge-green' : 'badge-danger'}`;
@@ -523,66 +628,32 @@
             badgeCBF.style.borderColor = isSafe ? 'var(--kernel)' : 'var(--threat)';
         }
 
-        // Continuous Oscilloscope Buffer
-        cbfData.push(plantState.pv);
-        if (cbfData.length > MAX_POINTS) cbfData.shift();
-
-        // Innovation Residual r(t)
-        const residualVal = plantState.is_perturbed ? (0.12 + Math.random() * 0.08) : (0.002 + Math.random() * 0.004);
-        residualData.push(residualVal);
-        if (residualData.length > MAX_POINTS) residualData.shift();
-
-        const resEl = document.getElementById('val-residual');
+        const latestRes = state.residualData[state.residualData.length - 1] || 0.002;
         if (resEl) {
-            resEl.innerText = residualVal.toFixed(3);
-            resEl.style.color = residualVal > 0.08 ? 'var(--threat)' : 'var(--kernel)';
+            resEl.innerText = latestRes.toFixed(3);
+            resEl.style.color = latestRes > 0.08 ? 'var(--threat)' : 'var(--kernel)';
         }
-
-        const fusionBadge = document.getElementById('fusion-status-badge');
         if (fusionBadge) {
-            fusionBadge.innerText = residualVal > 0.08 ? 'TAMPER / ANOMALY' : 'CONCORDANT';
-            fusionBadge.style.color = residualVal > 0.08 ? 'var(--threat)' : 'var(--kernel)';
+            fusionBadge.innerText = latestRes > 0.08 ? 'TAMPER / ANOMALY' : 'CONCORDANT';
+            fusionBadge.style.color = latestRes > 0.08 ? 'var(--threat)' : 'var(--kernel)';
         }
-    }
-
-    function generatePhaseOrbitData() {
-        // Generates a smooth, continuous closed limit-cycle attractor loop
-        plantState.phase_angle = (plantState.phase_angle + 0.15) % (Math.PI * 2);
-        const radius = plantState.is_perturbed ? 0.085 : 0.038;
-        const stretchY = 1.4;
-
-        const points = [];
-        const numSamples = 36;
-        for (let i = 0; i <= numSamples; i++) {
-            const theta = plantState.phase_angle + (i / numSamples) * Math.PI * 2;
-            const x = Math.cos(theta) * radius + (plantState.is_perturbed ? 0.03 : 0.0);
-            const y = Math.sin(theta) * radius * stretchY;
-            points.push([+x.toFixed(4), +y.toFixed(4)]);
-        }
-        return points;
-    }
-
-    function updateChartRenders() {
-        const isSafe = plantState.barrier_h >= 0;
-        const waveColor = isSafe ? '#00ffa3' : '#ff3366';
 
         // 1. CBF Physical Oscilloscope
         if (cbfChart) {
             cbfChart.setOption({
                 series: [{
-                    data: cbfData,
+                    data: state.cbfData,
                     lineStyle: { color: waveColor, width: 2.5 },
                     areaStyle: { color: isSafe ? 'rgba(0, 255, 163, 0.08)' : 'rgba(255, 51, 102, 0.15)' }
                 }]
             });
         }
 
-        // 2. 2D Phase-Plane Poincaré Orbit (Closed Attractor)
+        // 2. 2D Phase-Plane Orbit (Closed Attractor)
         if (phaseChart) {
-            const orbitPoints = generatePhaseOrbitData();
             phaseChart.setOption({
                 series: [{
-                    data: orbitPoints,
+                    data: generateNodePhaseOrbit(state),
                     lineStyle: { color: isSafe ? '#00e5ff' : '#ff3366', width: 2.5 }
                 }]
             });
@@ -592,31 +663,25 @@
         if (fusionChart) {
             fusionChart.setOption({
                 series: [{
-                    data: residualData,
-                    lineStyle: { color: plantState.is_perturbed ? '#ff3366' : '#ffb800', width: 2 }
+                    data: state.residualData,
+                    lineStyle: { color: state.is_perturbed ? '#ff3366' : '#ffb800', width: 2 }
                 }]
             });
         }
 
-        // 4. AF_XDP Multi-Queue RSS Distribution
+        // 4. AF_XDP Multi-Queue RSS
         if (rssChart) {
-            const jitterRss = [156, 162, 158, 160, 154, 165, 159, 161].map(v => v + Math.floor((Math.random() - 0.5) * 14));
-            rssChart.setOption({
-                series: [{ data: jitterRss }]
-            });
+            rssChart.setOption({ series: [{ data: state.rssQueues }] });
         }
 
         // 5. PMU Hardware IPC
         if (pmuChart) {
-            const jitterIpc = [2.42, 2.38, 2.45, 2.40].map(v => +(v + (Math.random() - 0.5) * 0.08).toFixed(2));
-            pmuChart.setOption({
-                series: [{ data: jitterIpc }]
-            });
+            pmuChart.setOption({ series: [{ data: state.pmuCores }] });
         }
     }
 
     // =========================================================================
-    // 6. INJECTION DISPATCH & REAL-TIME LOG POLLER
+    // 7. INJECTION DISPATCH & REAL-TIME LOG POLLER
     // =========================================================================
     async function injectLabAction(action, params = {}) {
         const statusBadge = document.getElementById('deck-status');
@@ -655,7 +720,10 @@
 
     async function injectNodeAttack(nodeId, attackId) {
         logToTerminal(`[*] [Sentinel-Lab] Triggering exploit: ${attackId} on ${nodeId}...`);
-        plantState.is_perturbed = true;
+
+        if (NODE_LAB_STATES.has(nodeId)) {
+            NODE_LAB_STATES.get(nodeId).is_perturbed = true;
+        }
 
         try {
             const res = await fetch('/api/v1/sensors/fault', {
@@ -702,7 +770,7 @@
     }
 
     // =========================================================================
-    // 7. SUB-STAGE TABS SWITCHER
+    // 8. SUB-STAGE TABS SWITCHER
     // =========================================================================
     function initSubStageTabs() {
         const btns = document.querySelectorAll('.lab-tab-btn');
@@ -736,6 +804,7 @@
 
                 setTimeout(() => {
                     ensureCharts();
+                    if (activeNodeId) rebindActiveNodeCharts(activeNodeId);
                     resizeCharts();
                 }, 40);
             });
@@ -743,7 +812,7 @@
     }
 
     // =========================================================================
-    // 8. ECHARTS INITIALIZATION (ZERO-DIMENSION SAFE)
+    // 9. ECHARTS INITIALIZATION (ZERO-DIMENSION SAFE)
     // =========================================================================
     function ensureCharts() {
         if (typeof echarts === 'undefined') return;
@@ -758,8 +827,6 @@
                 xAxis: { type: 'category', data: Array(MAX_POINTS).fill(''), axisLine: { lineStyle: { color: '#1a2232' } } },
                 yAxis: {
                     type: 'value',
-                    min: Math.floor(plantState.yMin),
-                    max: Math.ceil(plantState.yMax),
                     splitLine: { lineStyle: { color: '#1a2232' } },
                     axisLabel: { color: '#8a99ad', fontSize: 9 }
                 },
@@ -768,15 +835,14 @@
                     type: 'line',
                     smooth: true,
                     showSymbol: false,
-                    data: cbfData,
+                    data: [],
                     lineStyle: { color: '#00ffa3', width: 2.5 },
                     areaStyle: { color: 'rgba(0, 255, 163, 0.08)' }
                 }]
             });
-            resetChartAxes();
         }
 
-        // 2. 2D Phase-Plane Chart (Closed Attractor Orbit)
+        // 2. 2D Phase-Plane Chart
         const phaseEl = document.getElementById('phaseEchart');
         if (phaseEl && phaseEl.clientWidth > 0 && !phaseChart) {
             phaseChart = echarts.init(phaseEl);
@@ -802,7 +868,7 @@
                     type: 'line',
                     smooth: true,
                     showSymbol: false,
-                    data: generatePhaseOrbitData(),
+                    data: [],
                     lineStyle: { color: '#00e5ff', width: 2.5 },
                     markArea: {
                         itemStyle: { color: 'rgba(0, 255, 163, 0.04)', borderColor: '#00ffa3', borderWidth: 1, borderType: 'dashed' },
@@ -882,7 +948,7 @@
                 series: [{
                     name: 'Residual r(t)',
                     type: 'line',
-                    data: residualData,
+                    data: [],
                     lineStyle: { color: '#ffb800', width: 2 }
                 }]
             });
@@ -898,7 +964,7 @@
     }
 
     // =========================================================================
-    // 9. LATEX SCORECARD EXPORT (DOI 10.5281/zenodo.23598779)
+    // 10. LATEX SCORECARD EXPORT (DOI 10.5281/zenodo.23598779)
     // =========================================================================
     window.exportLabScorecard = function () {
         const modal = document.getElementById('modal-latex-export');
