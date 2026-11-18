@@ -1,10 +1,8 @@
+// File: /home/kami/sentinel-nexus/web/js/extensions_manager.js
 // ============================================================================
-// ARYORITHM SENTINEL NEXUS: 7-ARTIFACT UNIVERSAL VAULT MANAGER
-// Handles .spkg, .onnx, .slab, .pcap, .tar.gz, .blueprint, and .aryopack
+// ARYORITHM SENTINEL NEXUS: SCENARIO-DRIVEN 7-ARTIFACT VAULT MANAGER
+// Zero Hardcoding: Discovers Real Artifacts Mounted in Active Scenario
 // ============================================================================
-
-const SPKG_MAGIC = 0x474B50534F595241n; // "ARYOSPKG"
-const SLAB_MAGIC = 0x534C4142;          // "SLAB"
 
 class ExtensionsManager {
     constructor() {
@@ -14,13 +12,14 @@ class ExtensionsManager {
         this.deployBtn = document.getElementById('btn-deploy-fleet');
         this.tableBody = document.getElementById('extensions-tbody');
         this.filterButtons = document.querySelectorAll('.artifact-filter-bar .btn-ctrl');
-        
-        this.activeFilter = "all";
+
+        this.activeFilter = 'all';
         this.stagedArtifact = null;
+        this.artifacts = [];
 
         this.initEventListeners();
-        this.renderArtifacts();
-        setInterval(() => this.renderArtifacts(), 4000);
+        this.refreshVault();
+        setInterval(() => this.refreshVault(), 4000);
     }
 
     initEventListeners() {
@@ -49,142 +48,309 @@ class ExtensionsManager {
             });
         }
 
-        // Sub-filter tabs
         this.filterButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 this.filterButtons.forEach(b => {
-                    b.style.background = "#1E293B";
-                    b.style.color = "#94A3B8";
-                    b.style.border = "1px solid #334155";
+                    b.style.background = '#1E293B';
+                    b.style.color = '#94A3B8';
+                    b.style.border = '1px solid #334155';
                 });
-                btn.style.background = "#00F0FF";
-                btn.style.color = "#0B0F17";
-                btn.style.border = "none";
-                this.activeFilter = btn.getAttribute('data-filter') || "all";
-                this.renderArtifacts();
+                btn.style.background = '#00F0FF';
+                btn.style.color = '#0B0F17';
+                btn.style.border = 'none';
+                this.activeFilter = btn.getAttribute('data-filter') || 'all';
+                this.renderTable();
             });
         });
 
         if (this.deployBtn) {
-            this.deployBtn.addEventListener('click', () => {
-                alert(`[STAGED] Artifact ${this.stagedArtifact ? this.stagedArtifact.name : ''} validated and deployed to local runtime!`);
-                if (this.previewCard) this.previewCard.classList.add('hidden');
-                this.renderArtifacts();
-            });
+            this.deployBtn.addEventListener('click', () => this.deployStagedArtifact());
         }
 
         const refreshBtn = document.getElementById('btn-refresh-ext');
-        if (refreshBtn) refreshBtn.addEventListener('click', () => this.renderArtifacts());
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.refreshVault());
+        }
+
+        // Refresh immediately when Artifacts & Vault tab is clicked
+        document.querySelectorAll('.admin-nav-item, .nav-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.getAttribute('data-tab') === 'tab-extensions') {
+                    this.refreshVault();
+                }
+            });
+        });
     }
 
     async handleFile(file) {
         const name = file.name;
-        let type = "package";
-        let spec = "Ed25519 Reflex";
-        let badgeColor = "#10B981";
+        const headerBytes = new Uint8Array(await file.slice(0, 64).arrayBuffer());
+        const magicAscii = Array.from(headerBytes.slice(0, 8))
+            .map(b => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.'))
+            .join('');
 
-        if (name.endsWith('.onnx')) {
-            type = "model";
-            spec = name.includes('int8') ? "INT8 QDQ Graph (<20 µs)" : "FP32 Neural Graph";
-            badgeColor = "#00F0FF";
-        } else if (name.endsWith('.slab')) {
-            type = "dataset";
-            spec = "0x534C4142 Zero-Copy Tensors";
-            badgeColor = "#A855F7";
-        } else if (name.endsWith('.pcap') || name.endsWith('.spcap')) {
-            type = "pcap";
-            spec = "ICS Wire Capture (tcpdump)";
-            badgeColor = "#F59E0B";
+        let type = 'package';
+        let spec = 'Binary Package';
+        let badgeColor = '#10B981';
+        let sigStatus = 'LOCAL HEADER PARSED';
+
+        if (magicAscii.startsWith('ARYOSPKG')) {
+            type = 'package';
+            spec = 'ARYOSPKG Container';
+            sigStatus = 'MAGIC ARYOSPKG VERIFIED';
+        } else if (magicAscii.startsWith('SLAB') || name.endsWith('.slab')) {
+            type = 'dataset';
+            spec = magicAscii.startsWith('SLAB') ? '0x534C4142 Binary Tensors' : 'Dataset File';
+            badgeColor = '#A855F7';
+            sigStatus = magicAscii.startsWith('SLAB') ? 'MAGIC SLAB VERIFIED' : 'EXTENSION MATCHED';
+        } else if (name.endsWith('.onnx')) {
+            type = 'model';
+            spec = name.includes('int8') ? 'INT8 ONNX Graph' : 'ONNX Neural Graph';
+            badgeColor = '#00F0FF';
+            sigStatus = headerBytes.length > 4 ? 'ONNX PROTOBUF PRESENT' : 'EMPTY FILE';
+        } else if (name.endsWith('.pcap') || name.endsWith('.pcapng') || name.endsWith('.spcap')) {
+            type = 'pcap';
+            const isPcapMagic = (headerBytes[0] === 0xd4 && headerBytes[1] === 0xc3) ||
+                                (headerBytes[0] === 0xa1 && headerBytes[1] === 0xb2) ||
+                                (headerBytes[0] === 0x0a && headerBytes[1] === 0x0d);
+            spec = isPcapMagic ? 'PCAP Capture Verified' : 'Packet Capture File';
+            badgeColor = '#F59E0B';
+            sigStatus = isPcapMagic ? 'PCAP MAGIC VERIFIED' : 'EXTENSION MATCHED';
         } else if (name.endsWith('.tar.gz') || name.endsWith('.tgz')) {
-            type = "scenario";
-            spec = "Matrix Multi-Network Range";
-            badgeColor = "#00B4D8";
+            type = 'scenario';
+            const isGzip = headerBytes[0] === 0x1f && headerBytes[1] === 0x8b;
+            spec = isGzip ? 'GZIP Scenario Bundle' : 'Scenario Archive';
+            badgeColor = '#00B4D8';
+            sigStatus = isGzip ? 'GZIP MAGIC VERIFIED' : 'EXTENSION MATCHED';
         } else if (name.endsWith('.blueprint')) {
-            type = "blueprint";
-            spec = "Hardware Binding & DAG";
-            badgeColor = "#EC4899";
+            type = 'blueprint';
+            spec = 'Edge Blueprint Bundle';
+            badgeColor = '#EC4899';
         } else if (name.endsWith('.aryopack')) {
-            type = "appliance";
-            spec = "Self-Extracting Bootstrap";
-            badgeColor = "#EF4444";
+            type = 'appliance';
+            spec = 'Appliance Bootstrap Pack';
+            badgeColor = '#EF4444';
         }
 
-        document.getElementById('prev-filename').textContent = name;
-        document.getElementById('prev-type').textContent = type.toUpperCase();
-        document.getElementById('prev-spec').textContent = spec;
-        document.getElementById('prev-size').textContent = (file.size / 1024).toFixed(1) + " KB";
-
+        const fnEl = document.getElementById('prev-filename');
+        const typeEl = document.getElementById('prev-type');
+        const specEl = document.getElementById('prev-spec');
+        const sizeEl = document.getElementById('prev-size');
+        const sigEl = document.getElementById('prev-sig');
         const badge = document.getElementById('prev-tier-badge');
+
+        if (fnEl) fnEl.textContent = name;
+        if (typeEl) typeEl.textContent = type.toUpperCase();
+        if (specEl) specEl.textContent = spec;
+        if (sizeEl) sizeEl.textContent = this.formatBytes(file.size);
+        if (sigEl) sigEl.textContent = sigStatus;
         if (badge) {
             badge.textContent = type.toUpperCase();
             badge.style.background = badgeColor;
-            badge.style.color = "#0B0F17";
+            badge.style.color = '#0B0F17';
         }
 
         this.stagedArtifact = { file, name, type, spec, size: file.size };
         if (this.previewCard) this.previewCard.classList.remove('hidden');
     }
 
-    renderArtifacts() {
+    async deployStagedArtifact() {
+        if (!this.stagedArtifact) return;
+        const sigEl = document.getElementById('prev-sig');
+
+        try {
+            const resp = await fetch('/api/v1/extensions/deploy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    rule_name: this.stagedArtifact.name,
+                    rule_id: this.stagedArtifact.type.toUpperCase(),
+                    spec: this.stagedArtifact.spec,
+                    size_bytes: this.stagedArtifact.size
+                })
+            });
+            const result = await resp.json();
+            if (sigEl) {
+                sigEl.textContent = `${(result.status || 'staged').toUpperCase()} (${result.fanout_latency_ms || 0} ms)`;
+            }
+            this.artifacts.unshift({
+                id: this.stagedArtifact.name,
+                type: this.stagedArtifact.type,
+                format: this.stagedArtifact.spec,
+                target: 'Staged via Console',
+                size: this.formatBytes(this.stagedArtifact.size),
+                status: 'STAGED'
+            });
+            this.renderTable();
+            this.updateFilterBadges();
+        } catch (e) {
+            if (sigEl) sigEl.textContent = `DEPLOY ERROR: ${e.message}`;
+        }
+    }
+
+    async refreshVault() {
+        const discovered = [];
+        const seen = new Set();
+
+        const addItem = (item) => {
+            if (!item || !item.id) return;
+            const key = `${item.type || 'unknown'}::${item.id}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            discovered.push(item);
+        };
+
+        try {
+            // Primary Source: Unified Backend Scenario Vault Scanner
+            const vaultResp = await fetch('/api/v1/vault/inventory');
+            if (vaultResp.ok) {
+                const vaultItems = await vaultResp.json();
+                if (Array.isArray(vaultItems)) {
+                    vaultItems.forEach(addItem);
+                }
+            }
+        } catch (_) {
+            // Fallback handled below
+        }
+
+        // Secondary Enrichment: Active Models, Extensions & Web Plugins
+        try {
+            const [modelsResp, extResp, manifestResp] = await Promise.all([
+                fetch('/api/v1/models').catch(() => null),
+                fetch('/api/v1/extensions/status').catch(() => null),
+                fetch('/plugins/manifest.json').catch(() => null)
+            ]);
+
+            if (modelsResp && modelsResp.ok) {
+                const models = await modelsResp.json();
+                if (Array.isArray(models)) {
+                    models.forEach(m => {
+                        addItem({
+                            id: m.model_id || m.filename || m.id,
+                            type: 'model',
+                            format: m.format || 'ONNX Graph',
+                            target: m.target || '/opt/sentinel-nexus/models/',
+                            size: m.size || (m.size_bytes ? this.formatBytes(m.size_bytes) : 'N/A'),
+                            status: m.status || 'STAGED'
+                        });
+                    });
+                }
+            }
+
+            if (extResp && extResp.ok) {
+                const exts = await extResp.json();
+                if (Array.isArray(exts)) {
+                    exts.forEach(e => {
+                        addItem({
+                            id: e.id,
+                            type: 'package',
+                            format: `${e.tier || 'Native'} (${e.proto || 'WIRE'})`,
+                            target: e.latency || 'Runtime',
+                            size: e.frames !== undefined ? `${e.frames} pkts` : 'Active',
+                            status: e.status || 'ACTIVE'
+                        });
+                    });
+                }
+            }
+
+            if (manifestResp && manifestResp.ok) {
+                const man = await manifestResp.json();
+                if (man && Array.isArray(man.plugins)) {
+                    man.plugins.forEach(p => {
+                        addItem({
+                            id: p.script || p.id,
+                            type: 'package',
+                            format: 'Micro-Frontend Plugin',
+                            target: `/plugins/${p.id}`,
+                            size: 'Mounted',
+                            status: 'ACTIVE'
+                        });
+                    });
+                }
+            }
+        } catch (_) {}
+
+        this.artifacts = discovered;
+        this.updateFilterBadges();
+        this.renderTable();
+    }
+
+    updateFilterBadges() {
+        const counts = { all: this.artifacts.length, package: 0, model: 0, dataset: 0, pcap: 0, scenario: 0, blueprint: 0, appliance: 0 };
+        this.artifacts.forEach(a => {
+            if (counts[a.type] !== undefined) counts[a.type]++;
+        });
+
+        const labels = {
+            all: `ALL (${counts.all})`,
+            package: `PACKAGES (${counts.package})`,
+            model: `MODELS (${counts.model})`,
+            dataset: `DATASETS (${counts.dataset})`,
+            pcap: `PCAPS (${counts.pcap})`,
+            scenario: `SCENARIOS (${counts.scenario})`,
+            blueprint: `BLUEPRINTS (${counts.blueprint})`,
+            appliance: `APPLIANCES (${counts.appliance})`
+        };
+
+        this.filterButtons.forEach(btn => {
+            const f = btn.getAttribute('data-filter');
+            if (labels[f]) btn.textContent = labels[f];
+        });
+    }
+
+    renderTable() {
         if (!this.tableBody) return;
 
-        // Comprehensive active inventory of all 7 artifacts currently on your machine
-        const allArtifacts = [
-            // 1. Packages (.spkg / active rules)
-            { id: "modbus_rate_limiter.spkg", type: "package", format: "LuaJIT C-FFI", target: "/etc/sentinel/rules.d/", size: "403 B", status: "ACTIVE" },
-            { id: "s7comm_safety_interlock.spkg", type: "package", format: "Rust Wasm3", target: "/etc/sentinel/wasm.d/", size: "128 KB", status: "ACTIVE" },
-            { id: "ccsds_space_guard.so", type: "package", format: "Native C++20", target: "/usr/local/bin/ccsds-guard", size: "84 KB", status: "ACTIVE" },
-
-            // 2. Neural Models (.onnx)
-            { id: "network_threat_detector.onnx", type: "model", format: "INT8 QDQ ONNX", target: "shared/models/ (32D)", size: "1.4 MB", status: "STAGED" },
-            { id: "thermal_anomaly_vision.onnx", type: "model", format: "MobileNetV2 Vision", target: "shared/models/ (TensorRT)", size: "14 MB", status: "STAGED" },
-            { id: "vibration_spectral_ae.onnx", type: "model", format: "1D Temporal Autoencoder", target: "shared/models/ (32D)", size: "45 KB", status: "STAGED" },
-            { id: "lidar_spatial_detector.onnx", type: "model", format: "Spatial Range Clustering", target: "shared/models/ (64D)", size: "68 KB", status: "STAGED" },
-            { id: "power_quality_anomaly.onnx", type: "model", format: "Tabular Masked Autoencoder", target: "shared/models/ (OpenVINO)", size: "45 KB", status: "STAGED" },
-
-            // 3. Datasets (.slab)
-            { id: "telemetry_sample.slab", type: "dataset", format: "0x534C4142 Binary", target: "/var/cache/sentinel/datasets/", size: "296 B", status: "CACHED" },
-
-            // 4. PCAPs (.pcap)
-            { id: "modbus_unauthorized_write.pcap", type: "pcap", format: "PCAP v2.4 (SCADA_ICS)", target: "/etc/sentinel/pcaps/", size: "106 B", status: "STAGED" },
-
-            // 5. Digital Twin Scenarios (.tar.gz)
-            { id: "scenario_water_blackout_defense.tar.gz", type: "scenario", format: "Turnkey Composite Bundle", target: "sentinel-matrix/scenarios/", size: "1.5 MB", status: "READY" },
-            { id: "scenario_water_treatment_facility.tar.gz", type: "scenario", format: "Declarative Reference (~15KB)", target: "/var/cache/sentinel/scenarios/", size: "14 KB", status: "CACHED" },
-
-            // 6. Production Site Blueprints (.blueprint)
-            { id: "blueprint_water_substation_alpha.blueprint", type: "blueprint", format: "Physical NIC DAG (ens160)", target: "/etc/sentinel/blueprint.yaml", size: "12 KB", status: "ACTIVE" },
-
-            // 7. Official Appliances (.aryopack)
-            { id: "sentinel_ecosystem_v2.5.aryopack", type: "appliance", format: "Air-Gapped Bootstrap (21/21)", target: "/home/kami/ (Root Certified)", size: "652 MB", status: "SEALED" }
-        ];
-
-        const filtered = this.activeFilter === "all" ? 
-            allArtifacts : 
-            allArtifacts.filter(a => a.type === this.activeFilter);
+        const filtered = this.activeFilter === 'all'
+            ? this.artifacts
+            : this.artifacts.filter(a => a.type === this.activeFilter);
 
         this.tableBody.innerHTML = '';
+
+        if (filtered.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="6" style="color:#64748B; text-align:center; padding:18px; font-family:monospace;">No ${this.activeFilter === 'all' ? '' : this.activeFilter.toUpperCase() + ' '}artifacts found in the active scenario mounts.</td>`;
+            this.tableBody.appendChild(tr);
+            return;
+        }
+
+        const typeColors = {
+            package: '#10B981',
+            model: '#00F0FF',
+            dataset: '#A855F7',
+            pcap: '#F59E0B',
+            scenario: '#00B4D8',
+            blueprint: '#EC4899',
+            appliance: '#EF4444'
+        };
+
         filtered.forEach(art => {
             const tr = document.createElement('tr');
-            
-            let typeColor = "#10B981";
-            if (art.type === "model") typeColor = "#00F0FF";
-            else if (art.type === "dataset") typeColor = "#A855F7";
-            else if (art.type === "pcap") typeColor = "#F59E0B";
-            else if (art.type === "scenario") typeColor = "#00B4D8";
-            else if (art.type === "blueprint") typeColor = "#EC4899";
-            else if (art.type === "appliance") typeColor = "#EF4444";
+            const typeColor = typeColors[art.type] || '#94A3B8';
+            const statusClass = (art.status === 'ACTIVE' || art.status === 'SEALED') ? 'badge-green' : 'badge-cyan';
 
             tr.innerHTML = `
-                <td class="font-mono" style="color: #F8FAFC; font-weight: 700;">${art.id}</td>
-                <td><span style="background: rgba(255,255,255,0.06); border: 1px solid ${typeColor}; color: ${typeColor}; border-radius: 3px; padding: 2px 6px; font-size: 9px; font-weight: 800; font-family: monospace;">${art.type.toUpperCase()}</span></td>
-                <td style="color: #94A3B8; font-size: 11px;">${art.format}</td>
-                <td style="color: #64748B; font-family: monospace; font-size: 10px;">${art.target}</td>
-                <td style="color: #CBD5E1; font-family: monospace; font-size: 11px;">${art.size}</td>
-                <td><span class="badge badge-green" style="font-size: 9px;">${art.status}</span></td>
+                <td class="font-mono" style="color: #F8FAFC; font-weight: 700;">${this.escapeHtml(art.id)}</td>
+                <td><span style="background: rgba(255,255,255,0.06); border: 1px solid ${typeColor}; color: ${typeColor}; border-radius: 3px; padding: 2px 6px; font-size: 9px; font-weight: 800; font-family: monospace;">${this.escapeHtml((art.type || '').toUpperCase())}</span></td>
+                <td style="color: #94A3B8; font-size: 11px;">${this.escapeHtml(art.format || '-')}</td>
+                <td style="color: #64748B; font-family: monospace; font-size: 10px;">${this.escapeHtml(art.target || '-')}</td>
+                <td style="color: #CBD5E1; font-family: monospace; font-size: 11px;">${this.escapeHtml(art.size || '-')}</td>
+                <td><span class="badge ${statusClass}" style="font-size: 9px;">${this.escapeHtml(art.status || 'STAGED')}</span></td>
             `;
             this.tableBody.appendChild(tr);
         });
+    }
+
+    formatBytes(bytes) {
+        if (!bytes || bytes <= 0) return '0 B';
+        if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return bytes + ' B';
+    }
+
+    escapeHtml(str) {
+        if (typeof str !== 'string') return String(str || '');
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 }
 
