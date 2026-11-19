@@ -1,61 +1,811 @@
 {
   "attacks": {
-    "scada-smuggling": { "id": "SCADA_SMUGGLING", "name": "Differential SCADA Frame Smuggling" },
-    "stuxnet-resonance": { "id": "STUXNET_RESONANCE", "name": "Stuxnet Centrifuge Frequency Tamper" },
-    "water-hammer": { "id": "WATER_HAMMER", "name": "Hydraulic Water Hammer Valve Surge" },
-    "oldsmar-poisoning": { "id": "OLDSMAR_POISONING", "name": "Oldsmar Chemical Setpoint Tamper" },
-    "rowhammer": { "id": "ROWHAMMER_BITFLIP", "name": "Rowhammer Memory Bit-Flip Injection" },
-    "voltage-glitch": { "id": "VOLTAGE_GLITCH", "name": "Sub-nanosecond SoC Voltage Glitch" },
-    "gnss-spoof": { "id": "GNSS_SPOOF", "name": "GNSS/GPS Constellation Phase Spoof" },
-    "aoa-freeze": { "id": "AOA_FREEZE", "name": "Angle-of-Attack Invariant Sensor Freeze" },
-    "tvc-gimbal-lock": { "id": "TVC_GIMBAL_LOCK", "name": "Thrust Vector Control Gimbal Lock" },
-    "cobot-crush": { "id": "COBOT_CRUSH", "name": "Collaborative Robot Kinematic Surge" },
-    "steer-by-wire-hijack": { "id": "STEER_BY_WIRE_HIJACK", "name": "Steer-by-Wire Actuator Angle Hijack" },
-    "grid-harmonic-resonance": { "id": "GRID_HARMONIC_RESONANCE", "name": "Grid Harmonic Resonance (THD > 18%)" },
-    "rocof-blackout": { "id": "ROCOF_BLACKOUT", "name": "ROCOF Underfrequency Blackout Trip" },
-    "torpedo-door-override": { "id": "TORPEDO_DOOR_OVERRIDE", "name": "Torpedo Outer Door Interlock Force" },
-    "dam-cavitation-gouge": { "id": "DAM_CAVITATION_GOUGE", "name": "Penstock Turbine Cavitation Shockwave" },
-    "cell-lysis-shear": { "id": "CELL_LYSIS_SHEAR", "name": "Bioreactor Impeller Viscous Shear Spike" },
-    "airgap-acoustic-leak": { "id": "AIRGAP_ACOUSTIC_LEAK", "name": "Air-Gapped Acoustic Exfiltration Leak" },
-    "hpm-surge": { "id": "HPM_SURGE", "name": "High-Power Microwave EMP Induction" },
-    "bess-thermal-runaway": { "id": "BESS_THERMAL_RUNAWAY", "name": "BESS Battery Thermal Runaway Surge" },
-    "quantum-dephase": { "id": "QUANTUM_DEPHASE", "name": "Qubit Phase Coherence Magnetic Desync" },
-    "nuclear-dnb": { "id": "NUCLEAR_DNB", "name": "Reactor Core Departure from Nucleate Boiling" },
-    "maglev-gap-collapse": { "id": "MAGLEV_GAP_COLLAPSE", "name": "Electrodynamic Levitation Gap Collapse" },
-    "subsea-apb-burst": { "id": "SUBSEA_APB_BURST", "name": "Subsea Wellhead Annular Casing Burst" },
-    "euv-laser-miss": { "id": "EUV_LASER_MISS", "name": "EUV Droplet Trajectory Desynchronization" },
-    "casting-breakout": { "id": "CASTING_BREAKOUT", "name": "Continuous Metallurgy Mold Rupture" },
-    "tokamak-disruption": { "id": "TOKAMAK_DISRUPTION", "name": "Plasma Beta Limit Magnetic Collapse" },
-    "h2-crossover": { "id": "H2_CROSSOVER", "name": "PEM Electrolyzer Hydrogen Membrane Crossover" },
-    "gravimeter-spoof": { "id": "GRAVIMETER_SPOOF", "name": "Quantum Gravimeter Inertial Spoof" },
-    "lidar-spoof-obstacle": { "id": "LIDAR_SPOOF_OBSTACLE", "name": "LiDAR Point-Cloud Obstacle Blind Vector" },
-    "dicom-cstore-flood": { "id": "DICOM_CSTORE_FLOOD", "name": "DICOM C-STORE Medical Stream Flood" }
+    "scada-smuggling": {
+      "id": "SCADA_SMUGGLING",
+      "name": "Differential SCADA Frame Smuggling",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 35.0
+      },
+      "signal_profile": "discrete_event"
+    },
+    "stuxnet-resonance": {
+      "id": "STUXNET_RESONANCE",
+      "name": "Stuxnet Centrifuge Frequency Tamper",
+      "multiplexer_fault": {
+        "action": "harmonic_multiplier",
+        "value": 3.2
+      },
+      "signal_profile": "harmonic_sideband"
+    },
+    "water-hammer": {
+      "id": "WATER_HAMMER",
+      "name": "Hydraulic Water Hammer Valve Surge",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 95.0
+      },
+      "signal_profile": "impulse_shock"
+    },
+    "oldsmar-poisoning": {
+      "id": "OLDSMAR_POISONING",
+      "name": "Oldsmar Chemical Setpoint Tamper",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 4.2
+      },
+      "signal_profile": "caustic_ramp"
+    },
+    "rowhammer": {
+      "id": "ROWHAMMER_BITFLIP",
+      "name": "Rowhammer Memory Bit-Flip Injection",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 18.0
+      },
+      "signal_profile": "discrete_event"
+    },
+    "voltage-glitch": {
+      "id": "VOLTAGE_GLITCH",
+      "name": "Sub-nanosecond SoC Voltage Glitch",
+      "multiplexer_fault": {
+        "action": "impulse_drop",
+        "value": 0.45
+      },
+      "signal_profile": "impulse_shock"
+    },
+    "gnss-spoof": {
+      "id": "GNSS_SPOOF",
+      "name": "GNSS/GPS Constellation Phase Spoof",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 25.0
+      },
+      "signal_profile": "coherence_decay"
+    },
+    "aoa-freeze": {
+      "id": "AOA_FREEZE",
+      "name": "Angle-of-Attack Invariant Sensor Freeze",
+      "multiplexer_fault": {
+        "action": "drop_to_val",
+        "value": 12.0
+      },
+      "signal_profile": "flatline_freeze"
+    },
+    "tvc-gimbal-lock": {
+      "id": "TVC_GIMBAL_LOCK",
+      "name": "Thrust Vector Control Gimbal Lock",
+      "multiplexer_fault": {
+        "action": "drop_to_val",
+        "value": 0.0
+      },
+      "signal_profile": "flatline_freeze"
+    },
+    "cobot-crush": {
+      "id": "COBOT_CRUSH",
+      "name": "Collaborative Robot Kinematic Surge",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 45.0
+      },
+      "signal_profile": "impulse_shock"
+    },
+    "steer-by-wire-hijack": {
+      "id": "STEER_BY_WIRE_HIJACK",
+      "name": "Steer-by-Wire Actuator Angle Hijack",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 28.0
+      },
+      "signal_profile": "impulse_shock"
+    },
+    "grid-harmonic-resonance": {
+      "id": "GRID_HARMONIC_RESONANCE",
+      "name": "Grid Harmonic Resonance (THD > 18%)",
+      "multiplexer_fault": {
+        "action": "harmonic_multiplier",
+        "value": 2.8
+      },
+      "signal_profile": "harmonic_sideband"
+    },
+    "rocof-blackout": {
+      "id": "ROCOF_BLACKOUT",
+      "name": "ROCOF Underfrequency Blackout Trip",
+      "multiplexer_fault": {
+        "action": "step_decrease",
+        "value": 1.4
+      },
+      "signal_profile": "caustic_ramp"
+    },
+    "torpedo-door-override": {
+      "id": "TORPEDO_DOOR_OVERRIDE",
+      "name": "Torpedo Outer Door Interlock Force",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 80.0
+      },
+      "signal_profile": "impulse_shock"
+    },
+    "dam-cavitation-gouge": {
+      "id": "DAM_CAVITATION_GOUGE",
+      "name": "Penstock Turbine Cavitation Shockwave",
+      "multiplexer_fault": {
+        "action": "harmonic_multiplier",
+        "value": 3.5
+      },
+      "signal_profile": "harmonic_sideband"
+    },
+    "cell-lysis-shear": {
+      "id": "CELL_LYSIS_SHEAR",
+      "name": "Bioreactor Impeller Viscous Shear Spike",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 3.0
+      },
+      "signal_profile": "caustic_ramp"
+    },
+    "airgap-acoustic-leak": {
+      "id": "AIRGAP_ACOUSTIC_LEAK",
+      "name": "Air-Gapped Acoustic Exfiltration Leak",
+      "multiplexer_fault": {
+        "action": "harmonic_multiplier",
+        "value": 2.2
+      },
+      "signal_profile": "harmonic_sideband"
+    },
+    "hpm-surge": {
+      "id": "HPM_SURGE",
+      "name": "High-Power Microwave EMP Induction",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 60.0
+      },
+      "signal_profile": "coherence_decay"
+    },
+    "bess-thermal-runaway": {
+      "id": "BESS_THERMAL_RUNAWAY",
+      "name": "BESS Battery Thermal Runaway Surge",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 55.0
+      },
+      "signal_profile": "caustic_ramp"
+    },
+    "quantum-dephase": {
+      "id": "QUANTUM_DEPHASE",
+      "name": "Qubit Phase Coherence Magnetic Desync",
+      "multiplexer_fault": {
+        "action": "drop_to_val",
+        "value": 0.1
+      },
+      "signal_profile": "coherence_decay"
+    },
+    "nuclear-dnb": {
+      "id": "NUCLEAR_DNB",
+      "name": "Reactor Core Departure from Nucleate Boiling",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 75.0
+      },
+      "signal_profile": "caustic_ramp"
+    },
+    "maglev-gap-collapse": {
+      "id": "MAGLEV_GAP_COLLAPSE",
+      "name": "Electrodynamic Levitation Gap Collapse",
+      "multiplexer_fault": {
+        "action": "drop_to_val",
+        "value": 0.5
+      },
+      "signal_profile": "coherence_decay"
+    },
+    "subsea-apb-burst": {
+      "id": "SUBSEA_APB_BURST",
+      "name": "Subsea Wellhead Annular Casing Burst",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 110.0
+      },
+      "signal_profile": "impulse_shock"
+    },
+    "euv-laser-miss": {
+      "id": "EUV_LASER_MISS",
+      "name": "EUV Droplet Trajectory Desynchronization",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 14.0
+      },
+      "signal_profile": "flatline_freeze"
+    },
+    "casting-breakout": {
+      "id": "CASTING_BREAKOUT",
+      "name": "Continuous Metallurgy Mold Rupture",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 90.0
+      },
+      "signal_profile": "caustic_ramp"
+    },
+    "tokamak-disruption": {
+      "id": "TOKAMAK_DISRUPTION",
+      "name": "Plasma Beta Limit Magnetic Collapse",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 85.0
+      },
+      "signal_profile": "impulse_shock"
+    },
+    "h2-crossover": {
+      "id": "H2_CROSSOVER",
+      "name": "PEM Electrolyzer Hydrogen Membrane Crossover",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 3.5
+      },
+      "signal_profile": "caustic_ramp"
+    },
+    "gravimeter-spoof": {
+      "id": "GRAVIMETER_SPOOF",
+      "name": "Quantum Gravimeter Inertial Spoof",
+      "multiplexer_fault": {
+        "action": "drop_to_val",
+        "value": 9.81
+      },
+      "signal_profile": "flatline_freeze"
+    },
+    "lidar-spoof-obstacle": {
+      "id": "LIDAR_SPOOF_OBSTACLE",
+      "name": "LiDAR Point-Cloud Obstacle Blind Vector",
+      "multiplexer_fault": {
+        "action": "drop_to_val",
+        "value": 0.0
+      },
+      "signal_profile": "flatline_freeze"
+    },
+    "dicom-cstore-flood": {
+      "id": "DICOM_CSTORE_FLOOD",
+      "name": "DICOM C-STORE Medical Stream Flood",
+      "multiplexer_fault": {
+        "action": "step_increase",
+        "value": 180.0
+      },
+      "signal_profile": "discrete_event"
+    }
   },
   "categories": {
-    "network": ["scada-smuggling", "stuxnet-resonance", "water-hammer", "oldsmar-poisoning", "rowhammer", "gnss-spoof", "aoa-freeze", "tvc-gimbal-lock", "cobot-crush", "steer-by-wire-hijack", "grid-harmonic-resonance", "rocof-blackout", "torpedo-door-override", "dam-cavitation-gouge", "cell-lysis-shear"],
-    "microarch": ["rowhammer", "voltage-glitch", "scada-smuggling", "airgap-acoustic-leak"],
-    "pcb_power": ["voltage-glitch", "rowhammer", "hpm-surge", "bess-thermal-runaway", "steer-by-wire-hijack", "airgap-acoustic-leak"],
-    "rf_em": ["gnss-spoof", "hpm-surge", "quantum-dephase"],
-    "vibration": ["stuxnet-resonance", "water-hammer", "cobot-crush", "steer-by-wire-hijack", "nuclear-dnb", "airgap-acoustic-leak", "maglev-gap-collapse", "dam-cavitation-gouge"],
-    "temperature": ["bess-thermal-runaway", "nuclear-dnb", "subsea-apb-burst", "euv-laser-miss", "casting-breakout", "grid-harmonic-resonance", "quantum-dephase", "airgap-acoustic-leak", "maglev-gap-collapse", "cell-lysis-shear", "tokamak-disruption", "stuxnet-resonance"],
-    "pressure": ["water-hammer", "oldsmar-poisoning", "aoa-freeze", "tvc-gimbal-lock", "h2-crossover", "nuclear-dnb", "subsea-apb-burst", "euv-laser-miss", "casting-breakout", "torpedo-door-override", "dam-cavitation-gouge", "cell-lysis-shear", "tokamak-disruption"],
-    "electrical": ["grid-harmonic-resonance", "rocof-blackout", "voltage-glitch", "gnss-spoof", "hpm-surge", "bess-thermal-runaway", "h2-crossover", "nuclear-dnb", "maglev-gap-collapse", "torpedo-door-override", "tokamak-disruption"],
-    "magnetic": ["maglev-gap-collapse", "rocof-blackout", "quantum-dephase", "tokamak-disruption"],
-    "kinematic": ["stuxnet-resonance", "aoa-freeze", "tvc-gimbal-lock", "cobot-crush", "steer-by-wire-hijack", "casting-breakout", "gravimeter-spoof", "torpedo-door-override", "maglev-gap-collapse"],
-    "chemical": ["oldsmar-poisoning", "bess-thermal-runaway", "h2-crossover", "nuclear-dnb", "cell-lysis-shear", "water-hammer"],
-    "industrial_cps": ["stuxnet-resonance", "water-hammer", "oldsmar-poisoning", "cobot-crush", "dam-cavitation-gouge", "bess-thermal-runaway", "casting-breakout", "rocof-blackout"],
-    "nuclear": ["stuxnet-resonance", "nuclear-dnb", "tokamak-disruption"],
-    "avionics": ["aoa-freeze", "tvc-gimbal-lock", "gnss-spoof", "hpm-surge", "gravimeter-spoof"],
-    "propulsion": ["tvc-gimbal-lock"],
-    "automotive": ["steer-by-wire-hijack"],
-    "subsea": ["subsea-apb-burst", "torpedo-door-override", "water-hammer", "gnss-spoof"],
-    "semiconductor": ["euv-laser-miss", "rowhammer", "voltage-glitch", "hpm-surge", "quantum-dephase"],
-    "metallurgy": ["casting-breakout", "subsea-apb-burst", "euv-laser-miss"],
-    "quantum": ["quantum-dephase", "gravimeter-spoof", "tokamak-disruption"],
-    "optical": ["euv-laser-miss", "gravimeter-spoof", "lidar-spoof-obstacle"],
-    "vision": ["euv-laser-miss", "lidar-spoof-obstacle"],
-    "lidar": ["lidar-spoof-obstacle", "aoa-freeze", "cobot-crush"],
-    "bioprocess": ["cell-lysis-shear"],
-    "geological": ["dam-cavitation-gouge", "subsea-apb-burst"]
+    "vibration": {
+      "plot_archetype": "spectral_harmonic",
+      "lab_module": "acoustic-tdoa",
+      "physics_engine": "rk4_mechanical_vibe",
+      "chart_config": {
+        "primary_title": "RMS Vibration Velocity",
+        "secondary_title": "FFT Rotational Harmonic Spectrum (1x-5x)",
+        "unit": "mm/s",
+        "min_val": 0.0,
+        "max_val": 12.0,
+        "safe_low": 0.0,
+        "safe_high": 7.1
+      },
+      "attacks": [
+        "stuxnet-resonance",
+        "water-hammer",
+        "cobot-crush",
+        "steer-by-wire-hijack",
+        "nuclear-dnb",
+        "airgap-acoustic-leak",
+        "maglev-gap-collapse",
+        "dam-cavitation-gouge"
+      ]
+    },
+    "geological": {
+      "plot_archetype": "spectral_harmonic",
+      "lab_module": "acoustic-tdoa",
+      "physics_engine": "rk4_mechanical_vibe",
+      "chart_config": {
+        "primary_title": "Geophone Seismic Velocity",
+        "secondary_title": "Acoustic Modal Spectrum (1x-5x)",
+        "unit": "mm/s",
+        "min_val": 0.0,
+        "max_val": 15.0,
+        "safe_low": 0.0,
+        "safe_high": 8.0
+      },
+      "attacks": [
+        "dam-cavitation-gouge",
+        "subsea-apb-burst"
+      ]
+    },
+    "electrical": {
+      "plot_archetype": "spectral_harmonic",
+      "lab_module": "power-grid",
+      "physics_engine": "grid_harmonics",
+      "chart_config": {
+        "primary_title": "Grid Synchrophasor Frequency",
+        "secondary_title": "Harmonic Distortion Spectrum (1x-5x)",
+        "unit": "Hz",
+        "min_val": 48.0,
+        "max_val": 52.0,
+        "safe_low": 49.5,
+        "safe_high": 50.5
+      },
+      "attacks": [
+        "grid-harmonic-resonance",
+        "rocof-blackout",
+        "voltage-glitch",
+        "gnss-spoof",
+        "hpm-surge",
+        "bess-thermal-runaway",
+        "h2-crossover",
+        "nuclear-dnb",
+        "maglev-gap-collapse",
+        "torpedo-door-override",
+        "tokamak-disruption"
+      ]
+    },
+    "pcb_power": {
+      "plot_archetype": "spectral_harmonic",
+      "lab_module": "power-grid",
+      "physics_engine": "grid_harmonics",
+      "chart_config": {
+        "primary_title": "Core Rail Power Ripple",
+        "secondary_title": "EM Side-Channel Spectrum (1x-5x)",
+        "unit": "V",
+        "min_val": 0.0,
+        "max_val": 5.5,
+        "safe_low": 3.0,
+        "safe_high": 3.6
+      },
+      "attacks": [
+        "voltage-glitch",
+        "rowhammer",
+        "hpm-surge",
+        "bess-thermal-runaway",
+        "steer-by-wire-hijack",
+        "airgap-acoustic-leak"
+      ]
+    },
+    "pressure": {
+      "plot_archetype": "shockwave_transient",
+      "lab_module": "fluid-shock",
+      "physics_engine": "fluid_pressure_ode",
+      "chart_config": {
+        "primary_title": "Hydraulic Manifold Pressure",
+        "secondary_title": "Joukowsky Pressure Derivative (dP/dt)",
+        "unit": "PSI",
+        "min_val": 0.0,
+        "max_val": 250.0,
+        "safe_low": 40.0,
+        "safe_high": 150.0
+      },
+      "attacks": [
+        "water-hammer",
+        "oldsmar-poisoning",
+        "aoa-freeze",
+        "tvc-gimbal-lock",
+        "h2-crossover",
+        "nuclear-dnb",
+        "subsea-apb-burst",
+        "euv-laser-miss",
+        "casting-breakout",
+        "torpedo-door-override",
+        "dam-cavitation-gouge",
+        "cell-lysis-shear",
+        "tokamak-disruption"
+      ]
+    },
+    "subsea": {
+      "plot_archetype": "shockwave_transient",
+      "lab_module": "marine-subsea",
+      "physics_engine": "fluid_pressure_ode",
+      "chart_config": {
+        "primary_title": "Annular BOP Casing Pressure",
+        "secondary_title": "Transient Overpressure Rate (dP/dt)",
+        "unit": "bar",
+        "min_val": 0.0,
+        "max_val": 300.0,
+        "safe_low": 20.0,
+        "safe_high": 180.0
+      },
+      "attacks": [
+        "subsea-apb-burst",
+        "torpedo-door-override",
+        "water-hammer",
+        "gnss-spoof"
+      ]
+    },
+    "chemical": {
+      "plot_archetype": "corridor_titration",
+      "lab_module": "chemical-gas",
+      "physics_engine": "chemical_nernst",
+      "chart_config": {
+        "primary_title": "Nernst Electrochemical Potential / pH",
+        "secondary_title": "Corridor Deviation & Dosing Rate",
+        "unit": "pH",
+        "min_val": 0.0,
+        "max_val": 14.0,
+        "safe_low": 6.5,
+        "safe_high": 8.5
+      },
+      "attacks": [
+        "oldsmar-poisoning",
+        "bess-thermal-runaway",
+        "h2-crossover",
+        "nuclear-dnb",
+        "cell-lysis-shear",
+        "water-hammer"
+      ]
+    },
+    "bioprocess": {
+      "plot_archetype": "corridor_titration",
+      "lab_module": "chemical-gas",
+      "physics_engine": "chemical_nernst",
+      "chart_config": {
+        "primary_title": "Bioreactor Dissolved Oxygen / pH",
+        "secondary_title": "Shear & Corridor Deviation",
+        "unit": "pH",
+        "min_val": 0.0,
+        "max_val": 14.0,
+        "safe_low": 6.8,
+        "safe_high": 7.6
+      },
+      "attacks": [
+        "cell-lysis-shear"
+      ]
+    },
+    "temperature": {
+      "plot_archetype": "thermal_runaway",
+      "lab_module": "fab-extreme",
+      "physics_engine": "thermal_lag_ode",
+      "chart_config": {
+        "primary_title": "Thermal Plant Core Temp T(t)",
+        "secondary_title": "2D Thermal Phase-Plane (T vs dT/dt)",
+        "unit": "C",
+        "min_val": 40.0,
+        "max_val": 160.0,
+        "safe_low": 55.0,
+        "safe_high": 120.0
+      },
+      "attacks": [
+        "bess-thermal-runaway",
+        "nuclear-dnb",
+        "subsea-apb-burst",
+        "euv-laser-miss",
+        "casting-breakout",
+        "grid-harmonic-resonance",
+        "quantum-dephase",
+        "airgap-acoustic-leak",
+        "maglev-gap-collapse",
+        "cell-lysis-shear",
+        "tokamak-disruption",
+        "stuxnet-resonance"
+      ]
+    },
+    "nuclear": {
+      "plot_archetype": "thermal_runaway",
+      "lab_module": "fluid-shock",
+      "physics_engine": "thermal_lag_ode",
+      "chart_config": {
+        "primary_title": "Reactor Cladding Temperature",
+        "secondary_title": "2D Thermal Phase-Plane (T vs dT/dt)",
+        "unit": "C",
+        "min_val": 250.0,
+        "max_val": 450.0,
+        "safe_low": 280.0,
+        "safe_high": 350.0
+      },
+      "attacks": [
+        "stuxnet-resonance",
+        "nuclear-dnb",
+        "tokamak-disruption"
+      ]
+    },
+    "metallurgy": {
+      "plot_archetype": "thermal_runaway",
+      "lab_module": "fab-extreme",
+      "physics_engine": "thermal_lag_ode",
+      "chart_config": {
+        "primary_title": "Continuous Caster Mold Temp",
+        "secondary_title": "2D Thermal Phase-Plane (T vs dT/dt)",
+        "unit": "C",
+        "min_val": 600.0,
+        "max_val": 1600.0,
+        "safe_low": 900.0,
+        "safe_high": 1350.0
+      },
+      "attacks": [
+        "casting-breakout",
+        "subsea-apb-burst",
+        "euv-laser-miss"
+      ]
+    },
+    "kinematic": {
+      "plot_archetype": "spatial_kinematic",
+      "lab_module": "space-avionics",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "Measured Kinematic State vs Ground Truth",
+        "secondary_title": "Dead-Reckoning Divergence |e(t)|",
+        "unit": "deg/s",
+        "min_val": -10.0,
+        "max_val": 50.0,
+        "safe_low": 0.0,
+        "safe_high": 30.0
+      },
+      "attacks": [
+        "stuxnet-resonance",
+        "aoa-freeze",
+        "tvc-gimbal-lock",
+        "cobot-crush",
+        "steer-by-wire-hijack",
+        "casting-breakout",
+        "gravimeter-spoof",
+        "torpedo-door-override",
+        "maglev-gap-collapse"
+      ]
+    },
+    "avionics": {
+      "plot_archetype": "spatial_kinematic",
+      "lab_module": "space-avionics",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "Measured Airspeed / AoA vs Ground Truth",
+        "secondary_title": "Invariant Divergence |Measured - Truth|",
+        "unit": "knots",
+        "min_val": 0.0,
+        "max_val": 200.0,
+        "safe_low": 40.0,
+        "safe_high": 160.0
+      },
+      "attacks": [
+        "aoa-freeze",
+        "tvc-gimbal-lock",
+        "gnss-spoof",
+        "hpm-surge",
+        "gravimeter-spoof"
+      ]
+    },
+    "propulsion": {
+      "plot_archetype": "spatial_kinematic",
+      "lab_module": "space-avionics",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "Gimbal Deflection vs Physical Truth",
+        "secondary_title": "Control Divergence |e(t)|",
+        "unit": "deg",
+        "min_val": -20.0,
+        "max_val": 20.0,
+        "safe_low": -12.0,
+        "safe_high": 12.0
+      },
+      "attacks": [
+        "tvc-gimbal-lock"
+      ]
+    },
+    "automotive": {
+      "plot_archetype": "spatial_kinematic",
+      "lab_module": "space-avionics",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "Steer-by-Wire Angle vs Wheel Truth",
+        "secondary_title": "Actuator Divergence |e(t)|",
+        "unit": "deg",
+        "min_val": -45.0,
+        "max_val": 45.0,
+        "safe_low": -30.0,
+        "safe_high": 30.0
+      },
+      "attacks": [
+        "steer-by-wire-hijack"
+      ]
+    },
+    "optical": {
+      "plot_archetype": "spatial_kinematic",
+      "lab_module": "fab-extreme",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "Optical Alignment vs Reference",
+        "secondary_title": "Trajectory Error Magnitude",
+        "unit": "um",
+        "min_val": 0.0,
+        "max_val": 50.0,
+        "safe_low": 0.0,
+        "safe_high": 25.0
+      },
+      "attacks": [
+        "euv-laser-miss",
+        "gravimeter-spoof",
+        "lidar-spoof-obstacle"
+      ]
+    },
+    "vision": {
+      "plot_archetype": "spatial_kinematic",
+      "lab_module": "fab-extreme",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "Vision Frame Rate / Tracking vs Truth",
+        "secondary_title": "Frame Tracking Error",
+        "unit": "FPS",
+        "min_val": 0.0,
+        "max_val": 60.0,
+        "safe_low": 10.0,
+        "safe_high": 35.0
+      },
+      "attacks": [
+        "euv-laser-miss",
+        "lidar-spoof-obstacle"
+      ]
+    },
+    "lidar": {
+      "plot_archetype": "spatial_kinematic",
+      "lab_module": "space-avionics",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "LiDAR Rangefinder vs Terrain Truth",
+        "secondary_title": "Point-Cloud Range Residual",
+        "unit": "m",
+        "min_val": 0.0,
+        "max_val": 250.0,
+        "safe_low": 15.0,
+        "safe_high": 200.0
+      },
+      "attacks": [
+        "lidar-spoof-obstacle",
+        "aoa-freeze",
+        "cobot-crush"
+      ]
+    },
+    "rf_em": {
+      "plot_archetype": "coherence_snr",
+      "lab_module": "rf-sdr",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "RF Carrier-to-Noise Density (C/N0)",
+        "secondary_title": "Signal Anomaly Density Histogram",
+        "unit": "dBm",
+        "min_val": -120.0,
+        "max_val": -40.0,
+        "safe_low": -95.0,
+        "safe_high": -55.0
+      },
+      "attacks": [
+        "gnss-spoof",
+        "hpm-surge",
+        "quantum-dephase"
+      ]
+    },
+    "quantum": {
+      "plot_archetype": "coherence_snr",
+      "lab_module": "quantum-metrology",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "Qubit Coherence Fidelity",
+        "secondary_title": "Decoherence Event Histogram",
+        "unit": "F",
+        "min_val": 0.0,
+        "max_val": 1.0,
+        "safe_low": 0.85,
+        "safe_high": 1.0
+      },
+      "attacks": [
+        "quantum-dephase",
+        "gravimeter-spoof",
+        "tokamak-disruption"
+      ]
+    },
+    "magnetic": {
+      "plot_archetype": "coherence_snr",
+      "lab_module": "quantum-metrology",
+      "physics_engine": "generic_ode",
+      "chart_config": {
+        "primary_title": "Magnetic Levitation Flux / Field",
+        "secondary_title": "Flux Collapse Density",
+        "unit": "mT",
+        "min_val": 0.0,
+        "max_val": 100.0,
+        "safe_low": 20.0,
+        "safe_high": 80.0
+      },
+      "attacks": [
+        "maglev-gap-collapse",
+        "rocof-blackout",
+        "quantum-dephase",
+        "tokamak-disruption"
+      ]
+    },
+    "network": {
+      "plot_archetype": "discrete_divergence",
+      "lab_module": "fuzzer",
+      "physics_engine": "event_driven",
+      "chart_config": {
+        "primary_title": "Protocol Grammar Divergence Rate",
+        "secondary_title": "Packet Discrepancy Density",
+        "unit": "pkts/s",
+        "min_val": 0.0,
+        "max_val": 100.0,
+        "safe_low": 0.0,
+        "safe_high": 15.0
+      },
+      "attacks": [
+        "scada-smuggling",
+        "stuxnet-resonance",
+        "water-hammer",
+        "oldsmar-poisoning",
+        "rowhammer",
+        "gnss-spoof",
+        "aoa-freeze",
+        "tvc-gimbal-lock",
+        "cobot-crush",
+        "steer-by-wire-hijack",
+        "grid-harmonic-resonance",
+        "rocof-blackout",
+        "torpedo-door-override",
+        "dam-cavitation-gouge",
+        "cell-lysis-shear"
+      ]
+    },
+    "microarch": {
+      "plot_archetype": "discrete_divergence",
+      "lab_module": "sensor-audit",
+      "physics_engine": "event_driven",
+      "chart_config": {
+        "primary_title": "Hardware ECC Bit-Flip & Glitch Rate",
+        "secondary_title": "PMU Stall & Bus-Lock Density",
+        "unit": "err/s",
+        "min_val": 0.0,
+        "max_val": 50.0,
+        "safe_low": 0.0,
+        "safe_high": 5.0
+      },
+      "attacks": [
+        "rowhammer",
+        "voltage-glitch",
+        "scada-smuggling",
+        "airgap-acoustic-leak"
+      ]
+    },
+    "semiconductor": {
+      "plot_archetype": "discrete_divergence",
+      "lab_module": "sensor-audit",
+      "physics_engine": "event_driven",
+      "chart_config": {
+        "primary_title": "Lithography Droplet Timing Drift",
+        "secondary_title": "Timing Fault Density",
+        "unit": "ns",
+        "min_val": 0.0,
+        "max_val": 50.0,
+        "safe_low": 0.0,
+        "safe_high": 10.0
+      },
+      "attacks": [
+        "euv-laser-miss",
+        "rowhammer",
+        "voltage-glitch",
+        "hpm-surge",
+        "quantum-dephase"
+      ]
+    },
+    "industrial_cps": {
+      "plot_archetype": "discrete_divergence",
+      "lab_module": "fuzzer",
+      "physics_engine": "event_driven",
+      "chart_config": {
+        "primary_title": "CPS Frame Anomaly Score",
+        "secondary_title": "Control Discrepancy Density",
+        "unit": "%",
+        "min_val": 0.0,
+        "max_val": 100.0,
+        "safe_low": 0.0,
+        "safe_high": 20.0
+      },
+      "attacks": [
+        "stuxnet-resonance",
+        "water-hammer",
+        "oldsmar-poisoning",
+        "cobot-crush",
+        "dam-cavitation-gouge",
+        "bess-thermal-runaway",
+        "casting-breakout",
+        "rocof-blackout"
+      ]
+    }
   }
 }
