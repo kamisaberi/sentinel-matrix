@@ -1,7 +1,7 @@
 // File: /home/kami/sentinel-nexus/web/js/lab_cockpit.js
 // ==============================================================================
-// ARYORITHM SENTINEL NEXUS: CATEGORY-DRIVEN & PLUGIN-COMPLIANT LAB COCKPIT
-// Zero Hardcoding: Driven by /api/v1/lab/categories & /api/v1/lab/telemetry
+// ARYORITHM SENTINEL NEXUS: SENSOR-CENTRIC & DOMAIN-DRIVEN LAB COCKPIT
+// Zero Hardcoding: Strict Sensor Tabs -> Category Plot Tabs -> Targeted Attacks
 // ==============================================================================
 
 (function () {
@@ -9,27 +9,29 @@
 
     let activeNodeId = null;
     let activeNodeDetail = null;
-    let activeCategory = null;
-    let showAllCategories = false;
+    let activeSensorId = null;
+    let activePlotSubTab = 'plot_a';
+    let activeMainWorkspaceTab = 'tab_sensors'; // 'tab_sensors' | 'tab_hardware'
+
     let labCatalog = { node_categories: [], categories: {} };
     let labNodes = [];
     let telemetryTimer = null;
     let logPollTimer = null;
     let lastLogContent = '';
-    let lastArchetype = null;
+    let lastPlotMode = null;
 
     // ECharts Instances
-    let primaryChart = null;   // #cbfEchart
-    let secondaryChart = null; // #phaseEchart
-    let evtChart = null;       // #evtEchart
-    let pmuChart = null;       // #pmuEchart
-    let rssChart = null;       // #rssEchart
-    let fusionChart = null;    // #fusionEchart
+    let plot1Chart = null; // #cbfEchart
+    let plot2Chart = null; // #phaseEchart
+    let evtChart = null;   // #evtEchart
+    let pmuChart = null;   // #pmuEchart
+    let rssChart = null;   // #rssEchart
+    let fusionChart = null;// #fusionEchart
 
     const MAX_POINTS = 50;
-    let primaryBuf = [];
+    let p1Buf = [];
     let truthBuf = [];
-    let secondaryBuf = [];
+    let secBuf = [];
     let phaseOrbitBuf = [];
     let residualBuf = [];
 
@@ -37,8 +39,7 @@
     // 1. INITIALIZATION & RESIZE OBSERVER (0x0 PROTECTION)
     // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
-        initSubStageTabs();
-        injectCategoryBarContainer();
+        injectWorkspaceStructure();
         loadLabFleetRail();
 
         document.querySelectorAll('.admin-nav-item, .nav-tab').forEach(btn => {
@@ -53,9 +54,7 @@
         if (typeof ResizeObserver !== 'undefined') {
             ['cbfEchart', 'phaseEchart', 'evtEchart', 'pmuEchart', 'rssEchart', 'fusionEchart'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    new ResizeObserver(() => resizeAllCharts()).observe(el);
-                }
+                if (el) new ResizeObserver(() => resizeAllCharts()).observe(el);
             });
         }
         window.addEventListener('resize', resizeAllCharts);
@@ -66,18 +65,80 @@
         }
     });
 
-    function injectCategoryBarContainer() {
+    // Injects the clean 2-Tab bar and Sensor Selector Bar dynamically
+    function injectWorkspaceStructure() {
         const stageTabs = document.querySelector('#tab-lab-cockpit .lab-stage-tabs');
-        if (!stageTabs || document.getElementById('lab-category-pill-bar')) return;
+        if (!stageTabs) return;
 
-        const bar = document.createElement('div');
-        bar.id = 'lab-category-pill-bar';
-        bar.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:8px 10px; background:rgba(13,17,26,0.85); border:1px solid var(--hairline); border-radius:4px;';
-        stageTabs.parentElement.insertBefore(bar, stageTabs.nextSibling);
+        // 1. Transform top stage tabs into the 2 Main Workspace Tabs
+        stageTabs.innerHTML = `
+            <button class="lab-main-tab active" data-tab="tab_sensors" style="
+                background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent); color: var(--ink);
+                padding: 7px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                📡 SENSORS INVARIANT LAB
+            </button>
+            <button class="lab-main-tab" data-tab="tab_hardware" style="
+                background: var(--panel); border: 1px solid var(--hairline); color: var(--muted);
+                padding: 7px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                ⚡ NODE SYSTEM &amp; HARDWARE TELEMETRY
+            </button>
+        `;
+
+        stageTabs.querySelectorAll('.lab-main-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                stageTabs.querySelectorAll('.lab-main-tab').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'var(--panel)';
+                    b.style.borderColor = 'var(--hairline)';
+                    b.style.color = 'var(--muted)';
+                });
+                btn.classList.add('active');
+                btn.style.background = 'rgba(0, 229, 255, 0.15)';
+                btn.style.borderColor = 'var(--accent)';
+                btn.style.color = 'var(--ink)';
+
+                activeMainWorkspaceTab = btn.getAttribute('data-tab');
+                updateWorkspaceVisibility();
+                setTimeout(() => {
+                    tickTelemetryOnce();
+                    resizeAllCharts();
+                }, 50);
+            });
+        });
+
+        // 2. Inject Dedicated Sensor Selection Bar
+        if (!document.getElementById('lab-sensor-tabs-bar')) {
+            const bar = document.createElement('div');
+            bar.id = 'lab-sensor-tabs-bar';
+            bar.style.cssText = 'display:flex; flex-direction:column; gap:6px; padding:10px 12px; background:rgba(13,17,26,0.9); border:1px solid var(--hairline); border-radius:4px;';
+            stageTabs.parentElement.insertBefore(bar, stageTabs.nextSibling);
+        }
+    }
+
+    function updateWorkspaceVisibility() {
+        const sensorBar = document.getElementById('lab-sensor-tabs-bar');
+        const viewPhysics = document.getElementById('view-lab-physics');
+        const viewTiming = document.getElementById('view-lab-timing');
+        const viewNetwork = document.getElementById('view-lab-network');
+        const deckContainer = document.querySelector('#tab-lab-cockpit .lab-stage-deck');
+
+        if (activeMainWorkspaceTab === 'tab_sensors') {
+            if (sensorBar) sensorBar.style.display = 'flex';
+            if (viewPhysics) viewPhysics.style.display = 'grid';
+            if (viewTiming) viewTiming.style.display = 'none';
+            if (viewNetwork) viewNetwork.style.display = 'none';
+            if (deckContainer) deckContainer.style.display = 'grid';
+        } else {
+            if (sensorBar) sensorBar.style.display = 'none';
+            if (viewPhysics) viewPhysics.style.display = 'none';
+            if (viewTiming) viewTiming.style.display = 'grid';
+            if (viewNetwork) viewNetwork.style.display = 'grid';
+            if (deckContainer) deckContainer.style.display = 'grid';
+        }
     }
 
     // =========================================================================
-    // 2. DYNAMIC FLEET RAIL & CATEGORY CATALOG FETCH
+    // 2. DYNAMIC FLEET RAIL & SENTRY SELECTION
     // =========================================================================
     async function loadLabFleetRail() {
         const railEl = document.getElementById('lab-sentry-rail');
@@ -175,124 +236,217 @@
 
             if (catRes && catRes.ok) {
                 labCatalog = await catRes.json();
-                const nodeCats = Array.isArray(labCatalog.node_categories) ? labCatalog.node_categories : [];
-                const allCats = Object.keys(labCatalog.categories || {});
-                if (!activeCategory || !labCatalog.categories?.[activeCategory]) {
-                    activeCategory = nodeCats[0] || allCats[0] || 'network';
-                }
-                renderCategoryPills();
-                renderContextualAttackDeck();
-                resetRollingBuffers();
-                await tickTelemetryOnce();
             }
+
+            // Sync node's real attached sensors
+            const sensors = Array.isArray(activeNodeDetail?.sensors) ? activeNodeDetail.sensors : [];
+            if (!activeSensorId || !sensors.some(s => s.sensor_id === activeSensorId)) {
+                activeSensorId = sensors.length > 0 ? sensors[0].sensor_id : null;
+            }
+
+            renderSensorTabsBar(sensors);
+            renderTargetedSensorAttacks();
+            resetRollingBuffers();
+            updateWorkspaceVisibility();
+            await tickTelemetryOnce();
         } catch (e) {
-            console.warn('[LabCockpit] Node/Category sync error:', e);
+            console.warn('[LabCockpit] Node selection error:', e);
         }
     }
 
-    function renderCategoryPills() {
-        const bar = document.getElementById('lab-category-pill-bar');
+    // =========================================================================
+    // 3. SENSOR TABS BAR (LEVEL 3) & METADATA STRIP
+    // =========================================================================
+    function renderSensorTabsBar(sensors) {
+        const bar = document.getElementById('lab-sensor-tabs-bar');
         if (!bar) return;
 
-        const nodeCats = Array.isArray(labCatalog.node_categories) ? labCatalog.node_categories : [];
-        const allKeys = Object.keys(labCatalog.categories || {});
-        const ordered = [...nodeCats, ...allKeys.filter(k => !nodeCats.includes(k))];
-        const visible = showAllCategories ? ordered : (nodeCats.length > 0 ? ordered.slice(0, Math.max(nodeCats.length, 6)) : ordered.slice(0, 8));
+        if (sensors.length === 0) {
+            bar.innerHTML = `<div style="font-size:10.5px; color:#94A3B8; font-family:monospace;">[!] No physical sensors reported for this sentry node.</div>`;
+            return;
+        }
+
+        const tabsHtml = sensors.map(s => {
+            const isSel = s.sensor_id === activeSensorId;
+            return `
+                <button class="lab-sensor-tab" data-sid="${escapeHtml(s.sensor_id)}" style="
+                    font-size:10px; font-weight:800; font-family:monospace; padding:6px 12px; border-radius:4px; cursor:pointer;
+                    background:${isSel ? '#00E5FF' : '#111827'}; color:${isSel ? '#07090E' : '#CBD5E1'};
+                    border:1px solid ${isSel ? '#00E5FF' : '#243144'}; display:flex; align-items:center; gap:6px;">
+                    <span>🏷️ ${escapeHtml(s.sensor_id)}</span>
+                    <span style="opacity:0.85;">(${s.baseline ?? 0} ${escapeHtml(s.unit || '')})</span>
+                </button>
+            `;
+        }).join('');
+
+        const curSensor = sensors.find(s => s.sensor_id === activeSensorId) || sensors[0];
+        const cat = (curSensor.category || 'generic').toLowerCase();
+        const catDef = labCatalog.categories?.[cat] || {};
+        const archetype = catDef.plot_archetype || 'spatial_kinematic';
+
+        // Render Plot Sub-Tabs based on this specific sensor's domain!
+        const plotTabs = getPlotTabsForDomain(archetype, curSensor);
+
+        const plotTabsHtml = plotTabs.map(p => {
+            const isSel = p.id === activePlotSubTab;
+            return `
+                <button class="lab-plot-subtab" data-pid="${escapeHtml(p.id)}" style="
+                    font-size:9.5px; font-weight:700; font-family:monospace; padding:4px 9px; border-radius:3px; cursor:pointer;
+                    background:${isSel ? 'rgba(0, 255, 163, 0.15)' : '#070A0F'}; color:${isSel ? '#00FFA3' : '#94A3B8'};
+                    border:1px solid ${isSel ? '#00FFA3' : '#1E293B'};">
+                    ${escapeHtml(p.label)}
+                </button>
+            `;
+        }).join('');
 
         bar.innerHTML = `
-            <span style="font-size:9px; font-weight:800; color:var(--muted); font-family:monospace; margin-right:4px;">DOMAIN CATEGORY:</span>
-            ${visible.map(cat => {
-                const cObj = labCatalog.categories[cat] || {};
-                const isSel = cat === activeCategory;
-                const isNodeCat = nodeCats.includes(cat);
-                return `
-                    <button class="lab-cat-pill" data-cat="${escapeHtml(cat)}" style="
-                        font-size:9.5px; font-weight:700; font-family:monospace; padding:4px 9px; border-radius:3px; cursor:pointer;
-                        background:${isSel ? '#00E5FF' : (isNodeCat ? 'rgba(0,255,163,0.10)' : '#111827')};
-                        color:${isSel ? '#07090E' : (isNodeCat ? '#00FFA3' : '#94A3B8')};
-                        border:1px solid ${isSel ? '#00E5FF' : (isNodeCat ? '#00FFA3' : '#243144')};">
-                        ${escapeHtml(cat.toUpperCase())}${cObj.is_plugin ? ' ★' : ''}
-                    </button>
-                `;
-            }).join('')}
-            ${ordered.length > visible.length || showAllCategories ? `
-                <button id="btn-toggle-all-cats" style="font-size:9px; font-family:monospace; padding:4px 8px; border-radius:3px; cursor:pointer; background:#1E293B; color:#00E5FF; border:1px solid #334155;">
-                    ${showAllCategories ? 'COLLAPSE' : `+ ALL (${ordered.length})`}
-                </button>` : ''}
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <span style="font-size:9px; font-weight:800; color:var(--muted); font-family:monospace;">ATTACHED SENSORS:</span>
+                    ${tabsHtml}
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:9px; font-weight:800; color:#00E5FF; font-family:monospace;">PLOT DIAGNOSTIC:</span>
+                    ${plotTabsHtml}
+                </div>
+            </div>
+            <div style="font-family:monospace; font-size:10px; color:#8A99AD; display:flex; flex-wrap:wrap; gap:12px; padding-top:4px; border-top:1px solid rgba(255,255,255,0.05);">
+                <span>CHANNEL: <b style="color:#F8FAFC;">${escapeHtml(curSensor.name || curSensor.sensor_id)}</b></span>
+                <span>CATEGORY: <b style="color:#00E5FF;">${escapeHtml((curSensor.category || '').toUpperCase())}</b></span>
+                <span>INTERFACE: <b style="color:#CBD5E1;">${escapeHtml(curSensor.interface || (':' + (curSensor.port || 502)))}</b></span>
+                <span>BASELINE: <b style="color:#00FFA3;">${curSensor.baseline ?? 0} ${escapeHtml(curSensor.unit || '')}</b></span>
+                <span>DOMAIN ARCHETYPE: <b style="color:#A855F7;">${escapeHtml(archetype.toUpperCase())}</b></span>
+            </div>
         `;
 
-        bar.querySelectorAll('.lab-cat-pill').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                activeCategory = btn.getAttribute('data-cat');
-                renderCategoryPills();
-                renderContextualAttackDeck();
+        bar.querySelectorAll('.lab-sensor-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activeSensorId = btn.getAttribute('data-sid');
+                activePlotSubTab = 'plot_a';
+                renderSensorTabsBar(sensors);
+                renderTargetedSensorAttacks();
                 resetRollingBuffers();
-                await tickTelemetryOnce();
+                tickTelemetryOnce();
             });
         });
 
-        document.getElementById('btn-toggle-all-cats')?.addEventListener('click', () => {
-            showAllCategories = !showAllCategories;
-            renderCategoryPills();
+        bar.querySelectorAll('.lab-plot-subtab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activePlotSubTab = btn.getAttribute('data-pid');
+                renderSensorTabsBar(sensors);
+                tickTelemetryOnce();
+            });
         });
     }
 
-    function renderContextualAttackDeck() {
+    // Returns the exact plots tailored for that sensor's domain!
+    function getPlotTabsForDomain(archetype, sensor) {
+        if (archetype === 'spectral_harmonic') {
+            return [
+                { id: 'plot_a', label: '📊 02: FFT Harmonic Spectrum' },
+                { id: 'plot_b', label: '🔄 03: 2D Phase Limit Cycle' }
+            ];
+        }
+        if (archetype === 'shockwave_transient') {
+            return [
+                { id: 'plot_a', label: '⚡ 02: Joukowsky dP/dt Impulse' },
+                { id: 'plot_b', label: '🔄 03: 2D Pressure Phase Orbit' }
+            ];
+        }
+        if (archetype === 'thermal_runaway') {
+            return [
+                { id: 'plot_a', label: '🔄 02: 2D Thermal Phase Orbit' },
+                { id: 'plot_b', label: '⏱️ 03: Arrhenius Runaway Margin' }
+            ];
+        }
+        if (archetype === 'corridor_titration') {
+            return [
+                { id: 'plot_a', label: '📊 02: Corridor Boundary Deviation' },
+                { id: 'plot_b', label: '🔄 03: Reaction Rate Orbit' }
+            ];
+        }
+        if (archetype === 'coherence_snr' || archetype === 'discrete_divergence') {
+            return [
+                { id: 'plot_a', label: '📊 02: Error & Jitter Histogram' },
+                { id: 'plot_b', label: '🛡️ 03: Stability Invariant Margin' }
+            ];
+        }
+        // Default for spatial_kinematic (avionics, kinematic, lidar, optical)
+        return [
+            { id: 'plot_a', label: '📊 02: Measured vs Ground Truth' },
+            { id: 'plot_b', label: '🔄 03: Kinematic Phase Orbit' }
+        ];
+    }
+
+    // =========================================================================
+    // 4. SENSOR-SPECIFIC ATTACK DECK (ONLY ATTACKS FOR THIS SENSOR!)
+    // =========================================================================
+    function renderTargetedSensorAttacks() {
         const deckContainer = document.querySelector('.lab-stage-deck .lab-card:first-child > div:last-child');
         if (!deckContainer) return;
 
-        const catDef = labCatalog.categories?.[activeCategory];
+        const curSensor = (activeNodeDetail?.sensors || []).find(s => s.sensor_id === activeSensorId);
+        const cat = curSensor ? (curSensor.category || '').toLowerCase() : '';
+        const catDef = labCatalog.categories?.[cat] || {};
         const attacks = Array.isArray(catDef?.attacks) ? catDef.attacks : [];
 
         deckContainer.innerHTML = `
             <div>
                 <div style="font-size: 9px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">
-                    ${escapeHtml((activeCategory || 'DOMAIN').toUpperCase())} ATTACK VECTORS (MOD: ${escapeHtml(catDef?.lab_module || 'fuzzer')})
+                    TARGETED ATTACK VECTORS FOR ${escapeHtml((curSensor?.sensor_id || 'SENSOR').toUpperCase())} (${escapeHtml(cat.toUpperCase())})
                 </div>
-                <div id="lab-dynamic-atk-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; max-height: 118px; overflow-y: auto;"></div>
+                <div id="lab-targeted-atk-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; max-height: 118px; overflow-y: auto;"></div>
             </div>
             <div style="margin-top: 8px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                    <button class="lab-btn lab-btn-success" id="btn-lab-safe" style="padding: 6px; font-size: 9px; text-align: left;">[+] Stabilize Category</button>
-                    <button class="lab-btn lab-btn-danger" id="btn-lab-reset" style="padding: 6px; font-size: 9px; text-align: left;">⏹ Reset All Faults</button>
+                    <button class="lab-btn lab-btn-success" id="btn-sensor-safe" style="padding: 6px; font-size: 9px; text-align: left;">[+] Stabilize This Sensor</button>
+                    <button class="lab-btn lab-btn-danger" id="btn-sensor-reset" style="padding: 6px; font-size: 9px; text-align: left;">⏹ Reset All Node Faults</button>
                 </div>
             </div>
         `;
 
-        const grid = document.getElementById('lab-dynamic-atk-grid');
+        const grid = document.getElementById('lab-targeted-atk-grid');
         if (grid) {
-            grid.innerHTML = attacks.map(a => `
-                <button class="lab-btn lab-cat-atk-btn" data-slug="${escapeHtml(a.slug)}" title="${escapeHtml(a.name)}"
-                    style="padding: 6px; font-size: 9px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    [!] ${escapeHtml(a.name)}
-                </button>
-            `).join('');
+            if (attacks.length === 0) {
+                grid.innerHTML = `<div style="color:#64748B; font-size:10px; font-family:monospace; padding:6px;">No targeted exploits registered for ${escapeHtml(cat || 'this channel')}.</div>`;
+            } else {
+                grid.innerHTML = attacks.map(a => `
+                    <button class="lab-btn lab-targeted-btn" data-slug="${escapeHtml(a.slug)}" title="${escapeHtml(a.name)}"
+                        style="padding: 6px; font-size: 9px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        [!] ${escapeHtml(a.name)}
+                    </button>
+                `).join('');
 
-            grid.querySelectorAll('.lab-cat-atk-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    injectLabAction('inject', { category: activeCategory, attack: btn.getAttribute('data-slug') });
+                grid.querySelectorAll('.lab-targeted-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        injectLabAction('inject', {
+                            category: cat,
+                            attack: btn.getAttribute('data-slug'),
+                            sensor_id: curSensor ? curSensor.sensor_id : ''
+                        });
+                    });
                 });
-            });
+            }
         }
 
-        document.getElementById('btn-lab-safe')?.addEventListener('click', () => {
-            injectLabAction('safe', { category: activeCategory });
+        document.getElementById('btn-sensor-safe')?.addEventListener('click', () => {
+            injectLabAction('safe', { category: cat, sensor_id: curSensor ? curSensor.sensor_id : '' });
         });
-        document.getElementById('btn-lab-reset')?.addEventListener('click', () => {
+        document.getElementById('btn-sensor-reset')?.addEventListener('click', () => {
             injectLabAction('reset', {});
         });
     }
 
     function resetRollingBuffers() {
-        primaryBuf = [];
+        p1Buf = [];
         truthBuf = [];
-        secondaryBuf = [];
+        secBuf = [];
         phaseOrbitBuf = [];
         residualBuf = [];
     }
 
     // =========================================================================
-    // 3. SIX CORE ECHARTS ARCHETYPE RENDERERS + PLUGIN OVERRIDE HOOKS
+    // 5. PLOT RENDERERS: PHYSICAL WAVEFORM + DOMAIN-SPECIALIZED PLOTS
     // =========================================================================
     function getOrInitChart(domId, currentInst, forceReset) {
         if (typeof echarts === 'undefined') return null;
@@ -309,233 +463,176 @@
         return currentInst;
     }
 
-    function updateDynamicCardHeaders(viz, isSafe) {
-        const pCard = document.getElementById('cbfEchart')?.closest('.lab-card');
-        const sCard = document.getElementById('phaseEchart')?.closest('.lab-card');
-        if (pCard) {
-            const spans = pCard.querySelectorAll('span');
-            if (spans[1]) spans[1].textContent = (viz.primary_title || 'PRIMARY INVARIANT').toUpperCase();
-        }
-        if (sCard) {
-            const spans = sCard.querySelectorAll('span');
-            if (spans[1]) spans[1].textContent = (viz.secondary_title || 'SECONDARY SPECTRUM').toUpperCase();
-            const badge = sCard.querySelector('.badge-green, .badge-danger');
-            if (badge && spans[2]) spans[2].textContent = (viz.plot_archetype || 'ARCHETYPE').toUpperCase();
-        }
-        const invarEl = document.getElementById('lab-invar-title');
-        if (invarEl) invarEl.textContent = `${(viz.category || '').toUpperCase()} | ${(viz.plot_archetype || '').toUpperCase()}`;
-
-        const lblTemp = document.getElementById('lbl-temp');
-        if (lblTemp) lblTemp.textContent = `${viz.primary_title || 'Measured PV'} (${viz.unit || ''})`;
-        const valTemp = document.getElementById('val-temp');
-        if (valTemp) valTemp.textContent = `${Number(viz.primary_val || 0).toFixed(2)} ${viz.unit || ''}`;
-
-        const badgeCBF = document.getElementById('cbf-status-badge');
-        if (badgeCBF) {
-            badgeCBF.textContent = isSafe ? 'h(x) >= 0 SAFE' : `BREACH: ${(viz.active_attack || 'ANOMALY').toUpperCase()}`;
-            badgeCBF.style.background = isSafe ? 'rgba(0,255,163,0.15)' : 'rgba(255,51,102,0.2)';
-            badgeCBF.style.color = isSafe ? 'var(--kernel)' : 'var(--threat)';
-            badgeCBF.style.borderColor = isSafe ? 'var(--kernel)' : 'var(--threat)';
-        }
+    function renderPlot1Waveform(chart, viz, isSafe) {
+        const color = isSafe ? '#00FFA3' : '#FF3366';
+        chart.setOption({
+            animation: false,
+            backgroundColor: 'transparent',
+            grid: { top: 22, right: 16, bottom: 20, left: 48 },
+            xAxis: { type: 'category', boundaryGap: false, data: p1Buf.map((_, i) => i), show: false },
+            yAxis: {
+                type: 'value',
+                min: viz.min_plot,
+                max: viz.max_plot,
+                splitLine: { lineStyle: { color: '#1a2232' } },
+                axisLabel: { color: '#8a99ad', fontSize: 9 }
+            },
+            series: [{
+                name: viz.primary_title || 'Measured Sensor Wave',
+                type: 'line',
+                smooth: 0.35,
+                showSymbol: false,
+                data: p1Buf,
+                lineStyle: { color, width: 2.4 },
+                areaStyle: { color: isSafe ? 'rgba(0, 255, 163, 0.10)' : 'rgba(255, 51, 102, 0.18)' },
+                markLine: {
+                    silent: true,
+                    symbol: 'none',
+                    data: [
+                        {
+                            yAxis: viz.safe_high,
+                            lineStyle: { color: '#FF3366', type: 'dashed', width: 1.8 },
+                            label: { formatter: `Limit (${viz.safe_high} ${viz.unit})`, fontSize: 8.5 }
+                        },
+                        {
+                            yAxis: viz.safe_low,
+                            lineStyle: { color: '#FFB800', type: 'dotted', width: 1.2 },
+                            label: { formatter: `Min (${viz.safe_low} ${viz.unit})`, fontSize: 8.5 }
+                        }
+                    ]
+                }
+            }]
+        }, false);
     }
 
-    const CORE_PLOT_RENDERERS = {
-        spectral_harmonic(c1, c2, viz, isSafe) {
-            const color = isSafe ? '#00FFA3' : '#FF3366';
-            c1.setOption({
-                animation: false, backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: primaryBuf.map((_, i) => i), show: false },
-                yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
+    function renderPlot2DomainDiagnostic(chart, viz, isSafe, archetype) {
+        const color = isSafe ? '#00E5FF' : '#FF3366';
+
+        // Sub-Plot Option B: 2D Phase Orbit
+        if (activePlotSubTab === 'plot_b' && (archetype === 'spatial_kinematic' || archetype === 'spectral_harmonic' || archetype === 'shockwave_transient' || archetype === 'thermal_runaway')) {
+            chart.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
+                grid: { top: 22, right: 16, bottom: 24, left: 48 },
+                xAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
+                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 series: [{
-                    type: 'line', smooth: 0.3, showSymbol: false, data: primaryBuf,
-                    lineStyle: { color, width: 2.2 },
-                    areaStyle: { color: isSafe ? 'rgba(0,255,163,0.1)' : 'rgba(255,51,102,0.16)' },
-                    markLine: { silent: true, symbol: 'none', data: [{ yAxis: viz.safe_high, lineStyle: { color: '#FF3366', type: 'dashed' } }] }
+                    name: '2D Phase Orbit (x vs dx/dt)',
+                    type: 'line',
+                    smooth: 0.3,
+                    showSymbol: false,
+                    data: phaseOrbitBuf,
+                    lineStyle: { color, width: 2.2 }
                 }]
             }, false);
+            return;
+        }
 
+        // Sub-Plot Option A: Domain Diagnostic
+        if (archetype === 'spectral_harmonic') {
             const sec = Array.isArray(viz.secondary_series) && viz.secondary_series.length > 0
                 ? viz.secondary_series
-                : [{ label: '1x', value: 1.0 }, { label: '2x', value: 0.3 }, { label: '3x', value: 0.2 }, { label: '5x', value: 0.1 }];
-            c2.setOption({
-                animation: false, backgroundColor: 'transparent',
+                : [{ label: '1x', value: 1.2 }, { label: '2x', value: 0.4 }, { label: '3x', value: 0.2 }, { label: '5x', value: 0.1 }];
+            chart.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
                 grid: { top: 22, right: 16, bottom: 24, left: 42 },
                 xAxis: { type: 'category', data: sec.map(s => s.label), axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 series: [{
-                    type: 'bar', barWidth: '45%',
+                    type: 'bar',
+                    barWidth: '45%',
                     data: sec.map((s, idx) => ({
                         value: s.value,
                         itemStyle: { color: (!isSafe && idx > 0) ? '#FF3366' : '#00E5FF' }
                     }))
                 }]
             }, false);
-        },
-
-        shockwave_transient(c1, c2, viz, isSafe) {
-            const color = isSafe ? '#00E5FF' : '#FF3366';
-            c1.setOption({
-                animation: false, backgroundColor: 'transparent',
+        } else if (archetype === 'shockwave_transient') {
+            chart.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
                 grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: primaryBuf.map((_, i) => i), show: false },
-                yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    type: 'line', smooth: false, showSymbol: false, data: primaryBuf,
-                    lineStyle: { color, width: 2.2 },
-                    markArea: { itemStyle: { color: 'rgba(255,51,102,0.08)' }, data: [[{ yAxis: viz.safe_high }, { yAxis: viz.max_plot }]] },
-                    markLine: { silent: true, symbol: 'none', data: [{ yAxis: viz.safe_high, lineStyle: { color: '#FF3366', type: 'dashed' } }] }
-                }]
-            }, false);
-
-            c2.setOption({
-                animation: false, backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: secondaryBuf.map((_, i) => i), show: false },
+                xAxis: { type: 'category', boundaryGap: false, data: secBuf.map((_, i) => i), show: false },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 series: [{
-                    name: 'dP/dt', type: 'line', showSymbol: false, data: secondaryBuf,
+                    name: 'dP/dt Shockwave',
+                    type: 'line',
+                    showSymbol: false,
+                    data: secBuf,
                     lineStyle: { color: isSafe ? '#FFB800' : '#FF3366', width: 2 },
-                    areaStyle: { color: isSafe ? 'rgba(255,184,0,0.12)' : 'rgba(255,51,102,0.18)' }
+                    areaStyle: { color: isSafe ? 'rgba(255,184,0,0.12)' : 'rgba(255,51,102,0.2)' }
                 }]
             }, false);
-        },
-
-        corridor_titration(c1, c2, viz, isSafe) {
-            const color = isSafe ? '#00FFA3' : '#FF3366';
+        } else if (archetype === 'corridor_titration') {
             const mid = (viz.safe_low + viz.safe_high) * 0.5;
-            c1.setOption({
-                animation: false, backgroundColor: 'transparent',
+            const dev = p1Buf.map(v => +Math.abs(v - mid).toFixed(3));
+            chart.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
                 grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: primaryBuf.map((_, i) => i), show: false },
-                yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    type: 'line', smooth: 0.35, showSymbol: false, data: primaryBuf,
-                    lineStyle: { color, width: 2.5 },
-                    markArea: { itemStyle: { color: 'rgba(0,255,163,0.08)' }, data: [[{ yAxis: viz.safe_low }, { yAxis: viz.safe_high }]] },
-                    markLine: {
-                        silent: true, symbol: 'none',
-                        data: [
-                            { yAxis: viz.safe_low, lineStyle: { color: '#FFB800', type: 'dashed' } },
-                            { yAxis: viz.safe_high, lineStyle: { color: '#FF3366', type: 'dashed' } }
-                        ]
-                    }
-                }]
-            }, false);
-
-            const devSeries = primaryBuf.map(v => +Math.abs(v - mid).toFixed(3));
-            c2.setOption({
-                animation: false, backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: devSeries.map((_, i) => i), show: false },
+                xAxis: { type: 'category', boundaryGap: false, data: dev.map((_, i) => i), show: false },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 series: [{
-                    type: 'line', showSymbol: false, data: devSeries,
-                    lineStyle: { color: isSafe ? '#00E5FF' : '#FF3366', width: 2 },
+                    name: 'Corridor Deviation',
+                    type: 'line',
+                    showSymbol: false,
+                    data: dev,
+                    lineStyle: { color, width: 2 },
                     areaStyle: { color: isSafe ? 'rgba(0,229,255,0.12)' : 'rgba(255,51,102,0.2)' }
                 }]
             }, false);
-        },
-
-        thermal_runaway(c1, c2, viz, isSafe) {
-            const color = isSafe ? '#00FFA3' : '#FF3366';
-            c1.setOption({
-                animation: false, backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: primaryBuf.map((_, i) => i), show: false },
-                yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    type: 'line', smooth: 0.35, showSymbol: false, data: primaryBuf,
-                    lineStyle: { color, width: 2.5 },
-                    markArea: { itemStyle: { color: 'rgba(255,51,102,0.09)' }, data: [[{ yAxis: viz.safe_high }, { yAxis: viz.max_plot }]] },
-                    markLine: { silent: true, symbol: 'none', data: [{ yAxis: viz.safe_high, lineStyle: { color: '#FF3366', type: 'dashed' } }] }
-                }]
-            }, false);
-
-            c2.setOption({
-                animation: false, backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 24, left: 48 },
-                xAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    name: 'Phase Orbit', type: 'line', smooth: 0.3, showSymbol: false, data: phaseOrbitBuf,
-                    lineStyle: { color: isSafe ? '#00E5FF' : '#FF3366', width: 2.2 }
-                }]
-            }, false);
-        },
-
-        spatial_kinematic(c1, c2, viz, isSafe) {
-            c1.setOption({
-                animation: false, backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: primaryBuf.map((_, i) => i), show: false },
-                yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [
-                    {
-                        name: 'Measured', type: 'line', smooth: 0.25, showSymbol: false, data: primaryBuf,
-                        lineStyle: { color: isSafe ? '#00E5FF' : '#FF3366', width: 2.4 }
-                    },
-                    {
-                        name: 'Ground Truth', type: 'line', smooth: 0.3, showSymbol: false, data: truthBuf,
-                        lineStyle: { color: '#00FFA3', width: 1.8, type: 'dashed' }
-                    }
-                ]
-            }, false);
-
-            const divBuf = primaryBuf.map((v, idx) => +Math.abs(v - (truthBuf[idx] ?? v)).toFixed(3));
-            c2.setOption({
-                animation: false, backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: divBuf.map((_, i) => i), show: false },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    type: 'line', showSymbol: false, data: divBuf,
-                    lineStyle: { color: isSafe ? '#00FFA3' : '#FF3366', width: 2 },
-                    areaStyle: { color: isSafe ? 'rgba(0,255,163,0.1)' : 'rgba(255,51,102,0.2)' }
-                }]
-            }, false);
-        },
-
-        coherence_snr(c1, c2, viz, isSafe) {
-            CORE_PLOT_RENDERERS.discrete_divergence(c1, c2, viz, isSafe);
-        },
-
-        discrete_divergence(c1, c2, viz, isSafe) {
-            const color = isSafe ? '#00E5FF' : '#FF3366';
-            c1.setOption({
-                animation: false, backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: primaryBuf.map((_, i) => i), show: false },
-                yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    type: 'line', step: 'end', showSymbol: false, data: primaryBuf,
-                    lineStyle: { color, width: 2.2 },
-                    areaStyle: { color: isSafe ? 'rgba(0,229,255,0.1)' : 'rgba(255,51,102,0.18)' },
-                    markLine: { silent: true, symbol: 'none', data: [{ yAxis: viz.safe_low, lineStyle: { color: '#FFB800', type: 'dashed' } }] }
-                }]
-            }, false);
-
+        } else if (archetype === 'coherence_snr' || archetype === 'discrete_divergence') {
             const bins = Array.isArray(viz.secondary_series) && viz.secondary_series.length > 0
                 ? viz.secondary_series
                 : [{ label: 'SYN', value: 2 }, { label: 'CRC', value: 1 }, { label: 'SEQ', value: 1 }, { label: 'SPI', value: 0 }];
-            c2.setOption({
-                animation: false, backgroundColor: 'transparent',
+            chart.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
                 grid: { top: 22, right: 16, bottom: 24, left: 42 },
                 xAxis: { type: 'category', data: bins.map(b => b.label), axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 series: [{
-                    type: 'bar', barWidth: '45%',
+                    type: 'bar',
+                    barWidth: '45%',
                     data: bins.map(b => ({
                         value: b.value,
                         itemStyle: { color: isSafe ? '#00FFA3' : '#FF3366' }
                     }))
                 }]
             }, false);
+        } else {
+            // Default spatial_kinematic: Measured vs Ground Truth overlay (exposes flatline sensor freezes!)
+            chart.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
+                grid: { top: 22, right: 16, bottom: 20, left: 48 },
+                xAxis: { type: 'category', boundaryGap: false, data: p1Buf.map((_, i) => i), show: false },
+                yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
+                series: [
+                    {
+                        name: 'Measured Signal',
+                        type: 'line',
+                        smooth: 0.25,
+                        showSymbol: false,
+                        data: p1Buf,
+                        lineStyle: { color, width: 2.4 }
+                    },
+                    {
+                        name: 'Physical Ground Truth',
+                        type: 'line',
+                        smooth: 0.3,
+                        showSymbol: false,
+                        data: truthBuf,
+                        lineStyle: { color: '#00FFA3', width: 1.8, type: 'dashed' }
+                    }
+                ]
+            }, false);
         }
-    };
+    }
 
     // =========================================================================
-    // 4. TELEMETRY POLLING & MULTI-STAGE CHART DISPATCHER
+    // 6. TELEMETRY POLLING LOOP
     // =========================================================================
     function startTelemetryLoop() {
         if (telemetryTimer) clearInterval(telemetryTimer);
@@ -543,15 +640,18 @@
             const pane = document.getElementById('tab-lab-cockpit');
             if (!pane || !pane.classList.contains('active')) return;
             tickTelemetryOnce();
-        }, 400);
+        }, 350);
     }
 
     async function tickTelemetryOnce() {
         try {
+            const curSensor = (activeNodeDetail?.sensors || []).find(s => s.sensor_id === activeSensorId);
+            const cat = curSensor ? (curSensor.category || '').toLowerCase() : '';
+
             let url = '/api/v1/lab/telemetry';
             const qs = [];
             if (activeNodeId) qs.push(`node_id=${encodeURIComponent(activeNodeId)}`);
-            if (activeCategory) qs.push(`category=${encodeURIComponent(activeCategory)}`);
+            if (cat) qs.push(`category=${encodeURIComponent(cat)}`);
             if (qs.length > 0) url += '?' + qs.join('&');
 
             const resp = await fetch(url);
@@ -562,25 +662,26 @@
             const ps = data.physical_state || {};
             const isSafe = Boolean(ps.is_safe !== false);
 
-            // Seed rolling buffers on first frame for edge-to-edge render
-            if (primaryBuf.length === 0) {
+            // Buffer rolling
+            if (p1Buf.length === 0) {
                 for (let i = 0; i < MAX_POINTS; i++) {
-                    primaryBuf.push(viz.primary_val ?? 0);
+                    p1Buf.push(viz.primary_val ?? 0);
                     truthBuf.push(viz.ground_truth_val ?? 0);
-                    secondaryBuf.push(viz.derivative_val ?? 0);
+                    secBuf.push(viz.derivative_val ?? 0);
                 }
             } else {
-                primaryBuf.push(viz.primary_val ?? 0);
+                p1Buf.push(viz.primary_val ?? 0);
                 truthBuf.push(viz.ground_truth_val ?? 0);
-                secondaryBuf.push(viz.derivative_val ?? 0);
-                if (primaryBuf.length > MAX_POINTS) primaryBuf.shift();
+                secBuf.push(viz.derivative_val ?? 0);
+                if (p1Buf.length > MAX_POINTS) p1Buf.shift();
                 if (truthBuf.length > MAX_POINTS) truthBuf.shift();
-                if (secondaryBuf.length > MAX_POINTS) secondaryBuf.shift();
+                if (secBuf.length > MAX_POINTS) secBuf.shift();
             }
 
             phaseOrbitBuf.push([viz.primary_val ?? 0, viz.derivative_val ?? 0]);
             if (phaseOrbitBuf.length > 40) phaseOrbitBuf.shift();
 
+            // DOM Indicators
             const valBar = document.getElementById('val-barrier');
             if (valBar) {
                 const h = Number(ps.cbf_barrier_h || 0);
@@ -594,43 +695,41 @@
             const valVel = document.getElementById('val-velocity');
             if (valVel) valVel.textContent = `${Number(ps.dx_dt || 0) >= 0 ? '+' : ''}${Number(ps.dx_dt || 0).toFixed(3)} /s`;
 
-            updateDynamicCardHeaders(viz, isSafe);
+            const lblTemp = document.getElementById('lbl-temp');
+            if (lblTemp) lblTemp.textContent = `${curSensor?.name || viz.primary_title || 'Measured'} (${viz.unit || ''})`;
+            const valTemp = document.getElementById('val-temp');
+            if (valTemp) valTemp.textContent = `${Number(viz.primary_val || 0).toFixed(2)} ${viz.unit || ''}`;
 
-            // Stage 1: Archetype Strategy Resolution (Plugins first, then CORE_PLOT_RENDERERS)
-            const archetype = viz.plot_archetype || 'discrete_divergence';
-            const archetypeChanged = (lastArchetype !== null && lastArchetype !== archetype);
-            lastArchetype = archetype;
-
-            primaryChart = getOrInitChart('cbfEchart', primaryChart, archetypeChanged);
-            secondaryChart = getOrInitChart('phaseEchart', secondaryChart, archetypeChanged);
-
-            if (primaryChart && secondaryChart) {
-                const pluginRenderer =
-                    window.SentinelLabPlugins?.renderers?.[archetype] ||
-                    window.SentinelUI?.getLabRenderer?.(archetype);
-
-                if (typeof pluginRenderer === 'function') {
-                    pluginRenderer(primaryChart, secondaryChart, viz, isSafe, { primaryBuf, truthBuf, secondaryBuf, phaseOrbitBuf });
-                } else {
-                    const renderer = CORE_PLOT_RENDERERS[archetype] || CORE_PLOT_RENDERERS.discrete_divergence;
-                    renderer(primaryChart, secondaryChart, viz, isSafe);
-                }
+            const badgeCBF = document.getElementById('cbf-status-badge');
+            if (badgeCBF) {
+                badgeCBF.textContent = isSafe ? 'h(x) >= 0 SAFE' : `BREACH: ${(viz.active_attack || 'ANOMALY').toUpperCase()}`;
+                badgeCBF.style.background = isSafe ? 'rgba(0,255,163,0.15)' : 'rgba(255,51,102,0.2)';
+                badgeCBF.style.color = isSafe ? 'var(--kernel)' : 'var(--threat)';
+                badgeCBF.style.borderColor = isSafe ? 'var(--kernel)' : 'var(--threat)';
             }
 
-            // Stage 2: Timing & PMU
-            updateTimingCharts(data, isSafe);
+            const archetype = viz.plot_archetype || 'spatial_kinematic';
+            const plotModeKey = `${archetype}::${activePlotSubTab}`;
+            const modeChanged = (lastPlotMode !== null && lastPlotMode !== plotModeKey);
+            lastPlotMode = plotModeKey;
 
-            // Stage 3: Network RSS & Fusion
-            updateNetworkCharts(data);
-        } catch (e) {
-            console.warn('[LabCockpit] Telemetry tick skipped:', e);
-        }
+            plot1Chart = getOrInitChart('cbfEchart', plot1Chart, false);
+            plot2Chart = getOrInitChart('phaseEchart', plot2Chart, modeChanged);
+
+            if (plot1Chart) renderPlot1Waveform(plot1Chart, viz, isSafe);
+            if (plot2Chart) renderPlot2DomainDiagnostic(plot2Chart, viz, isSafe, archetype);
+
+            // Update Tab 2 (Node Health) Charts in background
+            updateHardwareMetrics(data, isSafe);
+        } catch (_) { }
     }
 
-    function updateTimingCharts(data, isSafe) {
+    function updateHardwareMetrics(data, isSafe) {
         if (!data.evt_wcet || !data.pmu_metrics) return;
         evtChart = getOrInitChart('evtEchart', evtChart, false);
         pmuChart = getOrInitChart('pmuEchart', pmuChart, false);
+        rssChart = getOrInitChart('rssEchart', rssChart, false);
+        fusionChart = getOrInitChart('fusionEchart', fusionChart, false);
 
         const wcetEl = document.getElementById('val-wcet');
         if (wcetEl) wcetEl.textContent = `${Number(data.evt_wcet.p99_999_us || 1.82).toFixed(2)} µs`;
@@ -640,8 +739,6 @@
         if (ipcEl) ipcEl.textContent = Number(data.pmu_metrics.ipc || 2.42).toFixed(2);
         const llcEl = document.getElementById('val-llc');
         if (llcEl) llcEl.textContent = `${Number(data.pmu_metrics.llc_miss_pct || 1.24).toFixed(2)}%`;
-        const lockEl = document.getElementById('val-buslocks');
-        if (lockEl) lockEl.textContent = String(data.pmu_metrics.bus_lock_stalls || 0);
 
         if (evtChart) {
             const mu = data.evt_wcet.gumbel_mu || 0.84;
@@ -671,30 +768,8 @@
                 series: [{ type: 'bar', data: [ipc, +(ipc - 0.04).toFixed(2), +(ipc + 0.03).toFixed(2), +(ipc - 0.02).toFixed(2)], itemStyle: { color: '#a855f7' } }]
             }, false);
         }
-    }
 
-    function updateNetworkCharts(data) {
-        if (!data.rss_multi_queue || !data.sensor_fusion) return;
-        rssChart = getOrInitChart('rssEchart', rssChart, false);
-        fusionChart = getOrInitChart('fusionEchart', fusionChart, false);
-
-        const epsEl = document.getElementById('val-tot-eps');
-        if (epsEl) epsEl.textContent = `${(Number(data.rss_multi_queue.total_eps || 0) / 1e6).toFixed(2)}M EPS`;
-        const resEl = document.getElementById('val-residual');
-        if (resEl) resEl.textContent = Number(data.sensor_fusion.residual_r || 0).toFixed(3);
-        const chiEl = document.getElementById('val-chi2-thresh');
-        if (chiEl) chiEl.textContent = Number(data.sensor_fusion.chi2_threshold || 0.08).toFixed(3);
-
-        const fusionBadge = document.getElementById('fusion-status-badge');
-        if (fusionBadge) {
-            fusionBadge.textContent = data.sensor_fusion.chi2_alarm ? 'CHI² ALARM' : 'CONCORDANT';
-            fusionBadge.style.color = data.sensor_fusion.chi2_alarm ? 'var(--threat)' : 'var(--kernel)';
-        }
-
-        residualBuf.push(Number(data.sensor_fusion.residual_r || 0));
-        if (residualBuf.length > 40) residualBuf.shift();
-
-        if (rssChart) {
+        if (rssChart && data.rss_multi_queue) {
             rssChart.setOption({
                 animation: false, backgroundColor: 'transparent',
                 grid: { top: 20, right: 15, bottom: 20, left: 42 },
@@ -704,7 +779,9 @@
             }, false);
         }
 
-        if (fusionChart) {
+        if (fusionChart && data.sensor_fusion) {
+            residualBuf.push(Number(data.sensor_fusion.residual_r || 0));
+            if (residualBuf.length > 40) residualBuf.shift();
             fusionChart.setOption({
                 animation: false, backgroundColor: 'transparent',
                 grid: { top: 20, right: 15, bottom: 20, left: 42 },
@@ -719,15 +796,11 @@
     }
 
     // =========================================================================
-    // 5. SAFE INJECTION DISPATCH & LOG POLLER
+    // 7. SAFE INJECTION DISPATCH & LOG POLLER
     // =========================================================================
     async function injectLabAction(action, extra = {}) {
         const statusBadge = document.getElementById('deck-status');
         if (statusBadge) statusBadge.textContent = `DISPATCH: ${action.toUpperCase()}`;
-
-        const matchingSensor = (activeNodeDetail?.sensors || []).find(
-            s => (s.category || '').toLowerCase() === (extra.category || activeCategory)
-        );
 
         try {
             const res = await fetch('/api/v1/lab/inject', {
@@ -736,14 +809,14 @@
                 body: JSON.stringify({
                     action,
                     node_id: activeNodeId,
-                    category: extra.category || activeCategory,
+                    category: extra.category || '',
                     attack: extra.attack || '',
-                    sensor_id: matchingSensor ? matchingSensor.sensor_id : ''
+                    sensor_id: extra.sensor_id || activeSensorId || ''
                 })
             });
             const data = await res.json();
             if (statusBadge) statusBadge.textContent = `ACTIVE: ${(data.action || action).toUpperCase()}`;
-        } catch (e) {
+        } catch (_) {
             if (statusBadge) statusBadge.textContent = 'DISPATCHED';
         }
 
@@ -751,8 +824,6 @@
         setTimeout(pollLabLogs, 250);
         setTimeout(pollLabLogs, 800);
     }
-
-    window.injectLab = (action) => injectLabAction(action, { category: activeCategory });
 
     async function pollLabLogs() {
         try {
@@ -769,42 +840,13 @@
                 const statusEl = document.getElementById('lab-log-status');
                 if (statusEl) statusEl.textContent = `UPDATED ${new Date().toLocaleTimeString()}`;
             }
-        } catch (_) {}
-    }
-
-    function initSubStageTabs() {
-        const btns = document.querySelectorAll('.lab-tab-btn');
-        btns.forEach(b => {
-            b.addEventListener('click', () => {
-                btns.forEach(x => {
-                    x.classList.remove('active');
-                    x.style.background = 'var(--panel)';
-                    x.style.borderColor = 'var(--hairline)';
-                    x.style.color = 'var(--muted)';
-                });
-                b.classList.add('active');
-                b.style.background = 'rgba(0, 229, 255, 0.12)';
-                b.style.borderColor = 'var(--accent)';
-                b.style.color = 'var(--ink)';
-
-                const stage = b.getAttribute('data-stage');
-                document.querySelectorAll('.lab-stage-view').forEach(v => v.style.display = 'none');
-                if (stage === 'stage-physics') document.getElementById('view-lab-physics').style.display = 'grid';
-                if (stage === 'stage-timing') document.getElementById('view-lab-timing').style.display = 'grid';
-                if (stage === 'stage-network') document.getElementById('view-lab-network').style.display = 'grid';
-
-                setTimeout(() => {
-                    tickTelemetryOnce();
-                    resizeAllCharts();
-                }, 50);
-            });
-        });
+        } catch (_) { }
     }
 
     function resizeAllCharts() {
-        [primaryChart, secondaryChart, evtChart, pmuChart, rssChart, fusionChart].forEach(c => {
+        [plot1Chart, plot2Chart, evtChart, pmuChart, rssChart, fusionChart].forEach(c => {
             if (c && !c.isDisposed()) {
-                try { c.resize(); } catch (_) {}
+                try { c.resize(); } catch (_) { }
             }
         });
     }
@@ -815,7 +857,7 @@
         if (!modal || !area) return;
 
         const site = activeNodeDetail?.site || activeNodeId || 'Aryorithm Edge Sentry';
-        area.value = `% ARYORITHM TECHNOLOGIES B.V. — SENTINEL LAB SCORECARD (${site}) | DOI: 10.5281/zenodo.23598779\n% Active Category: ${activeCategory || 'N/A'}\n`;
+        area.value = `% ARYORITHM TECHNOLOGIES B.V. — SENTINEL LAB SCORECARD (${site}) | DOI: 10.5281/zenodo.23598779\n% Active Sensor: ${activeSensorId || 'N/A'}\n`;
         modal.style.display = 'flex';
     };
 
