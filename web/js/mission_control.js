@@ -1,7 +1,7 @@
 // File: /home/kami/sentinel-nexus/web/js/mission_control.js
 // ==============================================================================
 // ARYORITHM SENTINEL NEXUS: MISSION CONTROL OPERATIONAL DEFENSE COCKPIT
-// Side-by-Side Sibling Layout: 1.25 Aspect-Ratio Camera (Left) + Tabbed Workspace (Right)
+// Side-by-Side Sibling Layout: 580px 1.25 Aspect-Ratio Camera (Left) + Tabbed Workspace (Right)
 // Zero Attack/Fault Buttons — Pure Operational Monitoring & Kernel Defense
 // ==============================================================================
 
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const workspaceContainer = document.getElementById("mc-sentry-workspace");
 
     // ========================================================================
-    // 1. SIBLING WORKSPACE INJECTION (1.25 Camera + Tabbed Sibling)
+    // 1. SIBLING WORKSPACE INJECTION (Enlarged 1.25 Camera + Tabbed Sibling)
     // ========================================================================
     function injectOptionBWorkspace() {
         if (!workspaceContainer) return;
@@ -49,11 +49,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
 
-            <!-- MAIN TWO-SIBLING ROW: LEFT = CAMERA (1.25 ASPECT RATIO), RIGHT = TABBED WORKSPACE -->
+            <!-- MAIN TWO-SIBLING ROW: LEFT = CAMERA (580px, 1.25 ASPECT RATIO), RIGHT = TABBED WORKSPACE -->
             <div class="mc-main-row" style="display: flex; gap: 14px; width: 100%; box-sizing: border-box; align-items: flex-start;">
 
-                <!-- SIBLING 1: CAMERA / PRIMARY PHYSICAL APPARATUS (1.25 Aspect Ratio Squared Shape) -->
-                <div class="mc-frame" id="mc-apparatus-frame" style="width: 400px; flex: 0 0 400px; box-sizing: border-box;">
+                <!-- SIBLING 1: CAMERA / PRIMARY PHYSICAL APPARATUS (Enlarged to 580px, 1.25 Aspect Ratio) -->
+                <div class="mc-frame" id="mc-apparatus-frame" style="width: 580px; flex: 0 0 580px; box-sizing: border-box;">
                     <div class="panel-header" style="margin-bottom: 8px; padding-bottom: 6px;">
                         <div class="frame-title-group">
                             <span class="frame-index">PANE 01</span>
@@ -62,12 +62,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="badge badge-green" id="mc-frame1-tag">MODBUS</span>
                     </div>
 
-                    <!-- 1.25 Aspect Ratio Video/Canvas Viewport (500x400) -->
+                    <!-- 1.25 Aspect Ratio Video/Canvas Viewport (580x464, High-DPI 750x600 internal resolution) -->
                     <div class="video-wall-container" id="mc-video-wall" style="width: 100%; aspect-ratio: 1.25; height: auto;">
                         <div style="position: relative; width: 100%; height: 100%; background: #05080C; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; aspect-ratio: 1.25;">
                             <video id="thermal-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
-                            <canvas id="thermal-canvas" width="500" height="400" style="width: 100%; height: 100%; object-fit: cover; display: block;"></canvas>
-                            <div style="position: absolute; top: 8px; left: 8px; background: rgba(14, 19, 27, 0.9); border: 1px solid #10B981; border-radius: 3px; padding: 3px 6px; font-size: 9px; font-family: monospace; color: #10B981; z-index: 10;">
+                            <canvas id="thermal-canvas" width="750" height="600" style="width: 100%; height: 100%; object-fit: cover; display: block;"></canvas>
+                            <div style="position: absolute; top: 10px; left: 10px; background: rgba(14, 19, 27, 0.9); border: 1px solid #10B981; border-radius: 3px; padding: 3px 7px; font-size: 9.5px; font-family: monospace; color: #10B981; z-index: 10;">
                                 <span id="cam-status-text">INSTRUMENT ACTIVE</span>
                             </div>
                         </div>
@@ -93,14 +93,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
 
                     <!-- SUB-VIEW 1: SENSOR TELEMETRY WALL (Grid with zero attack/fault buttons) -->
-                    <div id="mc-view-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; width: 100%; box-sizing: border-box;">
+                    <div id="mc-view-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; width: 100%; box-sizing: border-box;">
                         <!-- Sensor cards rendered dynamically -->
                     </div>
 
                     <!-- SUB-VIEW 2: ACTIVE DEFENSE & FLIGHT RECORDER -->
                     <div id="mc-view-defense" style="display: none; grid-template-columns: 1.15fr 1fr; gap: 10px; width: 100%; box-sizing: border-box;">
-                        <!-- Left: In-Kernel eBPF Flight Recorder -->
-                        <div class="mc-frame" style="height: 340px; box-sizing: border-box;">
+                        <!-- Left: In-Kernel eBPF Flight Recorder (Height matched to ~480px) -->
+                        <div class="mc-frame" style="height: 480px; box-sizing: border-box;">
                             <div class="panel-header">
                                 <div class="frame-title-group">
                                     <span class="frame-index">RECORDER</span>
@@ -111,13 +111,13 @@ document.addEventListener("DOMContentLoaded", () => {
                                     <span class="badge badge-green" id="mc-filter-status" style="font-size: 8px;">AF_XDP</span>
                                 </div>
                             </div>
-                            <div class="drop-log-feed" id="mc-drop-feed" style="flex: 1; height: 260px; overflow-y: auto;">
+                            <div class="drop-log-feed" id="mc-drop-feed" style="flex: 1; height: 400px; overflow-y: auto;">
                                 <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical interfaces...</div>
                             </div>
                         </div>
 
                         <!-- Right: Active Defensive Policy & Telemetry Posture -->
-                        <div class="mc-frame" style="height: 340px; box-sizing: border-box;">
+                        <div class="mc-frame" style="height: 480px; box-sizing: border-box;">
                             <div class="panel-header">
                                 <div class="frame-title-group">
                                     <span class="frame-index">POSTURE</span>
@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </div>
                                 <span class="badge badge-green" id="mc-defense-active-tag">ARMED</span>
                             </div>
-                            <div id="mc-defense-posture-body" style="display: flex; flex-direction: column; gap: 8px; font-family: monospace; font-size: 10.5px; color: var(--muted); padding-top: 4px;">
+                            <div id="mc-defense-posture-body" style="display: flex; flex-direction: column; gap: 10px; font-family: monospace; font-size: 11px; color: var(--muted); padding-top: 4px;">
                                 <!-- Populated dynamically from node detail -->
                             </div>
                         </div>
@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const isOnline = (activeNodeData.status === "ONLINE");
                 if (pipEl) pipEl.style.background = isOnline ? "#00FFA3" : "#FF3366";
 
-                // 1. Render Sibling 1 (Squared Camera / Apparatus)
+                // 1. Render Sibling 1 (580px Squared Camera / Apparatus)
                 const adapter = (window.SentinelUI && window.SentinelUI.getNodeAdapter) ?
                     window.SentinelUI.getNodeAdapter(activeNodeData) : null;
 
@@ -296,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     updatePrimaryInstrument(activeNodeData.primary_instrument || {});
                 }
 
-                // 2. Render Sibling 2 Tab 1: Sensor Telemetry Wall (Zero Attack/Fault Buttons)
+                // 2. Render Sibling 2 Tab 1: Sensor Telemetry Wall
                 if (activeNodeData.sensors && activeNodeData.sensors.length > 0) {
                     activeSensors = activeNodeData.sensors;
                 } else if (adapter && adapter.getSensors) {
@@ -325,7 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================================================
-    // 3. PRIMARY APPARATUS (1.25 Aspect Ratio Squared Shape)
+    // 3. PRIMARY APPARATUS (Enlarged 580px, 1.25 Aspect Ratio)
     // ========================================================================
     function updatePrimaryInstrument(inst) {
         const titleEl = document.getElementById("mc-frame1-title");
@@ -389,12 +389,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 ctx.lineWidth = 2.0;
                 ctx.beginPath();
                 for (let x = 0; x < w; x++) {
-                    const y = (h / 2) + Math.sin((x * 0.02) + (tick * 3.5)) * 36;
+                    const y = (h / 2) + Math.sin((x * 0.015) + (tick * 3.5)) * 42;
                     if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
                 ctx.stroke();
             } else {
-                const grad = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 1.5);
+                const grad = ctx.createRadialGradient(w / 2, h / 2, 12, w / 2, h / 2, w / 1.5);
                 grad.addColorStop(0, "#00FFA3");
                 grad.addColorStop(1, "#05080C");
                 ctx.fillStyle = grad;
@@ -406,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================================================
-    // 4. SIBLING TAB 1: SENSOR TELEMETRY WALL (Clean Grid, No Buttons)
+    // 4. SIBLING TAB 1: SENSOR TELEMETRY WALL
     // ========================================================================
     function renderDynamicSensorWall() {
         const sensorGrid = document.getElementById("mc-view-sensors");
@@ -435,19 +435,19 @@ document.addEventListener("DOMContentLoaded", () => {
             if (s.category === "RELAY") color = "#A855F7";
 
             return `
-                <div class="sensor-card" id="card-${sid}" style="background:#080C13; border:1px solid #1A2232; border-radius:4px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <div class="sensor-card" id="card-${sid}" style="background:#080C13; border:1px solid #1A2232; border-radius:4px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:10px; font-weight:800; color:#F0F4F8; text-transform:uppercase;">${escapeHtml(s.name || sid)}</span>
-                            <span class="badge badge-cyan" style="font-size:8px;">${escapeHtml(s.port ? ':' + s.port : (s.category || 'PROBE'))}</span>
+                            <span style="font-size:10.5px; font-weight:800; color:#F0F4F8; text-transform:uppercase;">${escapeHtml(s.name || sid)}</span>
+                            <span class="badge badge-cyan" style="font-size:8.5px;">${escapeHtml(s.port ? ':' + s.port : (s.category || 'PROBE'))}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:4px 0;">
-                            <span style="font-size:9px; color:#8A99AD; font-family:monospace;">MEASURED PV:</span>
-                            <span id="val-${sid}" style="font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:800; color:${color};">
+                        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:5px 0;">
+                            <span style="font-size:9.5px; color:#8A99AD; font-family:monospace;">MEASURED PV:</span>
+                            <span id="val-${sid}" style="font-family:'JetBrains Mono', monospace; font-size:14px; font-weight:800; color:${color};">
                                 ${s.baseline || 0.0} ${escapeHtml(s.unit || '')}
                             </span>
                         </div>
-                        <div id="echart-${sid}" style="width:100%; height:82px; background:transparent;"></div>
+                        <div id="echart-${sid}" style="width:100%; height:88px; background:transparent;"></div>
                     </div>
                 </div>
             `;
@@ -539,16 +539,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const latency = node.mitigation_latency_us !== undefined ? Number(node.mitigation_latency_us).toFixed(2) : "0.84";
 
         body.innerHTML = `
-            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:4px; padding:10px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:4px; padding:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
                     <span style="color:#8A99AD;">KERNEL MITIGATION SLA:</span>
                     <span style="color:#00FFA3; font-weight:700;">&lt; ${latency} µs [COMPLIANT]</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
                     <span style="color:#8A99AD;">SILICON ROOT-OF-TRUST:</span>
                     <span style="color:#00E5FF; font-weight:700;">TPM 2.0 ATTESTED</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
                     <span style="color:#8A99AD;">INGRESS PIPELINE:</span>
                     <span style="color:#F8FAFC;">AF_XDP (SKB / Zero-Copy)</span>
                 </div>
@@ -558,21 +558,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
 
-            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:4px; padding:10px;">
-                <div style="color:#F8FAFC; font-weight:700; margin-bottom:6px; font-size:10px;">ACTIVE IN-KERNEL DEFENSE GUARDS (${attacks.length}):</div>
-                <div style="display:flex; flex-direction:column; gap:4px; max-height:115px; overflow-y:auto;">
+            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:4px; padding:12px;">
+                <div style="color:#F8FAFC; font-weight:700; margin-bottom:6px; font-size:10.5px;">ACTIVE IN-KERNEL DEFENSE GUARDS (${attacks.length}):</div>
+                <div style="display:flex; flex-direction:column; gap:5px; max-height:180px; overflow-y:auto;">
                     ${attacks.length > 0
                         ? attacks.map(a => `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:2px;">
-                                <span style="color:#CBD5E1; font-size:9.5px;">🛡️ ${escapeHtml(a.name || a.id)}</span>
-                                <span style="color:#00FFA3; font-size:8.5px; font-weight:700;">ACTIVE</span>
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:3px;">
+                                <span style="color:#CBD5E1; font-size:10px;">🛡️ ${escapeHtml(a.name || a.id)}</span>
+                                <span style="color:#00FFA3; font-size:9px; font-weight:700;">ACTIVE</span>
                             </div>
                         `).join("")
-                        : `<div style="color:#64748B; font-size:9.5px;">Standard protocol invariant filters active on ${escapeHtml(proto)}.</div>`}
+                        : `<div style="color:#64748B; font-size:10px;">Standard protocol invariant filters active on ${escapeHtml(proto)}.</div>`}
                 </div>
             </div>
 
-            <div style="font-size:9.5px; color:#64748B; text-align:center;">
+            <div style="font-size:10px; color:#64748B; text-align:center;">
                 Attacking &amp; chaos fault injection is strictly isolated in the <b>Research Lab</b>.
             </div>
         `;
