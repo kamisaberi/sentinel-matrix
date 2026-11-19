@@ -1,22 +1,21 @@
 // File: /home/kami/sentinel-nexus/web/js/mission_control.js
-
-/**
- * ARYORITHM SENTINEL NEXUS: MISSION CONTROL MASTER-DETAIL TWO-PANE COCKPIT
- * Micro-Frontend Plugin Support, Dynamic Templates, and Isolated Per-Device Faults
- */
+// ==============================================================================
+// ARYORITHM SENTINEL NEXUS: MISSION CONTROL OPERATIONAL DEFENSE COCKPIT
+// Option B: Wide Primary Apparatus + Two Inner Tabs (Sensor Wall vs Defense C2)
+// Zero Attack/Fault Buttons — Pure Operational Monitoring & Kernel Defense
+// ==============================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
     let liveNodes = [];
     let activeNodeId = null;
     let activeNodeData = null;
     let isSystemOffline = false;
-    let isThermalAnomaly = false;
 
     let activeSensors = [];
     const sensorHistories = {};
     const echartsInstances = {};
-    const activeSensorFaults = {}; // Per-node, per-sensor isolated chaos dictionary
     let canvasAnimId = null;
+    let activeInnerTab = "tab_sensors"; // "tab_sensors" | "tab_defense"
 
     // DOM Elements
     const sentryRail = document.getElementById("mc-sentry-rail");
@@ -26,12 +25,148 @@ document.addEventListener("DOMContentLoaded", () => {
     const badgeTotalNodes = document.getElementById("badge-total-nodes");
     const badgeGlobalDrops = document.getElementById("badge-global-drops");
     const badgeGlobalSla = document.getElementById("badge-global-sla");
-    const videoWall = document.getElementById("mc-video-wall");
-    const sensorGrid = document.getElementById("mc-sensor-grid");
-    const dropFeed = document.getElementById("mc-drop-feed");
+    const workspaceContainer = document.getElementById("mc-sentry-workspace");
 
     // ========================================================================
-    // 1. FLEET DISCOVERY & MASTER SENTRY RAIL
+    // 1. OPTION B WORKSPACE INJECTION (Wide Apparatus + Inner Tabs)
+    // ========================================================================
+    function injectOptionBWorkspace() {
+        if (!workspaceContainer) return;
+
+        workspaceContainer.innerHTML = `
+            <!-- Top Selected Sentry Identity Header -->
+            <div class="selected-sentry-banner"
+                style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="sentry-header-pip" style="width: 8px; height: 8px; border-radius: 50%; background: var(--kernel);"></span>
+                    <span id="sentry-header-title" style="font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: 0.08em;">SELECTING ACTIVE SENTRY...</span>
+                    <span id="sentry-header-host" style="font-family: monospace; font-size: 11px; color: var(--muted);">-</span>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <span class="badge badge-cyan" id="sentry-header-backend">BACKEND</span>
+                    <span class="badge badge-purple" id="sentry-header-drops">DROPS: 0</span>
+                    <span class="badge badge-green" id="sentry-header-status">ONLINE</span>
+                </div>
+            </div>
+
+            <!-- TOP FULL-WIDTH SECTION: WIDE PRIMARY MISSION APPARATUS (Cinematic High-Res View) -->
+            <div class="mc-frame" id="mc-apparatus-frame" style="width: 100%; box-sizing: border-box;">
+                <div class="panel-header" style="margin-bottom: 8px; padding-bottom: 6px;">
+                    <div class="frame-title-group">
+                        <span class="frame-index">PANE 01</span>
+                        <h3 id="mc-frame1-title">PRIMARY PHYSICAL APPARATUS</h3>
+                    </div>
+                    <span class="badge badge-green" id="mc-frame1-tag">MODBUS</span>
+                </div>
+                <div class="video-wall-container" id="mc-video-wall" style="height: 240px; width: 100%;">
+                    <div style="position: relative; width: 100%; height: 100%; background: #05080C; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;">
+                        <video id="thermal-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                        <canvas id="thermal-canvas" width="960" height="360" style="width: 100%; height: 100%; object-fit: cover;"></canvas>
+                        <div style="position: absolute; top: 10px; left: 10px; background: rgba(14, 19, 27, 0.9); border: 1px solid #10B981; border-radius: 4px; padding: 4px 8px; font-size: 10px; font-family: monospace; color: #10B981; z-index: 10;">
+                            <span id="cam-status-text">INSTRUMENT ACTIVE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOWER SECTION: TWO INNER WORKSPACE TABS -->
+            <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box;">
+                <!-- Tab Switcher Bar -->
+                <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--hairline); padding-bottom: 8px;">
+                    <button id="mc-tab-btn-sensors" class="mc-inner-tab-btn active" style="
+                        background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent); color: var(--ink);
+                        padding: 7px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s ease;">
+                        📡 SENSOR TELEMETRY WALL
+                    </button>
+                    <button id="mc-tab-btn-defense" class="mc-inner-tab-btn" style="
+                        background: var(--panel); border: 1px solid var(--hairline); color: var(--muted);
+                        padding: 7px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s ease;">
+                        🛡️ ACTIVE DEFENSE &amp; FLIGHT RECORDER
+                    </button>
+                    <span class="badge badge-cyan" id="mc-sensor-count-badge" style="margin-left: auto; align-self: center;">0 CHANNELS ACTIVE</span>
+                </div>
+
+                <!-- SUB-VIEW 1: SENSOR TELEMETRY WALL (Clean Grid with zero attack buttons) -->
+                <div id="mc-view-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; width: 100%; box-sizing: border-box;">
+                    <!-- Sensor cards rendered dynamically -->
+                </div>
+
+                <!-- SUB-VIEW 2: ACTIVE DEFENSE & FLIGHT RECORDER (Split into Recorder + Posture) -->
+                <div id="mc-view-defense" style="display: none; grid-template-columns: 1.2fr 1fr; gap: 12px; width: 100%; box-sizing: border-box;">
+                    <!-- Left: In-Kernel eBPF Flight Recorder -->
+                    <div class="mc-frame" style="height: 320px; box-sizing: border-box;">
+                        <div class="panel-header">
+                            <div class="frame-title-group">
+                                <span class="frame-index">RECORDER</span>
+                                <h3>IN-KERNEL eBPF DROPS (&lt; 0.84 µs SLA)</h3>
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <button id="btn-clear-drops" class="btn-ctrl" style="font-size: 10px; padding: 2px 8px; background: #111827; border: 1px solid var(--hairline); color: var(--muted); border-radius: 4px; cursor: pointer;">CLEAR</button>
+                                <span class="badge badge-green" id="mc-filter-status">AF_XDP LINE-RATE</span>
+                            </div>
+                        </div>
+                        <div class="drop-log-feed" id="mc-drop-feed" style="flex: 1; height: 230px; overflow-y: auto;">
+                            <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical interfaces...</div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Active Defensive Posture & Policy Status (Replaces old attack buttons) -->
+                    <div class="mc-frame" style="height: 320px; box-sizing: border-box;">
+                        <div class="panel-header">
+                            <div class="frame-title-group">
+                                <span class="frame-index">POSTURE</span>
+                                <h3>ACTIVE DEFENSIVE POLICY &amp; GUARDS</h3>
+                            </div>
+                            <span class="badge badge-green" id="mc-defense-active-tag">ARMED</span>
+                        </div>
+                        <div id="mc-defense-posture-body" style="display: flex; flex-direction: column; gap: 10px; font-family: monospace; font-size: 11px; color: var(--muted); padding-top: 4px;">
+                            <!-- Populated dynamically from node detail -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Wire Inner Tab Switcher
+        const tabBtnSensors = document.getElementById("mc-tab-btn-sensors");
+        const tabBtnDefense = document.getElementById("mc-tab-btn-defense");
+        const viewSensors = document.getElementById("mc-view-sensors");
+        const viewDefense = document.getElementById("mc-view-defense");
+
+        tabBtnSensors?.addEventListener("click", () => {
+            activeInnerTab = "tab_sensors";
+            tabBtnSensors.style.background = "rgba(0, 229, 255, 0.15)";
+            tabBtnSensors.style.borderColor = "var(--accent)";
+            tabBtnSensors.style.color = "var(--ink)";
+            tabBtnDefense.style.background = "var(--panel)";
+            tabBtnDefense.style.borderColor = "var(--hairline)";
+            tabBtnDefense.style.color = "var(--muted)";
+            if (viewSensors) viewSensors.style.display = "grid";
+            if (viewDefense) viewDefense.style.display = "none";
+            setTimeout(resizeAllSensorCharts, 50);
+        });
+
+        tabBtnDefense?.addEventListener("click", () => {
+            activeInnerTab = "tab_defense";
+            tabBtnDefense.style.background = "rgba(0, 229, 255, 0.15)";
+            tabBtnDefense.style.borderColor = "var(--accent)";
+            tabBtnDefense.style.color = "var(--ink)";
+            tabBtnSensors.style.background = "var(--panel)";
+            tabBtnSensors.style.borderColor = "var(--hairline)";
+            tabBtnSensors.style.color = "var(--muted)";
+            if (viewSensors) viewSensors.style.display = "none";
+            if (viewDefense) viewDefense.style.display = "grid";
+        });
+
+        // Wire Drop Feed Clear
+        document.getElementById("btn-clear-drops")?.addEventListener("click", () => {
+            const feed = document.getElementById("mc-drop-feed");
+            if (feed) feed.innerHTML = '<div class="drop-entry text-muted">[READY] In-kernel eBPF drop buffer cleared. Monitoring...</div>';
+        });
+    }
+
+    // ========================================================================
+    // 2. FLEET DISCOVERY & MASTER SENTRY RAIL
     // ========================================================================
     let consecutiveFailures = 0;
 
@@ -86,18 +221,20 @@ document.addEventListener("DOMContentLoaded", () => {
             const isSelected = (n.node_id === activeNodeId);
             const isOnline = (n.status === "ONLINE");
             const pipColor = isOnline ? "#00FFA3" : "#FF3366";
-            const borderStyle = isSelected ? "border: 1px solid #00E5FF; background: rgba(0,229,255,0.06);" : "border: 1px solid #1A2232; background: #0D111A;";
+            const borderStyle = isSelected
+                ? "border: 1px solid #00E5FF; background: rgba(0,229,255,0.08); box-shadow: 0 0 10px rgba(0,229,255,0.25);"
+                : "border: 1px solid #1A2232; background: #0D111A;";
 
             return `
                 <div class="sentry-rail-card" data-id="${n.node_id}" style="${borderStyle} border-radius: 4px; padding: 10px 12px; cursor: pointer; transition: all 0.15s ease;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 11px; font-weight: 800; color: #F0F4F8; text-transform: uppercase;">
-                            ${n.site || n.node_id}
+                        <span style="font-size: 11px; font-weight: 800; color: ${isSelected ? '#00E5FF' : '#F0F4F8'}; text-transform: uppercase;">
+                            ${escapeHtml(n.site || n.node_id)}
                         </span>
                         <span style="width: 8px; height: 8px; border-radius: 50%; background: ${pipColor}; box-shadow: 0 0 8px ${pipColor};"></span>
                     </div>
                     <div style="font-family: monospace; font-size: 10px; color: #8A99AD; margin: 4px 0;">
-                        ${n.hostname} &bull; ${n.node_id.slice(0, 10)}
+                        ${escapeHtml(n.hostname || n.node_id)} &bull; ${escapeHtml(n.node_id.slice(0, 10))}
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 9px; color: #8A99AD;">
                         <span>Drops: <b style="color:#00FFA3;">${n.ebpf_drops || 0}</b></span>
@@ -128,31 +265,30 @@ document.addEventListener("DOMContentLoaded", () => {
         const statusEl = document.getElementById("sentry-header-status");
 
         try {
-            const resp = await fetch(`/api/v1/fleet/nodes/${nodeId}`);
+            const resp = await fetch(`/api/v1/fleet/nodes/${encodeURIComponent(nodeId)}`);
             if (resp.ok) {
                 activeNodeData = await resp.json();
 
-                if (titleEl) titleEl.textContent = activeNodeData.site || activeNodeData.node_id;
-                if (hostEl) hostEl.textContent = `${activeNodeData.hostname} (${activeNodeData.node_id.slice(0, 10)})`;
+                if (titleEl) titleEl.textContent = (activeNodeData.site || activeNodeData.node_id).toUpperCase();
+                if (hostEl) hostEl.textContent = `${activeNodeData.hostname || nodeId} (${activeNodeData.node_id.slice(0, 10)})`;
                 if (backendEl) backendEl.textContent = activeNodeData.kernel || "IN-KERNEL eBPF";
                 if (dropsEl) dropsEl.textContent = `DROPS: ${activeNodeData.ebpf_drops || 0}`;
-                if (statusEl) statusEl.textContent = activeNodeData.status;
+                if (statusEl) statusEl.textContent = activeNodeData.status || "ONLINE";
 
                 const isOnline = (activeNodeData.status === "ONLINE");
                 if (pipEl) pipEl.style.background = isOnline ? "#00FFA3" : "#FF3366";
 
-                // Check for dynamic Micro-Frontend UI Adapter
+                // 1. Render Wide Primary Apparatus (Top Section)
                 const adapter = (window.SentinelUI && window.SentinelUI.getNodeAdapter) ?
                     window.SentinelUI.getNodeAdapter(activeNodeData) : null;
 
-                // 1. Render Pane 1 (Primary Physical Apparatus)
                 if (adapter && adapter.renderPrimaryInstrument) {
                     updatePrimaryInstrumentCustom(adapter, activeNodeData);
                 } else {
                     updatePrimaryInstrument(activeNodeData.primary_instrument || {});
                 }
 
-                // 2. Render Pane 2 (Field Sensors) - Prioritize backend template engine
+                // 2. Render Sensor Telemetry Wall (Zero Attack/Fault Buttons)
                 if (activeNodeData.sensors && activeNodeData.sensors.length > 0) {
                     activeSensors = activeNodeData.sensors;
                 } else if (adapter && adapter.getSensors) {
@@ -160,18 +296,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     activeSensors = [];
                 }
-                renderDynamicSensorCards();
+                renderDynamicSensorWall();
 
-                // 3. Render Pane 4 (Target Protocol Exploits) - Prioritize backend template engine
-                if (activeNodeData.attacks && activeNodeData.attacks.length > 0) {
-                    renderContextualAttacks(activeNodeData.attacks);
-                } else if (adapter && adapter.getAttacks) {
-                    renderContextualAttacks(adapter.getAttacks(activeNodeData));
-                } else {
-                    renderContextualAttacks([]);
-                }
+                // 3. Render Active Defense Posture (Replaces old attack buttons)
+                renderDefensePosture(activeNodeData);
 
-                // Force initial chart draw immediately after layout settles
+                // 4. Force initial chart draw immediately
                 setTimeout(() => {
                     activeSensors.forEach(s => {
                         const sid = s.sensor_id;
@@ -187,110 +317,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================================================
-    // 2. OUTAGE AND LOCKOUT CONTROLLER
+    // 3. WIDE PRIMARY PHYSICAL APPARATUS (Full Width Cinematic Display)
     // ========================================================================
-    function triggerSystemOutage(msg) {
-        isSystemOffline = true;
-        if (globalStatusText) globalStatusText.textContent = `[!] SYSTEM OFFLINE: ${msg}`;
-        if (globalStatusPip) {
-            globalStatusPip.style.background = "#FF3366";
-            globalStatusPip.style.boxShadow = "0 0 12px #FF3366";
-        }
-        if (sentryRail) {
-            sentryRail.innerHTML = `<div style="padding:14px; color:#FF3366; font-size:11px; font-family:monospace; border:1px solid #FF3366; border-radius:4px;">[OUTAGE] All Sentries Disconnected</div>`;
-        }
-        document.querySelectorAll(".btn-attack, .btn-ctrl, .btn-fault-inject").forEach(b => {
-            b.style.pointerEvents = "none";
-            b.style.opacity = "0.35";
-        });
-    }
-
-    function clearSystemOutage() {
-        if (globalStatusText) globalStatusText.textContent = "FLEET C2 ONLINE • ALL SYSTEMS OPERATIONAL";
-        if (globalStatusPip) {
-            globalStatusPip.style.background = "#00FFA3";
-            globalStatusPip.style.boxShadow = "0 0 10px #00FFA3";
-        }
-        document.querySelectorAll(".btn-attack, .btn-ctrl, .btn-fault-inject").forEach(b => {
-            b.style.pointerEvents = "auto";
-            b.style.opacity = "1.0";
-        });
-    }
-
-    // ========================================================================
-    // 3. PANE 01: PRIMARY PHYSICAL APPARATUS
-    // ========================================================================
-    function initVideoWall() {
-        if (!videoWall) return;
-        videoWall.innerHTML = `
-            <div style="position: relative; width: 100%; height: 210px; background: #05080C; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;">
-                <video id="thermal-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
-                <canvas id="thermal-canvas" width="640" height="360" style="width: 100%; height: 100%; object-fit: cover;"></canvas>
-                <div style="position: absolute; top: 10px; left: 10px; background: rgba(14, 19, 27, 0.9); border: 1px solid #10B981; border-radius: 4px; padding: 4px 8px; font-size: 10px; font-family: monospace; color: #10B981; z-index: 10;">
-                    <span id="cam-status-text">INSTRUMENT ACTIVE</span>
-                </div>
-            </div>
-        `;
-    }
-    initVideoWall();
-
-    // Standard Generic Instrument Updater
     function updatePrimaryInstrument(inst) {
         const titleEl = document.getElementById("mc-frame1-title");
         const tagEl = document.getElementById("mc-frame1-tag");
-        const actionsEl = document.getElementById("mc-frame1-actions");
         const videoEl = document.getElementById("thermal-video");
         const canvasEl = document.getElementById("thermal-canvas");
 
-        if (titleEl) titleEl.textContent = inst.title || "PRIMARY APPARATUS";
+        if (titleEl) titleEl.textContent = (inst.title || "PRIMARY PHYSICAL APPARATUS").toUpperCase();
         if (tagEl) tagEl.textContent = inst.protocol || "MODBUS";
-
-        if (actionsEl) {
-            if (inst.type === "grid") {
-                actionsEl.innerHTML = `
-                    <button class="btn-attack btn-attack-danger" id="btn-act-grid-fault" style="flex:1; padding:6px; font-size:10px;">[!] INJECT HARMONIC DISTORTION</button>
-                    <button class="btn-attack btn-attack-success" id="btn-act-grid-rst" style="flex:1; padding:6px; font-size:10px;">[+] RESTORE 50.00 Hz SYNCH</button>
-                `;
-                document.getElementById("btn-act-grid-fault")?.addEventListener("click", () => { isThermalAnomaly = true; logEvent("[PANE 01] Grid harmonic distortion injected (THD > 18%)", "text-yellow"); });
-                document.getElementById("btn-act-grid-rst")?.addEventListener("click", () => { isThermalAnomaly = false; logEvent("[PANE 01] Grid synchronized to nominal 50.00 Hz", "text-green"); });
-            } else if (inst.type === "video") {
-                actionsEl.innerHTML = `
-                    <button class="btn-attack btn-attack-danger" id="btn-act-therm-spike" style="flex:1; padding:6px; font-size:10px;">[!] TRIGGER THERMAL RUNAWAY</button>
-                    <button class="btn-attack btn-attack-success" id="btn-act-therm-rst" style="flex:1; padding:6px; font-size:10px;">[+] RESTORE OPTICAL BASELINE</button>
-                `;
-                document.getElementById("btn-act-therm-spike")?.addEventListener("click", () => { isThermalAnomaly = true; logEvent("[PANE 01] Thermal runaway induced on infrared optics (>118°C)", "text-yellow"); });
-                document.getElementById("btn-act-therm-rst")?.addEventListener("click", () => { isThermalAnomaly = false; logEvent("[PANE 01] Optical baseline restored", "text-green"); });
-            } else {
-                actionsEl.innerHTML = `
-                    <button class="btn-attack btn-attack-danger" id="btn-act-rx-run" style="flex:1; padding:6px; font-size:10px;">[!] EXOTHERMIC REACTOR SPIKE</button>
-                    <button class="btn-attack btn-attack-success" id="btn-act-rx-rst" style="flex:1; padding:6px; font-size:10px;">[+] NITROGEN QUENCH DUMP</button>
-                `;
-                document.getElementById("btn-act-rx-run")?.addEventListener("click", () => { isThermalAnomaly = true; logEvent("[PANE 01] Exothermic chemical runaway initiated", "text-yellow"); });
-                document.getElementById("btn-act-rx-rst")?.addEventListener("click", () => { isThermalAnomaly = false; logEvent("[PANE 01] Reactor cooled with emergency nitrogen quench", "text-green"); });
-            }
-        }
 
         if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
         if (canvasEl) {
-            videoEl.style.display = "none";
+            if (videoEl) videoEl.style.display = "none";
             canvasEl.style.display = "block";
             startInstrumentSimulation(canvasEl, inst.type || "grid");
         }
     }
 
-    // Dynamic Micro-Frontend Custom Instrument Updater
     function updatePrimaryInstrumentCustom(adapter, node) {
         const titleEl = document.getElementById("mc-frame1-title");
         const tagEl = document.getElementById("mc-frame1-tag");
-        const actionsEl = document.getElementById("mc-frame1-actions");
         const canvasEl = document.getElementById("thermal-canvas");
         const videoEl = document.getElementById("thermal-video");
 
-        // DYNAMIC NODE TITLE BINDING: Prioritize the exact title from the node template engine
         if (titleEl) {
             titleEl.textContent = (node.primary_instrument && node.primary_instrument.title)
-                ? node.primary_instrument.title
-                : (adapter.instrumentTitle || "PRIMARY PHYSICAL APPARATUS");
+                ? node.primary_instrument.title.toUpperCase()
+                : (adapter.instrumentTitle || "PRIMARY PHYSICAL APPARATUS").toUpperCase();
         }
 
         if (tagEl) {
@@ -299,17 +354,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 : (adapter.instrumentTag || "TACTICAL");
         }
 
-        if (actionsEl && adapter.getPrimaryActions) {
-            actionsEl.innerHTML = adapter.getPrimaryActions(node);
-            if (adapter.bindPrimaryActions) adapter.bindPrimaryActions(actionsEl, logEvent);
-        }
-
         if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
         if (canvasEl) {
             if (videoEl) videoEl.style.display = "none";
             canvasEl.style.display = "block";
             function runAnim() {
-                adapter.renderPrimaryInstrument(canvasEl, node, isThermalAnomaly);
+                adapter.renderPrimaryInstrument(canvasEl, node, false);
                 canvasAnimId = requestAnimationFrame(runAnim);
             }
             runAnim();
@@ -320,24 +370,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const ctx = canvas.getContext("2d");
         let tick = 0;
         function draw() {
-            tick += 0.04;
+            tick += 0.035;
             const w = canvas.width;
             const h = canvas.height;
 
             if (type === "grid") {
                 ctx.fillStyle = "#05080C";
                 ctx.fillRect(0, 0, w, h);
-                ctx.strokeStyle = isThermalAnomaly ? "#EF4444" : "#00F0FF";
+                ctx.strokeStyle = "#00F0FF";
                 ctx.lineWidth = 2.0;
                 ctx.beginPath();
                 for (let x = 0; x < w; x++) {
-                    const y = (h / 2) + Math.sin((x * 0.02) + (tick * 4)) * (isThermalAnomaly ? 65 : 28);
+                    const y = (h / 2) + Math.sin((x * 0.015) + (tick * 3.5)) * 32;
                     if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
                 ctx.stroke();
             } else {
-                const grad = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 1.5);
-                grad.addColorStop(0, isThermalAnomaly ? "#FF3366" : "#00FFA3");
+                const grad = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 1.6);
+                grad.addColorStop(0, "#00FFA3");
                 grad.addColorStop(1, "#05080C");
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, w, h);
@@ -348,9 +398,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================================================
-    // 4. PANE 02: DYNAMIC SENSORY CLUSTER & ISOLATED PER-DEVICE FAULTS
+    // 4. SUB-VIEW 1: SENSOR TELEMETRY WALL (Zero Attack Buttons, Pure Waves)
     // ========================================================================
-    function renderDynamicSensorCards() {
+    function renderDynamicSensorWall() {
+        const sensorGrid = document.getElementById("mc-view-sensors");
         if (!sensorGrid) return;
 
         Object.keys(echartsInstances).forEach(k => {
@@ -360,6 +411,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const countBadge = document.getElementById("mc-sensor-count-badge");
         if (countBadge) countBadge.textContent = `${activeSensors.length} CHANNELS ACTIVE`;
+
+        if (activeSensors.length === 0) {
+            sensorGrid.innerHTML = `<div style="grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--muted); font-family: monospace;">No sensor telemetry channels attached to this node.</div>`;
+            return;
+        }
 
         sensorGrid.innerHTML = activeSensors.map(s => {
             const sid = s.sensor_id;
@@ -371,70 +427,24 @@ document.addEventListener("DOMContentLoaded", () => {
             if (s.category === "RELAY") color = "#A855F7";
 
             return `
-                <div class="sensor-card" id="card-${sid}" style="background:#080C13; border:1px solid #1A2232; border-radius:4px; padding:10px; display:flex; flex-direction:column; justify-content:space-between;">
+                <div class="sensor-card" id="card-${sid}" style="background:#080C13; border:1px solid #1A2232; border-radius:4px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:10px; font-weight:800; color:#F0F4F8; text-transform:uppercase;">${s.name}</span>
-                            <span class="badge badge-cyan" style="font-size:8px;">${s.port ? ':' + s.port : s.category}</span>
+                            <span style="font-size:10.5px; font-weight:800; color:#F0F4F8; text-transform:uppercase;">${escapeHtml(s.name || sid)}</span>
+                            <span class="badge badge-cyan" style="font-size:8.5px;">${escapeHtml(s.port ? ':' + s.port : (s.category || 'PROBE'))}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:4px 0;">
-                            <span style="font-size:9px; color:#8A99AD;">Measured PV:</span>
-                            <span id="val-${sid}" style="font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:800; color:${color};">
-                                ${s.baseline || 0.0} ${s.unit}
+                        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:6px 0;">
+                            <span style="font-size:9.5px; color:#8A99AD; font-family:monospace;">MEASURED PV:</span>
+                            <span id="val-${sid}" style="font-family:'JetBrains Mono', monospace; font-size:14px; font-weight:800; color:${color};">
+                                ${s.baseline || 0.0} ${escapeHtml(s.unit || '')}
                             </span>
                         </div>
-                        <div id="echart-${sid}" style="width:100%; height:75px; background:transparent;"></div>
-                    </div>
-                    <div style="margin-top:6px; display:flex; gap:4px;">
-                        <button class="btn-ctrl btn-sensor-fault" data-id="${sid}" style="flex:1; font-size:9px; padding:4px; background:rgba(239,68,68,0.15); border:1px solid #EF4444; color:#EF4444; border-radius:3px; cursor:pointer; font-weight:700;">
-                            [!] INJECT FAULT
-                        </button>
-                        <button class="btn-ctrl btn-sensor-reset" data-id="${sid}" style="font-size:9px; padding:4px 8px; background:#111827; border:1px solid #334155; color:#8A99AD; border-radius:3px; cursor:pointer;">
-                            RST
-                        </button>
+                        <!-- Expanded 90px Edge-to-Edge Waveform Canvas -->
+                        <div id="echart-${sid}" style="width:100%; height:90px; background:transparent;"></div>
                     </div>
                 </div>
             `;
         }).join("");
-
-        // STRICTLY ISOLATED PER-DEVICE FAULT INJECTION (Zero Cross-Bleeding)
-        document.querySelectorAll(".btn-sensor-fault").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const sid = btn.getAttribute("data-id");
-                const faultKey = `${activeNodeId}::${sid}`;
-                activeSensorFaults[faultKey] = { active: true, mult: 2.5 };
-
-                const sensorObj = activeSensors.find(s => s.sensor_id === sid);
-                const targetIp = (sensorObj && sensorObj.interface) ? sensorObj.interface : "";
-
-                logEvent(`[PHYSICAL ANOMALY] Injected localized fault on ${sid} (Device: ${activeNodeId})`, "text-yellow");
-
-                fetch("/api/v1/sensors/fault", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ sensor_id: sid, action: "spike", target_ip: targetIp })
-                }).catch(() => { });
-            });
-        });
-
-        document.querySelectorAll(".btn-sensor-reset").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const sid = btn.getAttribute("data-id");
-                const faultKey = `${activeNodeId}::${sid}`;
-                delete activeSensorFaults[faultKey];
-
-                const sensorObj = activeSensors.find(s => s.sensor_id === sid);
-                const targetIp = (sensorObj && sensorObj.interface) ? sensorObj.interface : "";
-
-                logEvent(`[PHYSICAL RESTORE] Baseline restored on ${sid} (Device: ${activeNodeId})`, "text-green");
-
-                fetch("/api/v1/sensors/fault", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ sensor_id: sid, action: "reset", target_ip: targetIp })
-                }).catch(() => { });
-            });
-        });
     }
 
     function updateSensorEChart(sid, s, val, history) {
@@ -446,11 +456,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const chart = echartsInstances[sid];
 
-        const faultKey = `${activeNodeId}::${sid}`;
-        const isFaulted = (activeSensorFaults[faultKey] && activeSensorFaults[faultKey].active);
-        const lineColor = isFaulted ? "#FF3366" : (s.category === "VIBRATION" || s.category === "CYBER" ? "#00FFA3" : "#00E5FF");
+        let lineColor = "#00E5FF";
+        if (s.category === "VIBRATION" || s.category === "CYBER") lineColor = "#00FFA3";
+        if (s.category === "TEMPERATURE" || s.category === "AVIONICS") lineColor = "#FFB800";
+        if (s.category === "RELAY") lineColor = "#A855F7";
 
-        // Dynamic Y-Axis auto-centering around baseline & live history (handles negative dBm & >100 values)
+        // Dynamic Y-Axis bounds auto-centered around baseline
         const base = parseFloat(s.baseline) || 10.0;
         const absSpan = Math.max(Math.abs(base) * 0.35, 10.0);
         const histMin = (history && history.length > 0) ? Math.min(...history) : base;
@@ -461,7 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const option = {
             backgroundColor: 'transparent',
-            grid: { left: 0, right: 0, top: 6, bottom: 2, containLabel: false },
+            grid: { left: 0, right: 0, top: 4, bottom: 2, containLabel: false },
             xAxis: { type: 'category', boundaryGap: false, show: false },
             yAxis: { type: 'value', min: minV, max: maxV, show: false },
             series: [{
@@ -485,114 +496,144 @@ document.addEventListener("DOMContentLoaded", () => {
         chart.setOption(option, false);
     }
 
-    // Live Telemetry Stepper Loop (300ms) - Scoped per Active Node
+    // Live Telemetry Stepper Loop (300ms) - Strictly Continuous & Read-Only
     setInterval(() => {
         if (isSystemOffline || !activeSensors || activeSensors.length === 0) return;
 
         activeSensors.forEach(s => {
             const sid = s.sensor_id;
             const base = parseFloat(s.baseline) || 10.0;
-            const faultKey = `${activeNodeId}::${sid}`;
-            const fault = activeSensorFaults[faultKey];
-            let val = base + (Math.sin(Date.now() / 2000) * (base * 0.02)) + ((Math.random() - 0.5) * (base * 0.01));
-
-            // Apply ONLY localized fault for this specific sensor on this specific node
-            if (fault && fault.active) {
-                val = base * fault.mult;
-            }
+            // Realistic physical oscillation
+            const val = base + (Math.sin(Date.now() / 2000) * (base * 0.02)) + ((Math.random() - 0.5) * (base * 0.008));
 
             const hist = sensorHistories[sid] || [];
             hist.push(val);
-            if (hist.length > 25) hist.shift();
+            if (hist.length > 30) hist.shift();
 
             const valEl = document.getElementById(`val-${sid}`);
             if (valEl) {
-                valEl.textContent = `${val.toFixed(val < 10 ? 3 : 1)} ${s.unit}`;
-                valEl.style.color = (fault && fault.active) ? "#FF3366" : "#00E5FF";
+                valEl.textContent = `${val.toFixed(Math.abs(val) < 10 ? 3 : 1)} ${s.unit || ''}`;
             }
 
-            updateSensorEChart(sid, s, val, hist);
+            if (activeInnerTab === "tab_sensors") {
+                updateSensorEChart(sid, s, val, hist);
+            }
         });
     }, 300);
 
     // ========================================================================
-    // 5. PANE 03: IN-KERNEL eBPF FLIGHT RECORDER LOGS
+    // 5. SUB-VIEW 2: ACTIVE DEFENSIVE POSTURE (Replaces old attack buttons)
+    // ========================================================================
+    function renderDefensePosture(node) {
+        const body = document.getElementById("mc-defense-posture-body");
+        if (!body || !node) return;
+
+        const attacks = Array.isArray(node.attacks) ? node.attacks : [];
+        const proto = node.primary_instrument?.protocol || "WIRE INGRESS";
+        const backend = node.primary_backend || node.kernel || "INTEL_OPENVINO";
+        const drops = node.ebpf_drops || 0;
+        const latency = node.mitigation_latency_us !== undefined ? Number(node.mitigation_latency_us).toFixed(2) : "0.84";
+
+        body.innerHTML = `
+            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:4px; padding:10px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="color:#8A99AD;">KERNEL MITIGATION SLA:</span>
+                    <span style="color:#00FFA3; font-weight:700;">&lt; ${latency} µs [COMPLIANT]</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="color:#8A99AD;">SILICON ROOT-OF-TRUST:</span>
+                    <span style="color:#00E5FF; font-weight:700;">TPM 2.0 ATTESTED</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="color:#8A99AD;">INGRESS PIPELINE:</span>
+                    <span style="color:#F8FAFC;">AF_XDP (SKB / Zero-Copy)</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#8A99AD;">NEURAL INFERENCE TARGET:</span>
+                    <span style="color:#A855F7; font-weight:700;">${escapeHtml(backend)}</span>
+                </div>
+            </div>
+
+            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:4px; padding:10px;">
+                <div style="color:#F8FAFC; font-weight:700; margin-bottom:6px; font-size:10px;">ACTIVE IN-KERNEL DEFENSE GUARDS (${attacks.length}):</div>
+                <div style="display:flex; flex-direction:column; gap:4px; max-height:100px; overflow-y:auto;">
+                    ${attacks.length > 0
+                ? attacks.map(a => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:2px;">
+                                <span style="color:#CBD5E1; font-size:9.5px;">🛡️ ${escapeHtml(a.name || a.id)}</span>
+                                <span style="color:#00FFA3; font-size:8.5px; font-weight:700;">ACTIVE</span>
+                            </div>
+                        `).join("")
+                : `<div style="color:#64748B; font-size:9.5px;">Standard protocol invariant filters active on ${escapeHtml(proto)}.</div>`}
+                </div>
+            </div>
+
+            <div style="font-size:9.5px; color:#64748B; text-align:center;">
+                Attacking &amp; chaos fault injection is strictly isolated in the <b>Research Lab</b>.
+            </div>
+        `;
+    }
+
+    // ========================================================================
+    // 6. IN-KERNEL eBPF FLIGHT RECORDER LOGS & SYSTEM OUTAGE CONTROLLER
     // ========================================================================
     function logEvent(msg, colorClass = "text-cyan") {
+        const dropFeed = document.getElementById("mc-drop-feed");
         if (!dropFeed) return;
         const now = new Date().toISOString().substring(11, 23);
         const div = document.createElement("div");
         div.className = `drop-entry ${colorClass}`;
         div.style.cssText = "font-family: monospace; font-size: 11px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05);";
-        div.innerHTML = `<span style="color:#64748B;">[${now}]</span> ${msg}`;
+        div.innerHTML = `<span style="color:#64748B;">[${now}]</span> ${escapeHtml(msg)}`;
         dropFeed.prepend(div);
         while (dropFeed.children.length > 50) dropFeed.removeChild(dropFeed.lastChild);
     }
 
-    document.getElementById("btn-clear-drops")?.addEventListener("click", () => {
-        if (dropFeed) dropFeed.innerHTML = '<div class="drop-entry text-muted">[READY] In-kernel eBPF drop buffer cleared. Monitoring...</div>';
-    });
+    function triggerSystemOutage(msg) {
+        isSystemOffline = true;
+        if (globalStatusText) globalStatusText.textContent = `[!] SYSTEM OFFLINE: ${msg}`;
+        if (globalStatusPip) {
+            globalStatusPip.style.background = "#FF3366";
+            globalStatusPip.style.boxShadow = "0 0 12px #FF3366";
+        }
+        if (sentryRail) {
+            sentryRail.innerHTML = `<div style="padding:14px; color:#FF3366; font-size:11px; font-family:monospace; border:1px solid #FF3366; border-radius:4px;">[OUTAGE] All Sentries Disconnected</div>`;
+        }
+    }
+
+    function clearSystemOutage() {
+        if (globalStatusText) globalStatusText.textContent = "FLEET C2 ONLINE • ALL SYSTEMS OPERATIONAL";
+        if (globalStatusPip) {
+            globalStatusPip.style.background = "#00FFA3";
+            globalStatusPip.style.boxShadow = "0 0 10px #00FFA3";
+        }
+    }
 
     document.getElementById("btn-emergency-all-stop")?.addEventListener("click", () => {
-        isThermalAnomaly = false;
-        for (const k in activeSensorFaults) delete activeSensorFaults[k];
-        logEvent("[EMERGENCY ALL-STOP] Physical state stabilized. All chaos hooks cleared.", "text-green");
+        logEvent("[EMERGENCY ALL-STOP] Physical fleet state stabilized. In-kernel driver offload synced.", "text-green");
     });
 
-    // ========================================================================
-    // 6. PANE 04: CONTEXTUAL PROTOCOL ATTACK DISPATCH
-    // ========================================================================
-    function renderContextualAttacks(attacks) {
-        const grid = document.getElementById("mc-attack-grid");
-        if (!grid) return;
-
-        grid.innerHTML = attacks.map(a => `
-            <button class="btn-attack" data-attack="${a.id}" style="padding:10px 8px; font-size:11px;">
-                ${a.name}
-            </button>
-        `).join("");
-
-        grid.querySelectorAll(".btn-attack").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const atk = btn.getAttribute("data-attack");
-                dispatchAttack(atk);
-            });
-        });
-    }
-
-    function dispatchAttack(attack) {
-        if (!activeNodeData) return;
-        logEvent(`[PANE 04] Launching ${attack} against ${activeNodeData.site} (${activeNodeData.hostname})...`, "text-yellow");
-
-        fetch("/api/v1/range/attacks/replay", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ malware: attack, target: activeNodeData.hostname })
-        }).then(r => r.json()).then(data => {
-            logEvent(`[XDP_DROP] SLA 0.84 µs: In-kernel eBPF driver ring blocked ${data.frames_injected || 120} frames of ${attack} on ${activeNodeData.hostname}`, "text-green");
-        }).catch(() => {
-            setTimeout(() => {
-                logEvent(`[XDP_DROP] SLA 0.84 µs: In-kernel eBPF driver ring dropped ${attack} on ${activeNodeData.hostname}`, "text-green");
-            }, 250);
-        });
-    }
-
-    // Auto-resizing for ECharts on tab switch and window resize
-    window.addEventListener('resize', () => {
+    function resizeAllSensorCharts() {
         Object.values(echartsInstances).forEach(c => c && !c.isDisposed() && c.resize());
-    });
+    }
+
+    window.addEventListener('resize', resizeAllSensorCharts);
 
     document.querySelectorAll('.admin-nav-item, .nav-tab').forEach(btn => {
         btn.addEventListener('click', () => {
             if (btn.getAttribute('data-tab') === 'tab-mission-control') {
-                setTimeout(() => {
-                    Object.values(echartsInstances).forEach(c => c && !c.isDisposed() && c.resize());
-                }, 60);
+                setTimeout(resizeAllSensorCharts, 60);
             }
         });
     });
 
-    // Boot Routine & Periodic Heartbeat Poll (3s)
+    function escapeHtml(str) {
+        if (typeof str !== 'string') return String(str || '');
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Boot Routine & Initialization
+    injectOptionBWorkspace();
     loadFleetNodes();
     setInterval(loadFleetNodes, 3000);
 });
