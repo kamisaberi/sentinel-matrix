@@ -1,7 +1,7 @@
 // File: /home/kami/sentinel-nexus/web/js/mission_control.js
 // ==============================================================================
 // ARYORITHM SENTINEL NEXUS: MISSION CONTROL OPERATIONAL DEFENSE COCKPIT
-// Option B: Wide Primary Apparatus + Two Inner Tabs (Sensor Wall vs Defense C2)
+// Side-by-Side Sibling Layout: 1.25 Aspect-Ratio Camera (Left) + Tabbed Workspace (Right)
 // Zero Attack/Fault Buttons — Pure Operational Monitoring & Kernel Defense
 // ==============================================================================
 
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const workspaceContainer = document.getElementById("mc-sentry-workspace");
 
     // ========================================================================
-    // 1. OPTION B WORKSPACE INJECTION (Wide Apparatus + Inner Tabs)
+    // 1. SIBLING WORKSPACE INJECTION (1.25 Camera + Tabbed Sibling)
     // ========================================================================
     function injectOptionBWorkspace() {
         if (!workspaceContainer) return;
@@ -49,80 +49,88 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
 
-            <!-- TOP FULL-WIDTH SECTION: WIDE PRIMARY MISSION APPARATUS (Cinematic High-Res View) -->
-            <div class="mc-frame" id="mc-apparatus-frame" style="width: 100%; box-sizing: border-box;">
-                <div class="panel-header" style="margin-bottom: 8px; padding-bottom: 6px;">
-                    <div class="frame-title-group">
-                        <span class="frame-index">PANE 01</span>
-                        <h3 id="mc-frame1-title">PRIMARY PHYSICAL APPARATUS</h3>
-                    </div>
-                    <span class="badge badge-green" id="mc-frame1-tag">MODBUS</span>
-                </div>
-                <div class="video-wall-container" id="mc-video-wall" style="height: 240px; width: 100%;">
-                    <div style="position: relative; width: 100%; height: 100%; background: #05080C; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;">
-                        <video id="thermal-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
-                        <canvas id="thermal-canvas" width="960" height="360" style="width: 100%; height: 100%; object-fit: cover;"></canvas>
-                        <div style="position: absolute; top: 10px; left: 10px; background: rgba(14, 19, 27, 0.9); border: 1px solid #10B981; border-radius: 4px; padding: 4px 8px; font-size: 10px; font-family: monospace; color: #10B981; z-index: 10;">
-                            <span id="cam-status-text">INSTRUMENT ACTIVE</span>
+            <!-- MAIN TWO-SIBLING ROW: LEFT = CAMERA (1.25 ASPECT RATIO), RIGHT = TABBED WORKSPACE -->
+            <div class="mc-main-row" style="display: flex; gap: 14px; width: 100%; box-sizing: border-box; align-items: flex-start;">
+
+                <!-- SIBLING 1: CAMERA / PRIMARY PHYSICAL APPARATUS (1.25 Aspect Ratio Squared Shape) -->
+                <div class="mc-frame" id="mc-apparatus-frame" style="width: 400px; flex: 0 0 400px; box-sizing: border-box;">
+                    <div class="panel-header" style="margin-bottom: 8px; padding-bottom: 6px;">
+                        <div class="frame-title-group">
+                            <span class="frame-index">PANE 01</span>
+                            <h3 id="mc-frame1-title" style="font-size: 11px;">PRIMARY PHYSICAL APPARATUS</h3>
                         </div>
+                        <span class="badge badge-green" id="mc-frame1-tag">MODBUS</span>
                     </div>
-                </div>
-            </div>
 
-            <!-- LOWER SECTION: TWO INNER WORKSPACE TABS -->
-            <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box;">
-                <!-- Tab Switcher Bar -->
-                <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--hairline); padding-bottom: 8px;">
-                    <button id="mc-tab-btn-sensors" class="mc-inner-tab-btn active" style="
-                        background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent); color: var(--ink);
-                        padding: 7px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s ease;">
-                        📡 SENSOR TELEMETRY WALL
-                    </button>
-                    <button id="mc-tab-btn-defense" class="mc-inner-tab-btn" style="
-                        background: var(--panel); border: 1px solid var(--hairline); color: var(--muted);
-                        padding: 7px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s ease;">
-                        🛡️ ACTIVE DEFENSE &amp; FLIGHT RECORDER
-                    </button>
-                    <span class="badge badge-cyan" id="mc-sensor-count-badge" style="margin-left: auto; align-self: center;">0 CHANNELS ACTIVE</span>
-                </div>
-
-                <!-- SUB-VIEW 1: SENSOR TELEMETRY WALL (Clean Grid with zero attack buttons) -->
-                <div id="mc-view-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; width: 100%; box-sizing: border-box;">
-                    <!-- Sensor cards rendered dynamically -->
-                </div>
-
-                <!-- SUB-VIEW 2: ACTIVE DEFENSE & FLIGHT RECORDER (Split into Recorder + Posture) -->
-                <div id="mc-view-defense" style="display: none; grid-template-columns: 1.2fr 1fr; gap: 12px; width: 100%; box-sizing: border-box;">
-                    <!-- Left: In-Kernel eBPF Flight Recorder -->
-                    <div class="mc-frame" style="height: 320px; box-sizing: border-box;">
-                        <div class="panel-header">
-                            <div class="frame-title-group">
-                                <span class="frame-index">RECORDER</span>
-                                <h3>IN-KERNEL eBPF DROPS (&lt; 0.84 µs SLA)</h3>
-                            </div>
-                            <div style="display: flex; gap: 6px;">
-                                <button id="btn-clear-drops" class="btn-ctrl" style="font-size: 10px; padding: 2px 8px; background: #111827; border: 1px solid var(--hairline); color: var(--muted); border-radius: 4px; cursor: pointer;">CLEAR</button>
-                                <span class="badge badge-green" id="mc-filter-status">AF_XDP LINE-RATE</span>
+                    <!-- 1.25 Aspect Ratio Video/Canvas Viewport (500x400) -->
+                    <div class="video-wall-container" id="mc-video-wall" style="width: 100%; aspect-ratio: 1.25; height: auto;">
+                        <div style="position: relative; width: 100%; height: 100%; background: #05080C; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; aspect-ratio: 1.25;">
+                            <video id="thermal-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                            <canvas id="thermal-canvas" width="500" height="400" style="width: 100%; height: 100%; object-fit: cover; display: block;"></canvas>
+                            <div style="position: absolute; top: 8px; left: 8px; background: rgba(14, 19, 27, 0.9); border: 1px solid #10B981; border-radius: 3px; padding: 3px 6px; font-size: 9px; font-family: monospace; color: #10B981; z-index: 10;">
+                                <span id="cam-status-text">INSTRUMENT ACTIVE</span>
                             </div>
                         </div>
-                        <div class="drop-log-feed" id="mc-drop-feed" style="flex: 1; height: 230px; overflow-y: auto;">
-                            <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical interfaces...</div>
+                    </div>
+                </div>
+
+                <!-- SIBLING 2: TABBED SECTION (Sensors Wall vs Active Defense C2) -->
+                <div id="mc-tabs-sibling-col" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;">
+
+                    <!-- Inner Tab Switcher Bar -->
+                    <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--hairline); padding-bottom: 8px; align-items: center;">
+                        <button id="mc-tab-btn-sensors" class="mc-inner-tab-btn active" style="
+                            background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent); color: var(--ink);
+                            padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s ease;">
+                            📡 SENSOR TELEMETRY WALL
+                        </button>
+                        <button id="mc-tab-btn-defense" class="mc-inner-tab-btn" style="
+                            background: var(--panel); border: 1px solid var(--hairline); color: var(--muted);
+                            padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s ease;">
+                            🛡️ ACTIVE DEFENSE &amp; FLIGHT RECORDER
+                        </button>
+                        <span class="badge badge-cyan" id="mc-sensor-count-badge" style="margin-left: auto;">0 CHANNELS ACTIVE</span>
+                    </div>
+
+                    <!-- SUB-VIEW 1: SENSOR TELEMETRY WALL (Grid with zero attack/fault buttons) -->
+                    <div id="mc-view-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; width: 100%; box-sizing: border-box;">
+                        <!-- Sensor cards rendered dynamically -->
+                    </div>
+
+                    <!-- SUB-VIEW 2: ACTIVE DEFENSE & FLIGHT RECORDER -->
+                    <div id="mc-view-defense" style="display: none; grid-template-columns: 1.15fr 1fr; gap: 10px; width: 100%; box-sizing: border-box;">
+                        <!-- Left: In-Kernel eBPF Flight Recorder -->
+                        <div class="mc-frame" style="height: 340px; box-sizing: border-box;">
+                            <div class="panel-header">
+                                <div class="frame-title-group">
+                                    <span class="frame-index">RECORDER</span>
+                                    <h3 style="font-size: 11px;">IN-KERNEL eBPF DROPS (&lt; 0.84 µs)</h3>
+                                </div>
+                                <div style="display: flex; gap: 6px;">
+                                    <button id="btn-clear-drops" class="btn-ctrl" style="font-size: 9px; padding: 2px 6px; background: #111827; border: 1px solid var(--hairline); color: var(--muted); border-radius: 3px; cursor: pointer;">CLEAR</button>
+                                    <span class="badge badge-green" id="mc-filter-status" style="font-size: 8px;">AF_XDP</span>
+                                </div>
+                            </div>
+                            <div class="drop-log-feed" id="mc-drop-feed" style="flex: 1; height: 260px; overflow-y: auto;">
+                                <div class="drop-entry text-muted">[READY] In-kernel eBPF driver rings listening on physical interfaces...</div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Active Defensive Policy & Telemetry Posture -->
+                        <div class="mc-frame" style="height: 340px; box-sizing: border-box;">
+                            <div class="panel-header">
+                                <div class="frame-title-group">
+                                    <span class="frame-index">POSTURE</span>
+                                    <h3 style="font-size: 11px;">DEFENSIVE POLICY &amp; GUARDS</h3>
+                                </div>
+                                <span class="badge badge-green" id="mc-defense-active-tag">ARMED</span>
+                            </div>
+                            <div id="mc-defense-posture-body" style="display: flex; flex-direction: column; gap: 8px; font-family: monospace; font-size: 10.5px; color: var(--muted); padding-top: 4px;">
+                                <!-- Populated dynamically from node detail -->
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Right: Active Defensive Posture & Policy Status (Replaces old attack buttons) -->
-                    <div class="mc-frame" style="height: 320px; box-sizing: border-box;">
-                        <div class="panel-header">
-                            <div class="frame-title-group">
-                                <span class="frame-index">POSTURE</span>
-                                <h3>ACTIVE DEFENSIVE POLICY &amp; GUARDS</h3>
-                            </div>
-                            <span class="badge badge-green" id="mc-defense-active-tag">ARMED</span>
-                        </div>
-                        <div id="mc-defense-posture-body" style="display: flex; flex-direction: column; gap: 10px; font-family: monospace; font-size: 11px; color: var(--muted); padding-top: 4px;">
-                            <!-- Populated dynamically from node detail -->
-                        </div>
-                    </div>
                 </div>
             </div>
         `;
@@ -278,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const isOnline = (activeNodeData.status === "ONLINE");
                 if (pipEl) pipEl.style.background = isOnline ? "#00FFA3" : "#FF3366";
 
-                // 1. Render Wide Primary Apparatus (Top Section)
+                // 1. Render Sibling 1 (Squared Camera / Apparatus)
                 const adapter = (window.SentinelUI && window.SentinelUI.getNodeAdapter) ?
                     window.SentinelUI.getNodeAdapter(activeNodeData) : null;
 
@@ -288,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     updatePrimaryInstrument(activeNodeData.primary_instrument || {});
                 }
 
-                // 2. Render Sensor Telemetry Wall (Zero Attack/Fault Buttons)
+                // 2. Render Sibling 2 Tab 1: Sensor Telemetry Wall (Zero Attack/Fault Buttons)
                 if (activeNodeData.sensors && activeNodeData.sensors.length > 0) {
                     activeSensors = activeNodeData.sensors;
                 } else if (adapter && adapter.getSensors) {
@@ -298,10 +306,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 renderDynamicSensorWall();
 
-                // 3. Render Active Defense Posture (Replaces old attack buttons)
+                // 3. Render Sibling 2 Tab 2: Active Defense Posture
                 renderDefensePosture(activeNodeData);
 
-                // 4. Force initial chart draw immediately
+                // 4. Force initial chart draw
                 setTimeout(() => {
                     activeSensors.forEach(s => {
                         const sid = s.sensor_id;
@@ -317,7 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================================================
-    // 3. WIDE PRIMARY PHYSICAL APPARATUS (Full Width Cinematic Display)
+    // 3. PRIMARY APPARATUS (1.25 Aspect Ratio Squared Shape)
     // ========================================================================
     function updatePrimaryInstrument(inst) {
         const titleEl = document.getElementById("mc-frame1-title");
@@ -381,12 +389,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 ctx.lineWidth = 2.0;
                 ctx.beginPath();
                 for (let x = 0; x < w; x++) {
-                    const y = (h / 2) + Math.sin((x * 0.015) + (tick * 3.5)) * 32;
+                    const y = (h / 2) + Math.sin((x * 0.02) + (tick * 3.5)) * 36;
                     if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
                 ctx.stroke();
             } else {
-                const grad = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 1.6);
+                const grad = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 1.5);
                 grad.addColorStop(0, "#00FFA3");
                 grad.addColorStop(1, "#05080C");
                 ctx.fillStyle = grad;
@@ -398,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================================================
-    // 4. SUB-VIEW 1: SENSOR TELEMETRY WALL (Zero Attack Buttons, Pure Waves)
+    // 4. SIBLING TAB 1: SENSOR TELEMETRY WALL (Clean Grid, No Buttons)
     // ========================================================================
     function renderDynamicSensorWall() {
         const sensorGrid = document.getElementById("mc-view-sensors");
@@ -427,20 +435,19 @@ document.addEventListener("DOMContentLoaded", () => {
             if (s.category === "RELAY") color = "#A855F7";
 
             return `
-                <div class="sensor-card" id="card-${sid}" style="background:#080C13; border:1px solid #1A2232; border-radius:4px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <div class="sensor-card" id="card-${sid}" style="background:#080C13; border:1px solid #1A2232; border-radius:4px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:10.5px; font-weight:800; color:#F0F4F8; text-transform:uppercase;">${escapeHtml(s.name || sid)}</span>
-                            <span class="badge badge-cyan" style="font-size:8.5px;">${escapeHtml(s.port ? ':' + s.port : (s.category || 'PROBE'))}</span>
+                            <span style="font-size:10px; font-weight:800; color:#F0F4F8; text-transform:uppercase;">${escapeHtml(s.name || sid)}</span>
+                            <span class="badge badge-cyan" style="font-size:8px;">${escapeHtml(s.port ? ':' + s.port : (s.category || 'PROBE'))}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:6px 0;">
-                            <span style="font-size:9.5px; color:#8A99AD; font-family:monospace;">MEASURED PV:</span>
-                            <span id="val-${sid}" style="font-family:'JetBrains Mono', monospace; font-size:14px; font-weight:800; color:${color};">
+                        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:4px 0;">
+                            <span style="font-size:9px; color:#8A99AD; font-family:monospace;">MEASURED PV:</span>
+                            <span id="val-${sid}" style="font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:800; color:${color};">
                                 ${s.baseline || 0.0} ${escapeHtml(s.unit || '')}
                             </span>
                         </div>
-                        <!-- Expanded 90px Edge-to-Edge Waveform Canvas -->
-                        <div id="echart-${sid}" style="width:100%; height:90px; background:transparent;"></div>
+                        <div id="echart-${sid}" style="width:100%; height:82px; background:transparent;"></div>
                     </div>
                 </div>
             `;
@@ -461,7 +468,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (s.category === "TEMPERATURE" || s.category === "AVIONICS") lineColor = "#FFB800";
         if (s.category === "RELAY") lineColor = "#A855F7";
 
-        // Dynamic Y-Axis bounds auto-centered around baseline
         const base = parseFloat(s.baseline) || 10.0;
         const absSpan = Math.max(Math.abs(base) * 0.35, 10.0);
         const histMin = (history && history.length > 0) ? Math.min(...history) : base;
@@ -503,7 +509,6 @@ document.addEventListener("DOMContentLoaded", () => {
         activeSensors.forEach(s => {
             const sid = s.sensor_id;
             const base = parseFloat(s.baseline) || 10.0;
-            // Realistic physical oscillation
             const val = base + (Math.sin(Date.now() / 2000) * (base * 0.02)) + ((Math.random() - 0.5) * (base * 0.008));
 
             const hist = sensorHistories[sid] || [];
@@ -522,7 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 300);
 
     // ========================================================================
-    // 5. SUB-VIEW 2: ACTIVE DEFENSIVE POSTURE (Replaces old attack buttons)
+    // 5. SIBLING TAB 2: ACTIVE DEFENSIVE POSTURE
     // ========================================================================
     function renderDefensePosture(node) {
         const body = document.getElementById("mc-defense-posture-body");
@@ -531,7 +536,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const attacks = Array.isArray(node.attacks) ? node.attacks : [];
         const proto = node.primary_instrument?.protocol || "WIRE INGRESS";
         const backend = node.primary_backend || node.kernel || "INTEL_OPENVINO";
-        const drops = node.ebpf_drops || 0;
         const latency = node.mitigation_latency_us !== undefined ? Number(node.mitigation_latency_us).toFixed(2) : "0.84";
 
         body.innerHTML = `
@@ -556,15 +560,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <div style="background:#070A0F; border:1px solid #1E293B; border-radius:4px; padding:10px;">
                 <div style="color:#F8FAFC; font-weight:700; margin-bottom:6px; font-size:10px;">ACTIVE IN-KERNEL DEFENSE GUARDS (${attacks.length}):</div>
-                <div style="display:flex; flex-direction:column; gap:4px; max-height:100px; overflow-y:auto;">
+                <div style="display:flex; flex-direction:column; gap:4px; max-height:115px; overflow-y:auto;">
                     ${attacks.length > 0
-                ? attacks.map(a => `
+                        ? attacks.map(a => `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:2px;">
                                 <span style="color:#CBD5E1; font-size:9.5px;">🛡️ ${escapeHtml(a.name || a.id)}</span>
                                 <span style="color:#00FFA3; font-size:8.5px; font-weight:700;">ACTIVE</span>
                             </div>
                         `).join("")
-                : `<div style="color:#64748B; font-size:9.5px;">Standard protocol invariant filters active on ${escapeHtml(proto)}.</div>`}
+                        : `<div style="color:#64748B; font-size:9.5px;">Standard protocol invariant filters active on ${escapeHtml(proto)}.</div>`}
                 </div>
             </div>
 
