@@ -244,6 +244,15 @@ build-device-runtime:
 		-f docker/Dockerfile.device_runtime .
 	@echo -e "${GREEN}[+] Successfully built sentinel-matrix/device-runtime:devel (cached)${RESET}"
 
+
+build-apparatus-runtime:
+	@echo -e "${CYAN}[*] Building Dedicated Real-World Apparatus & Dual-PCAP Runtime [devel/latest]...${RESET}"
+	docker build --build-arg BUILDKIT_INLINE_CACHE=1 \
+		-t sentinel-matrix/apparatus-runtime:devel \
+		-t sentinel-matrix/apparatus-runtime:latest \
+		-f docker/Dockerfile.apparatus_runtime .
+	@echo -e "${GREEN}[+] Successfully built sentinel-matrix/apparatus-runtime:latest${RESET}"
+
 build: init mock-plc build-device-runtime
 	@echo -e "${CYAN}[*] Building all Docker containers with BuildKit cache enabled (IMAGE_TAG=$(IMAGE_TAG))...${RESET}"
 	docker compose build
