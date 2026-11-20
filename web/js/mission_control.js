@@ -1,7 +1,7 @@
 // File: /home/kami/sentinel-nexus/web/js/mission_control.js
 // ==============================================================================
 // ARYORITHM SENTINEL NEXUS: MISSION CONTROL OPERATIONAL DEFENSE COCKPIT
-// Side-by-Side Sibling Layout: 580px 1.25 Aspect-Ratio Camera (Left) + Tabbed Workspace (Right)
+// 580px 1.25 Pluggable Apparatus (Left Sibling) + Tabbed Workspace (Right Sibling)
 // Zero Attack/Fault Buttons — Pure Operational Monitoring & Kernel Defense
 // ==============================================================================
 
@@ -15,9 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const sensorHistories = {};
     const echartsInstances = {};
     let canvasAnimId = null;
-    let activeInnerTab = "tab_sensors"; // "tab_sensors" | "tab_defense"
+    let activeInnerTab = "tab_sensors";
 
-    // DOM Elements
+    // Pluggable Apparatus Lifecycle Tracking
+    let activeApparatusSpec = null;
+    let activeApparatusHandle = null;
+    let selectedApparatusIdByNode = {};
+
     const sentryRail = document.getElementById("mc-sentry-rail");
     const sentryRailCount = document.getElementById("sentry-rail-count");
     const globalStatusText = document.getElementById("global-system-status");
@@ -27,14 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const badgeGlobalSla = document.getElementById("badge-global-sla");
     const workspaceContainer = document.getElementById("mc-sentry-workspace");
 
-    // ========================================================================
-    // 1. SIBLING WORKSPACE INJECTION (Enlarged 1.25 Camera + Tabbed Sibling)
-    // ========================================================================
     function injectOptionBWorkspace() {
         if (!workspaceContainer) return;
 
         workspaceContainer.innerHTML = `
-            <!-- Top Selected Sentry Identity Header -->
             <div class="selected-sentry-banner"
                 style="background: var(--panel); border: 1px solid var(--hairline); border-radius: 4px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -49,57 +49,39 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
 
-            <!-- MAIN TWO-SIBLING ROW: LEFT = CAMERA (580px, 1.25 ASPECT RATIO), RIGHT = TABBED WORKSPACE -->
             <div class="mc-main-row" style="display: flex; gap: 14px; width: 100%; box-sizing: border-box; align-items: flex-start;">
-
-                <!-- SIBLING 1: CAMERA / PRIMARY PHYSICAL APPARATUS (Enlarged to 580px, 1.25 Aspect Ratio) -->
+                <!-- SIBLING 1: PLUGGABLE APPARATUS (580px, 1.25 Aspect Ratio) -->
                 <div class="mc-frame" id="mc-apparatus-frame" style="width: 580px; flex: 0 0 580px; box-sizing: border-box;">
-                    <div class="panel-header" style="margin-bottom: 8px; padding-bottom: 6px;">
+                    <div class="panel-header" style="margin-bottom: 6px; padding-bottom: 6px; flex-wrap: wrap; gap: 6px;">
                         <div class="frame-title-group">
                             <span class="frame-index">PANE 01</span>
                             <h3 id="mc-frame1-title" style="font-size: 11px;">PRIMARY PHYSICAL APPARATUS</h3>
                         </div>
                         <span class="badge badge-green" id="mc-frame1-tag">MODBUS</span>
                     </div>
-
-                    <!-- 1.25 Aspect Ratio Video/Canvas Viewport (580x464, High-DPI 750x600 internal resolution) -->
-                    <div class="video-wall-container" id="mc-video-wall" style="width: 100%; aspect-ratio: 1.25; height: auto;">
-                        <div style="position: relative; width: 100%; height: 100%; background: #05080C; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; aspect-ratio: 1.25;">
-                            <video id="thermal-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
-                            <canvas id="thermal-canvas" width="750" height="600" style="width: 100%; height: 100%; object-fit: cover; display: block;"></canvas>
-                            <div style="position: absolute; top: 10px; left: 10px; background: rgba(14, 19, 27, 0.9); border: 1px solid #10B981; border-radius: 3px; padding: 3px 7px; font-size: 9.5px; font-family: monospace; color: #10B981; z-index: 10;">
-                                <span id="cam-status-text">INSTRUMENT ACTIVE</span>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="mc-apparatus-switcher" style="display: none; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;"></div>
+                    <div class="video-wall-container" id="mc-video-wall" style="width: 100%; aspect-ratio: 1.25; height: auto;"></div>
                 </div>
 
-                <!-- SIBLING 2: TABBED SECTION (Sensors Wall vs Active Defense C2) -->
+                <!-- SIBLING 2: TABBED WORKSPACE -->
                 <div id="mc-tabs-sibling-col" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;">
-
-                    <!-- Inner Tab Switcher Bar -->
                     <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--hairline); padding-bottom: 8px; align-items: center;">
                         <button id="mc-tab-btn-sensors" class="mc-inner-tab-btn active" style="
                             background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent); color: var(--ink);
-                            padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s ease;">
+                            padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
                             📡 SENSOR TELEMETRY WALL
                         </button>
                         <button id="mc-tab-btn-defense" class="mc-inner-tab-btn" style="
                             background: var(--panel); border: 1px solid var(--hairline); color: var(--muted);
-                            padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s ease;">
+                            padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
                             🛡️ ACTIVE DEFENSE &amp; FLIGHT RECORDER
                         </button>
                         <span class="badge badge-cyan" id="mc-sensor-count-badge" style="margin-left: auto;">0 CHANNELS ACTIVE</span>
                     </div>
 
-                    <!-- SUB-VIEW 1: SENSOR TELEMETRY WALL (Grid with zero attack/fault buttons) -->
-                    <div id="mc-view-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; width: 100%; box-sizing: border-box;">
-                        <!-- Sensor cards rendered dynamically -->
-                    </div>
+                    <div id="mc-view-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; width: 100%; box-sizing: border-box;"></div>
 
-                    <!-- SUB-VIEW 2: ACTIVE DEFENSE & FLIGHT RECORDER -->
                     <div id="mc-view-defense" style="display: none; grid-template-columns: 1.15fr 1fr; gap: 10px; width: 100%; box-sizing: border-box;">
-                        <!-- Left: In-Kernel eBPF Flight Recorder (Height matched to ~480px) -->
                         <div class="mc-frame" style="height: 480px; box-sizing: border-box;">
                             <div class="panel-header">
                                 <div class="frame-title-group">
@@ -116,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             </div>
                         </div>
 
-                        <!-- Right: Active Defensive Policy & Telemetry Posture -->
                         <div class="mc-frame" style="height: 480px; box-sizing: border-box;">
                             <div class="panel-header">
                                 <div class="frame-title-group">
@@ -125,17 +106,13 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </div>
                                 <span class="badge badge-green" id="mc-defense-active-tag">ARMED</span>
                             </div>
-                            <div id="mc-defense-posture-body" style="display: flex; flex-direction: column; gap: 10px; font-family: monospace; font-size: 11px; color: var(--muted); padding-top: 4px;">
-                                <!-- Populated dynamically from node detail -->
-                            </div>
+                            <div id="mc-defense-posture-body" style="display: flex; flex-direction: column; gap: 10px; font-family: monospace; font-size: 11px; color: var(--muted); padding-top: 4px;"></div>
                         </div>
                     </div>
-
                 </div>
             </div>
         `;
 
-        // Wire Inner Tab Switcher
         const tabBtnSensors = document.getElementById("mc-tab-btn-sensors");
         const tabBtnDefense = document.getElementById("mc-tab-btn-defense");
         const viewSensors = document.getElementById("mc-view-sensors");
@@ -166,7 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (viewDefense) viewDefense.style.display = "grid";
         });
 
-        // Wire Drop Feed Clear
         document.getElementById("btn-clear-drops")?.addEventListener("click", () => {
             const feed = document.getElementById("mc-drop-feed");
             if (feed) feed.innerHTML = '<div class="drop-entry text-muted">[READY] In-kernel eBPF drop buffer cleared. Monitoring...</div>';
@@ -174,7 +150,131 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================================================
-    // 2. FLEET DISCOVERY & MASTER SENTRY RAIL
+    // 2. PLUGGABLE APPARATUS DISPATCHER (Uses SentinelUI.registerApparatus)
+    // ========================================================================
+    function unmountActiveApparatus() {
+        if (canvasAnimId) {
+            cancelAnimationFrame(canvasAnimId);
+            canvasAnimId = null;
+        }
+        if (activeApparatusSpec && activeApparatusHandle && typeof activeApparatusSpec.unmount === "function") {
+            try { activeApparatusSpec.unmount(activeApparatusHandle); } catch (_) {}
+        }
+        activeApparatusSpec = null;
+        activeApparatusHandle = null;
+    }
+
+    function mountApparatusForNode(node) {
+        const wall = document.getElementById("mc-video-wall");
+        const switcher = document.getElementById("mc-apparatus-switcher");
+        const titleEl = document.getElementById("mc-frame1-title");
+        const tagEl = document.getElementById("mc-frame1-tag");
+        if (!wall || !node) return;
+
+        unmountActiveApparatus();
+
+        const matching = (window.SentinelUI && typeof window.SentinelUI.getMatchingApparatuses === "function")
+            ? window.SentinelUI.getMatchingApparatuses(node)
+            : [];
+
+        if (matching.length > 0) {
+            const nid = node.node_id || node.id;
+            let chosenId = selectedApparatusIdByNode[nid];
+            let chosen = matching.find(a => a.id === chosenId) || matching[0];
+            selectedApparatusIdByNode[nid] = chosen.id;
+
+            // Render switcher pills if > 1 apparatus matches this node
+            if (switcher) {
+                if (matching.length > 1) {
+                    switcher.style.display = "flex";
+                    switcher.innerHTML = matching.map(a => {
+                        const isSel = a.id === chosen.id;
+                        return `
+                            <button class="mc-app-pill" data-app-id="${escapeHtml(a.id)}" style="
+                                font-size:9.5px; font-weight:700; font-family:monospace; padding:3px 8px; border-radius:3px; cursor:pointer;
+                                background:${isSel ? '#00E5FF' : '#111827'}; color:${isSel ? '#07090E' : '#94A3B8'};
+                                border:1px solid ${isSel ? '#00E5FF' : '#243144'};">
+                                ${escapeHtml(a.shortLabel || a.title)}
+                            </button>
+                        `;
+                    }).join("");
+
+                    switcher.querySelectorAll(".mc-app-pill").forEach(btn => {
+                        btn.addEventListener("click", () => {
+                            selectedApparatusIdByNode[nid] = btn.getAttribute("data-app-id");
+                            mountApparatusForNode(node);
+                        });
+                    });
+                } else {
+                    switcher.style.display = "none";
+                }
+            }
+
+            if (titleEl) titleEl.textContent = (chosen.title || node.primary_instrument?.title || "APPARATUS").toUpperCase();
+            if (tagEl) tagEl.textContent = chosen.protocol || node.primary_instrument?.protocol || "LIVE";
+            wall.style.aspectRatio = String(chosen.aspectRatio || 1.25);
+
+            activeApparatusSpec = chosen;
+            activeApparatusHandle = chosen.mount(wall, node, { mode: "mission_control" });
+            return;
+        }
+
+        // Backward-compatible fallback for generic industrial scenarios (production_master_grid)
+        if (switcher) switcher.style.display = "none";
+        wall.style.aspectRatio = "1.25";
+        wall.innerHTML = `
+            <div style="position: relative; width: 100%; height: 100%; background: #05080C; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; aspect-ratio: 1.25;">
+                <canvas id="thermal-canvas" width="750" height="600" style="width: 100%; height: 100%; object-fit: cover; display: block;"></canvas>
+                <div style="position: absolute; top: 10px; left: 10px; background: rgba(14, 19, 27, 0.9); border: 1px solid #10B981; border-radius: 3px; padding: 3px 7px; font-size: 9.5px; font-family: monospace; color: #10B981; z-index: 10;">
+                    INSTRUMENT ACTIVE
+                </div>
+            </div>
+        `;
+        const inst = node.primary_instrument || {};
+        if (titleEl) titleEl.textContent = (inst.title || "PRIMARY PHYSICAL APPARATUS").toUpperCase();
+        if (tagEl) tagEl.textContent = inst.protocol || "MODBUS";
+
+        const canvasEl = document.getElementById("thermal-canvas");
+        if (canvasEl) startInstrumentSimulation(canvasEl, inst.type || "grid");
+    }
+
+    function startInstrumentSimulation(canvas, type) {
+        const ctx = canvas.getContext("2d");
+        let tick = 0;
+        function draw() {
+            tick += 0.035;
+            const w = canvas.width;
+            const h = canvas.height;
+            if (type === "grid") {
+                ctx.fillStyle = "#05080C";
+                ctx.fillRect(0, 0, w, h);
+                ctx.strokeStyle = "#00F0FF";
+                ctx.lineWidth = 2.0;
+                ctx.beginPath();
+                for (let x = 0; x < w; x++) {
+                    const y = (h / 2) + Math.sin((x * 0.015) + (tick * 3.5)) * 42;
+                    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            } else {
+                const grad = ctx.createRadialGradient(w / 2, h / 2, 12, w / 2, h / 2, w / 1.5);
+                grad.addColorStop(0, "#00FFA3");
+                grad.addColorStop(1, "#05080C");
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+            }
+            canvasAnimId = requestAnimationFrame(draw);
+        }
+        draw();
+    }
+
+    // Re-mount apparatus immediately if external plugins finish async load after initial render
+    window.addEventListener("sentinel:plugins-ready", () => {
+        if (activeNodeData) mountApparatusForNode(activeNodeData);
+    });
+
+    // ========================================================================
+    // 3. FLEET DISCOVERY & SENTRY SELECTION
     // ========================================================================
     let consecutiveFailures = 0;
 
@@ -189,9 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     isSystemOffline = false;
                     clearSystemOutage();
 
-                    // Update Top Global Output Strip
-                    let totalDrops = 0;
-                    let onlineCount = 0;
+                    let totalDrops = 0, onlineCount = 0;
                     nodes.forEach(n => {
                         totalDrops += (n.ebpf_drops || 0);
                         if (n.status === "ONLINE") onlineCount++;
@@ -253,10 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }).join("");
 
         sentryRail.querySelectorAll(".sentry-rail-card").forEach(card => {
-            card.addEventListener("click", () => {
-                const nid = card.getAttribute("data-id");
-                selectSentry(nid);
-            });
+            card.addEventListener("click", () => selectSentry(card.getAttribute("data-id")));
         });
     }
 
@@ -265,155 +360,51 @@ document.addEventListener("DOMContentLoaded", () => {
         activeNodeId = nodeId;
         renderSentryRail();
 
-        const titleEl = document.getElementById("sentry-header-title");
-        const hostEl = document.getElementById("sentry-header-host");
-        const pipEl = document.getElementById("sentry-header-pip");
-        const backendEl = document.getElementById("sentry-header-backend");
-        const dropsEl = document.getElementById("sentry-header-drops");
-        const statusEl = document.getElementById("sentry-header-status");
-
         try {
             const resp = await fetch(`/api/v1/fleet/nodes/${encodeURIComponent(nodeId)}`);
-            if (resp.ok) {
-                activeNodeData = await resp.json();
+            if (!resp.ok) return;
+            activeNodeData = await resp.json();
 
-                if (titleEl) titleEl.textContent = (activeNodeData.site || activeNodeData.node_id).toUpperCase();
-                if (hostEl) hostEl.textContent = `${activeNodeData.hostname || nodeId} (${activeNodeData.node_id.slice(0, 10)})`;
-                if (backendEl) backendEl.textContent = activeNodeData.kernel || "IN-KERNEL eBPF";
-                if (dropsEl) dropsEl.textContent = `DROPS: ${activeNodeData.ebpf_drops || 0}`;
-                if (statusEl) statusEl.textContent = activeNodeData.status || "ONLINE";
+            const titleEl = document.getElementById("sentry-header-title");
+            const hostEl = document.getElementById("sentry-header-host");
+            const pipEl = document.getElementById("sentry-header-pip");
+            const backendEl = document.getElementById("sentry-header-backend");
+            const dropsEl = document.getElementById("sentry-header-drops");
+            const statusEl = document.getElementById("sentry-header-status");
 
-                const isOnline = (activeNodeData.status === "ONLINE");
-                if (pipEl) pipEl.style.background = isOnline ? "#00FFA3" : "#FF3366";
+            if (titleEl) titleEl.textContent = (activeNodeData.site || activeNodeData.node_id).toUpperCase();
+            if (hostEl) hostEl.textContent = `${activeNodeData.hostname || nodeId} (${activeNodeData.node_id.slice(0, 10)})`;
+            if (backendEl) backendEl.textContent = activeNodeData.kernel || "IN-KERNEL eBPF";
+            if (dropsEl) dropsEl.textContent = `DROPS: ${activeNodeData.ebpf_drops || 0}`;
+            if (statusEl) statusEl.textContent = activeNodeData.status || "ONLINE";
+            if (pipEl) pipEl.style.background = (activeNodeData.status === "ONLINE") ? "#00FFA3" : "#FF3366";
 
-                // 1. Render Sibling 1 (580px Squared Camera / Apparatus)
-                const adapter = (window.SentinelUI && window.SentinelUI.getNodeAdapter) ?
-                    window.SentinelUI.getNodeAdapter(activeNodeData) : null;
+            mountApparatusForNode(activeNodeData);
 
-                if (adapter && adapter.renderPrimaryInstrument) {
-                    updatePrimaryInstrumentCustom(adapter, activeNodeData);
-                } else {
-                    updatePrimaryInstrument(activeNodeData.primary_instrument || {});
-                }
+            activeSensors = Array.isArray(activeNodeData.sensors) ? activeNodeData.sensors : [];
+            renderDynamicSensorWall();
+            renderDefensePosture(activeNodeData);
 
-                // 2. Render Sibling 2 Tab 1: Sensor Telemetry Wall
-                if (activeNodeData.sensors && activeNodeData.sensors.length > 0) {
-                    activeSensors = activeNodeData.sensors;
-                } else if (adapter && adapter.getSensors) {
-                    activeSensors = adapter.getSensors(activeNodeData);
-                } else {
-                    activeSensors = [];
-                }
-                renderDynamicSensorWall();
-
-                // 3. Render Sibling 2 Tab 2: Active Defense Posture
-                renderDefensePosture(activeNodeData);
-
-                // 4. Force initial chart draw
-                setTimeout(() => {
-                    activeSensors.forEach(s => {
-                        const sid = s.sensor_id;
-                        const base = parseFloat(s.baseline) || 10.0;
-                        const hist = sensorHistories[sid] || [base];
-                        updateSensorEChart(sid, s, base, hist);
-                    });
-                }, 50);
-            }
+            setTimeout(() => {
+                activeSensors.forEach(s => {
+                    const base = parseFloat(s.baseline) || 10.0;
+                    updateSensorEChart(s.sensor_id, s, base, sensorHistories[s.sensor_id] || [base]);
+                });
+            }, 50);
         } catch (e) {
             console.error("Failed to load node detail for " + nodeId, e);
         }
     }
 
     // ========================================================================
-    // 3. PRIMARY APPARATUS (Enlarged 580px, 1.25 Aspect Ratio)
-    // ========================================================================
-    function updatePrimaryInstrument(inst) {
-        const titleEl = document.getElementById("mc-frame1-title");
-        const tagEl = document.getElementById("mc-frame1-tag");
-        const videoEl = document.getElementById("thermal-video");
-        const canvasEl = document.getElementById("thermal-canvas");
-
-        if (titleEl) titleEl.textContent = (inst.title || "PRIMARY PHYSICAL APPARATUS").toUpperCase();
-        if (tagEl) tagEl.textContent = inst.protocol || "MODBUS";
-
-        if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
-        if (canvasEl) {
-            if (videoEl) videoEl.style.display = "none";
-            canvasEl.style.display = "block";
-            startInstrumentSimulation(canvasEl, inst.type || "grid");
-        }
-    }
-
-    function updatePrimaryInstrumentCustom(adapter, node) {
-        const titleEl = document.getElementById("mc-frame1-title");
-        const tagEl = document.getElementById("mc-frame1-tag");
-        const canvasEl = document.getElementById("thermal-canvas");
-        const videoEl = document.getElementById("thermal-video");
-
-        if (titleEl) {
-            titleEl.textContent = (node.primary_instrument && node.primary_instrument.title)
-                ? node.primary_instrument.title.toUpperCase()
-                : (adapter.instrumentTitle || "PRIMARY PHYSICAL APPARATUS").toUpperCase();
-        }
-
-        if (tagEl) {
-            tagEl.textContent = (node.primary_instrument && node.primary_instrument.protocol)
-                ? node.primary_instrument.protocol
-                : (adapter.instrumentTag || "TACTICAL");
-        }
-
-        if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
-        if (canvasEl) {
-            if (videoEl) videoEl.style.display = "none";
-            canvasEl.style.display = "block";
-            function runAnim() {
-                adapter.renderPrimaryInstrument(canvasEl, node, false);
-                canvasAnimId = requestAnimationFrame(runAnim);
-            }
-            runAnim();
-        }
-    }
-
-    function startInstrumentSimulation(canvas, type) {
-        const ctx = canvas.getContext("2d");
-        let tick = 0;
-        function draw() {
-            tick += 0.035;
-            const w = canvas.width;
-            const h = canvas.height;
-
-            if (type === "grid") {
-                ctx.fillStyle = "#05080C";
-                ctx.fillRect(0, 0, w, h);
-                ctx.strokeStyle = "#00F0FF";
-                ctx.lineWidth = 2.0;
-                ctx.beginPath();
-                for (let x = 0; x < w; x++) {
-                    const y = (h / 2) + Math.sin((x * 0.015) + (tick * 3.5)) * 42;
-                    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                }
-                ctx.stroke();
-            } else {
-                const grad = ctx.createRadialGradient(w / 2, h / 2, 12, w / 2, h / 2, w / 1.5);
-                grad.addColorStop(0, "#00FFA3");
-                grad.addColorStop(1, "#05080C");
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, w, h);
-            }
-            canvasAnimId = requestAnimationFrame(draw);
-        }
-        draw();
-    }
-
-    // ========================================================================
-    // 4. SIBLING TAB 1: SENSOR TELEMETRY WALL
+    // 4. SENSOR TELEMETRY WALL & DEFENSIVE POSTURE
     // ========================================================================
     function renderDynamicSensorWall() {
         const sensorGrid = document.getElementById("mc-view-sensors");
         if (!sensorGrid) return;
 
         Object.keys(echartsInstances).forEach(k => {
-            try { echartsInstances[k].dispose(); } catch (e) { }
+            try { echartsInstances[k].dispose(); } catch (_) {}
             delete echartsInstances[k];
         });
 
@@ -428,7 +419,6 @@ document.addEventListener("DOMContentLoaded", () => {
         sensorGrid.innerHTML = activeSensors.map(s => {
             const sid = s.sensor_id;
             sensorHistories[sid] = sensorHistories[sid] || [];
-
             let color = "#00E5FF";
             if (s.category === "VIBRATION" || s.category === "CYBER") color = "#00FFA3";
             if (s.category === "TEMPERATURE" || s.category === "AVIONICS") color = "#FFB800";
@@ -473,14 +463,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const histMin = (history && history.length > 0) ? Math.min(...history) : base;
         const histMax = (history && history.length > 0) ? Math.max(...history) : base;
 
-        const minV = Math.min(base - absSpan, histMin - absSpan * 0.2);
-        const maxV = Math.max(base + absSpan, histMax + absSpan * 0.2);
-
-        const option = {
+        chart.setOption({
+            animation: false,
             backgroundColor: 'transparent',
             grid: { left: 0, right: 0, top: 4, bottom: 2, containLabel: false },
             xAxis: { type: 'category', boundaryGap: false, show: false },
-            yAxis: { type: 'value', min: minV, max: maxV, show: false },
+            yAxis: { type: 'value', min: Math.min(base - absSpan, histMin - absSpan * 0.2), max: Math.max(base + absSpan, histMax + absSpan * 0.2), show: false },
             series: [{
                 data: history,
                 type: 'line',
@@ -494,45 +482,28 @@ document.addEventListener("DOMContentLoaded", () => {
                         { offset: 1, color: lineColor + "00" }
                     ])
                 }
-            }],
-            animationDurationUpdate: 300,
-            animationEasingUpdate: 'linear'
-        };
-
-        chart.setOption(option, false);
+            }]
+        }, false);
     }
 
-    // Live Telemetry Stepper Loop (300ms) - Strictly Continuous & Read-Only
     setInterval(() => {
         if (isSystemOffline || !activeSensors || activeSensors.length === 0) return;
-
         activeSensors.forEach(s => {
             const sid = s.sensor_id;
             const base = parseFloat(s.baseline) || 10.0;
             const val = base + (Math.sin(Date.now() / 2000) * (base * 0.02)) + ((Math.random() - 0.5) * (base * 0.008));
-
             const hist = sensorHistories[sid] || [];
             hist.push(val);
             if (hist.length > 30) hist.shift();
-
             const valEl = document.getElementById(`val-${sid}`);
-            if (valEl) {
-                valEl.textContent = `${val.toFixed(Math.abs(val) < 10 ? 3 : 1)} ${s.unit || ''}`;
-            }
-
-            if (activeInnerTab === "tab_sensors") {
-                updateSensorEChart(sid, s, val, hist);
-            }
+            if (valEl) valEl.textContent = `${val.toFixed(Math.abs(val) < 10 ? 3 : 1)} ${s.unit || ''}`;
+            if (activeInnerTab === "tab_sensors") updateSensorEChart(sid, s, val, hist);
         });
     }, 300);
 
-    // ========================================================================
-    // 5. SIBLING TAB 2: ACTIVE DEFENSIVE POSTURE
-    // ========================================================================
     function renderDefensePosture(node) {
         const body = document.getElementById("mc-defense-posture-body");
         if (!body || !node) return;
-
         const attacks = Array.isArray(node.attacks) ? node.attacks : [];
         const proto = node.primary_instrument?.protocol || "WIRE INGRESS";
         const backend = node.primary_backend || node.kernel || "INTEL_OPENVINO";
@@ -573,14 +544,11 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <div style="font-size:10px; color:#64748B; text-align:center;">
-                Attacking &amp; chaos fault injection is strictly isolated in the <b>Research Lab</b>.
+                Apparatus &amp; PCAP attack injection is isolated in <b>Research Lab &rarr; Apparatus &amp; PCAP Attack Lab</b>.
             </div>
         `;
     }
 
-    // ========================================================================
-    // 6. IN-KERNEL eBPF FLIGHT RECORDER LOGS & SYSTEM OUTAGE CONTROLLER
-    // ========================================================================
     function logEvent(msg, colorClass = "text-cyan") {
         const dropFeed = document.getElementById("mc-drop-feed");
         if (!dropFeed) return;
@@ -596,21 +564,13 @@ document.addEventListener("DOMContentLoaded", () => {
     function triggerSystemOutage(msg) {
         isSystemOffline = true;
         if (globalStatusText) globalStatusText.textContent = `[!] SYSTEM OFFLINE: ${msg}`;
-        if (globalStatusPip) {
-            globalStatusPip.style.background = "#FF3366";
-            globalStatusPip.style.boxShadow = "0 0 12px #FF3366";
-        }
-        if (sentryRail) {
-            sentryRail.innerHTML = `<div style="padding:14px; color:#FF3366; font-size:11px; font-family:monospace; border:1px solid #FF3366; border-radius:4px;">[OUTAGE] All Sentries Disconnected</div>`;
-        }
+        if (globalStatusPip) globalStatusPip.style.background = "#FF3366";
+        if (sentryRail) sentryRail.innerHTML = `<div style="padding:14px; color:#FF3366; font-size:11px; font-family:monospace; border:1px solid #FF3366; border-radius:4px;">[OUTAGE] All Sentries Disconnected</div>`;
     }
 
     function clearSystemOutage() {
         if (globalStatusText) globalStatusText.textContent = "FLEET C2 ONLINE • ALL SYSTEMS OPERATIONAL";
-        if (globalStatusPip) {
-            globalStatusPip.style.background = "#00FFA3";
-            globalStatusPip.style.boxShadow = "0 0 10px #00FFA3";
-        }
+        if (globalStatusPip) globalStatusPip.style.background = "#00FFA3";
     }
 
     document.getElementById("btn-emergency-all-stop")?.addEventListener("click", () => {
@@ -621,22 +581,18 @@ document.addEventListener("DOMContentLoaded", () => {
         Object.values(echartsInstances).forEach(c => c && !c.isDisposed() && c.resize());
     }
 
-    window.addEventListener('resize', resizeAllSensorCharts);
-
-    document.querySelectorAll('.admin-nav-item, .nav-tab').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (btn.getAttribute('data-tab') === 'tab-mission-control') {
-                setTimeout(resizeAllSensorCharts, 60);
-            }
+    window.addEventListener("resize", resizeAllSensorCharts);
+    document.querySelectorAll(".admin-nav-item, .nav-tab").forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (btn.getAttribute("data-tab") === "tab-mission-control") setTimeout(resizeAllSensorCharts, 60);
         });
     });
 
     function escapeHtml(str) {
-        if (typeof str !== 'string') return String(str || '');
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        if (typeof str !== "string") return String(str || "");
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // Boot Routine & Initialization
     injectOptionBWorkspace();
     loadFleetNodes();
     setInterval(loadFleetNodes, 3000);

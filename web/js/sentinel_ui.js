@@ -1,11 +1,19 @@
 // File: /home/kami/sentinel-nexus/web/js/sentinel_ui.js
+// ==============================================================================
+// ARYORITHM SENTINEL NEXUS: MICRO-FRONTEND PLUGIN & APPARATUS REGISTRY
+// Zero-Copy Extensibility: registerNodeAdapter, registerApparatus, registerTab
+// ==============================================================================
 
 (function () {
     const SentinelUI = {
         nodeAdapters: [],
+        apparatuses: [],
         customTabs: [],
+        pluginsLoaded: false,
 
         registerNodeAdapter(adapter) {
+            if (!adapter || !adapter.id) return;
+            this.nodeAdapters = this.nodeAdapters.filter(a => a.id !== adapter.id);
             this.nodeAdapters.push(adapter);
             console.log(`[SentinelUI] Registered node adapter: ${adapter.id}`);
         },
@@ -13,6 +21,32 @@
         getNodeAdapter(node) {
             if (!node) return null;
             return this.nodeAdapters.find(a => a.matches && a.matches(node)) || null;
+        },
+
+        registerApparatus(spec) {
+            if (!spec || !spec.id || typeof spec.mount !== "function") return;
+            this.apparatuses = this.apparatuses.filter(a => a.id !== spec.id);
+            this.apparatuses.push(spec);
+            console.log(`[SentinelUI] Registered visual apparatus plugin: ${spec.id}`);
+        },
+
+        getApparatusById(id) {
+            return this.apparatuses.find(a => a.id === id) || null;
+        },
+
+        getMatchingApparatuses(node) {
+            if (!node) return [];
+            const matched = this.apparatuses.filter(a => !a.matches || a.matches(node));
+            const prefType = (node.primary_instrument && node.primary_instrument.type)
+                ? node.primary_instrument.type.toLowerCase()
+                : "";
+            if (!prefType) return matched;
+
+            return matched.slice().sort((a, b) => {
+                const aDef = Array.isArray(a.defaultForTypes) && a.defaultForTypes.includes(prefType) ? 0 : 1;
+                const bDef = Array.isArray(b.defaultForTypes) && b.defaultForTypes.includes(prefType) ? 0 : 1;
+                return aDef - bDef;
+            });
         },
 
         registerTab(tabConfig) {
@@ -84,7 +118,9 @@
                         await this.loadScript(`/plugins/${p.script}`);
                     }
                 }
+                this.pluginsLoaded = true;
                 console.log(`[SentinelUI] Loaded ${data.plugins.length} external UI plugin(s).`);
+                window.dispatchEvent(new CustomEvent("sentinel:plugins-ready"));
             } catch (err) {
                 // Silently skip if /plugins/manifest.json is not present
             }

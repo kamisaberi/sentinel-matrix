@@ -1,7 +1,7 @@
 // File: /home/kami/sentinel-nexus/web/js/lab_cockpit.js
 // ==============================================================================
-// ARYORITHM SENTINEL NEXUS: SENSOR-CENTRIC & DOMAIN-DRIVEN LAB COCKPIT
-// Strict 50/50 Grid Balance, Zero-Overflow Viewport Bounds, Zero Hardcoding
+// ARYORITHM SENTINEL NEXUS: SENSOR-CENTRIC + APPARATUS DUAL-PCAP LAB COCKPIT
+// 3 Bounded Inner Tabs: Sensors Lab | Apparatus & PCAP Attack Lab | Node Health
 // ==============================================================================
 
 (function () {
@@ -11,22 +11,28 @@
     let activeNodeDetail = null;
     let activeSensorId = null;
     let activePlotSubTab = 'plot_a';
-    let activeMainWorkspaceTab = 'tab_sensors'; // 'tab_sensors' | 'tab_hardware'
+    let activeMainWorkspaceTab = 'tab_sensors'; // 'tab_sensors' | 'tab_apparatus' | 'tab_hardware'
 
     let labCatalog = { node_categories: [], categories: {} };
     let labNodes = [];
     let telemetryTimer = null;
     let logPollTimer = null;
+    let apparatusStatTimer = null;
     let lastLogContent = '';
     let lastPlotMode = null;
 
+    // Live Apparatus Plugin State inside Research Lab
+    let labApparatusSpec = null;
+    let labApparatusHandle = null;
+    let labSelectedApparatusId = null;
+
     // ECharts Instances
-    let plot1Chart = null; // #cbfEchart
-    let plot2Chart = null; // #phaseEchart
-    let evtChart = null;   // #evtEchart
-    let pmuChart = null;   // #pmuEchart
-    let rssChart = null;   // #rssEchart
-    let fusionChart = null;// #fusionEchart
+    let plot1Chart = null;
+    let plot2Chart = null;
+    let evtChart = null;
+    let pmuChart = null;
+    let rssChart = null;
+    let fusionChart = null;
 
     const MAX_POINTS = 50;
     let p1Buf = [];
@@ -53,6 +59,12 @@
             });
         });
 
+        window.addEventListener('sentinel:plugins-ready', () => {
+            if (activeMainWorkspaceTab === 'tab_apparatus' && activeNodeDetail) {
+                mountLabApparatusView();
+            }
+        });
+
         if (typeof ResizeObserver !== 'undefined') {
             ['cbfEchart', 'phaseEchart', 'evtEchart', 'pmuEchart', 'rssEchart', 'fusionEchart'].forEach(id => {
                 const el = document.getElementById(id);
@@ -65,12 +77,9 @@
         });
 
         startTelemetryLoop();
-        if (!logPollTimer) {
-            logPollTimer = setInterval(pollLabLogs, 1000);
-        }
+        if (!logPollTimer) logPollTimer = setInterval(pollLabLogs, 1000);
     });
 
-    // Enforces strict 50/50 CSS Grid bounds and stops horizontal flexbox stretching
     function enforceStrictViewportBounds() {
         const twoPane = document.querySelector('#tab-lab-cockpit .two-pane-cockpit');
         if (twoPane) {
@@ -84,12 +93,12 @@
         if (ws) {
             ws.style.flex = '1 1 0';
             ws.style.minWidth = '0';
-            ws.style.maxWidth = 'calc(100% - 294px)'; // 280px rail + 14px gap
+            ws.style.maxWidth = 'calc(100% - 294px)';
             ws.style.overflow = 'hidden';
             ws.style.boxSizing = 'border-box';
         }
 
-        ['view-lab-physics', 'view-lab-timing', 'view-lab-network'].forEach(id => {
+        ['view-lab-physics', 'view-lab-apparatus', 'view-lab-timing', 'view-lab-network'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.style.width = '100%';
@@ -125,12 +134,16 @@
         const stageTabs = document.querySelector('#tab-lab-cockpit .lab-stage-tabs');
         if (!stageTabs) return;
 
-        // 1. Transform top stage tabs into the 2 Main Workspace Tabs
         stageTabs.innerHTML = `
             <button class="lab-main-tab active" data-tab="tab_sensors" style="
                 background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent); color: var(--ink);
                 padding: 7px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
                 📡 SENSORS INVARIANT LAB
+            </button>
+            <button class="lab-main-tab" data-tab="tab_apparatus" style="
+                background: var(--panel); border: 1px solid var(--hairline); color: var(--muted);
+                padding: 7px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                🎯 APPARATUS &amp; PCAP ATTACK LAB
             </button>
             <button class="lab-main-tab" data-tab="tab_hardware" style="
                 background: var(--panel); border: 1px solid var(--hairline); color: var(--muted);
@@ -161,12 +174,256 @@
             });
         });
 
-        // 2. Inject Dedicated Sensor Selection Bar
+        // Inject Sensor Tabs Bar
         if (!document.getElementById('lab-sensor-tabs-bar')) {
             const bar = document.createElement('div');
             bar.id = 'lab-sensor-tabs-bar';
             bar.style.cssText = 'display:flex; flex-direction:column; gap:6px; padding:10px 12px; background:rgba(13,17,26,0.9); border:1px solid var(--hairline); border-radius:4px; box-sizing:border-box; width:100%; max-width:100%; overflow:hidden;';
             stageTabs.parentElement.insertBefore(bar, stageTabs.nextSibling);
+        }
+
+        // Inject Apparatus & Dual-PCAP Attack Lab Viewport
+        if (!document.getElementById('view-lab-apparatus')) {
+            const viewApp = document.createElement('div');
+            viewApp.id = 'view-lab-apparatus';
+            viewApp.className = 'lab-stage-view';
+            viewApp.style.cssText = 'display:none; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; width:100%; max-width:100%; overflow:hidden; box-sizing:border-box;';
+            viewApp.innerHTML = `
+                <!-- Left Card: Live Pluggable Apparatus Canvas -->
+                <div class="lab-card" style="background:var(--panel); border:1px solid var(--hairline); border-radius:4px; padding:12px; display:flex; flex-direction:column; gap:8px; min-width:0; overflow:hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <span id="lab-app-title" style="font-size:11px; font-weight:800; color:var(--accent); letter-spacing:0.05em;">LIVE APPARATUS VIEWPORT</span>
+                        <div id="lab-app-pills" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
+                    </div>
+                    <div id="lab-app-canvas-host" style="width:100%; max-width:480px; margin:0 auto; aspect-ratio:1.25; background:#05080C; border-radius:4px; overflow:hidden;"></div>
+                </div>
+
+                <!-- Right Card: Dual-PCAP Attack Injection Console -->
+                <div class="lab-card" style="background:var(--panel); border:1px solid var(--hairline); border-radius:4px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; min-width:0; overflow:hidden;">
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:11px; font-weight:800; color:#FF3366; letter-spacing:0.06em;">DUAL-PCAP APPARATUS THREAT INJECTOR</span>
+                            <span id="lab-pcap-mode-badge" class="badge badge-green">NOMINAL PCAP LOOP</span>
+                        </div>
+
+                        <!-- Live Container Stats Strip -->
+                        <div id="lab-pcap-stats-box" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; font-family:monospace; text-align:center;">
+                            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:3px; padding:6px;">
+                                <div id="lp-nom-tx" style="font-size:14px; font-weight:800; color:#00FFA3;">0</div>
+                                <div style="font-size:8px; color:#8A99AD;">NOMINAL TX</div>
+                            </div>
+                            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:3px; padding:6px;">
+                                <div id="lp-atk-tx" style="font-size:14px; font-weight:800; color:#FF3366;">0</div>
+                                <div style="font-size:8px; color:#8A99AD;">ATTACK TX</div>
+                            </div>
+                            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:3px; padding:6px;">
+                                <div id="lp-breaches" style="font-size:14px; font-weight:800; color:#FFB800;">0</div>
+                                <div style="font-size:8px; color:#8A99AD;">GPS BREACH</div>
+                            </div>
+                            <div style="background:#070A0F; border:1px solid #1E293B; border-radius:3px; padding:6px;">
+                                <div id="lp-replays" style="font-size:14px; font-weight:800; color:#A855F7;">0</div>
+                                <div style="font-size:8px; color:#8A99AD;">REPLAYS</div>
+                            </div>
+                        </div>
+
+                        <!-- One-Click Apparatus Threat Buttons -->
+                        <div>
+                            <div style="font-size:9px; color:#8A99AD; font-weight:800; font-family:monospace; margin-bottom:5px;">ONE-CLICK SCENARIO ATTACK PCAP FEEDS:</div>
+                            <div id="lab-app-attack-btns" style="display:grid; grid-template-columns:1fr; gap:6px;"></div>
+                        </div>
+
+                        <!-- Custom Mounted PCAP Selector -->
+                        <div style="background:#070A0F; border:1px solid #1E293B; border-radius:4px; padding:10px; display:flex; flex-direction:column; gap:8px;">
+                            <div style="font-size:9px; color:#00E5FF; font-weight:800; font-family:monospace;">CUSTOM SCENARIO PCAP REPLAY (/app/pcaps):</div>
+                            <div style="display:grid; grid-template-columns:1.5fr 0.8fr 0.7fr; gap:6px;">
+                                <select id="lab-pcap-select" class="form-select-sm" style="width:100%;"></select>
+                                <select id="lab-pcap-mode" class="form-select-sm" style="width:100%;">
+                                    <option value="overlay">OVERLAY</option>
+                                    <option value="replace">REPLACE</option>
+                                </select>
+                                <select id="lab-pcap-dur" class="form-select-sm" style="width:100%;">
+                                    <option value="12">12 sec</option>
+                                    <option value="25">25 sec</option>
+                                    <option value="60">60 sec</option>
+                                </select>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                                <button id="btn-lab-pcap-fire" class="lab-btn lab-btn-danger" style="padding:7px; font-size:10px;">[!] INJECT SELECTED PCAP</button>
+                                <button id="btn-lab-pcap-stop" class="lab-btn lab-btn-success" style="padding:7px; font-size:10px;">[⏹] RESTORE NOMINAL PCAP</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="lab-pcap-feedback" style="font-family:monospace; font-size:10px; color:#00E5FF; background:#04060A; border:1px solid #1E293B; border-radius:3px; padding:7px 10px;">
+                        [*] Dual-PCAP engine ready. Select an attack above to inject hostile wire frames.
+                    </div>
+                </div>
+            `;
+            const viewPhysics = document.getElementById('view-lab-physics');
+            if (viewPhysics && viewPhysics.parentElement) {
+                viewPhysics.parentElement.insertBefore(viewApp, viewPhysics.nextSibling);
+            }
+        }
+    }
+
+    function unmountLabApparatus() {
+        if (apparatusStatTimer) {
+            clearInterval(apparatusStatTimer);
+            apparatusStatTimer = null;
+        }
+        if (labApparatusSpec && labApparatusHandle && typeof labApparatusSpec.unmount === 'function') {
+            try { labApparatusSpec.unmount(labApparatusHandle); } catch (_) {}
+        }
+        labApparatusSpec = null;
+        labApparatusHandle = null;
+    }
+
+    function mountLabApparatusView() {
+        unmountLabApparatus();
+        const host = document.getElementById('lab-app-canvas-host');
+        const pills = document.getElementById('lab-app-pills');
+        const titleEl = document.getElementById('lab-app-title');
+        const atkBtns = document.getElementById('lab-app-attack-btns');
+        if (!host || !activeNodeDetail) return;
+
+        const matching = (window.SentinelUI && typeof window.SentinelUI.getMatchingApparatuses === 'function')
+            ? window.SentinelUI.getMatchingApparatuses(activeNodeDetail)
+            : [];
+
+        if (matching.length === 0) {
+            host.innerHTML = `<div style="padding:30px; text-align:center; color:#64748B; font-family:monospace; font-size:11px;">No apparatus plugin registered for this node.</div>`;
+            if (pills) pills.innerHTML = '';
+            if (atkBtns) atkBtns.innerHTML = '';
+            return;
+        }
+
+        const chosen = matching.find(a => a.id === labSelectedApparatusId) || matching[0];
+        labSelectedApparatusId = chosen.id;
+
+        if (titleEl) titleEl.textContent = (chosen.title || 'APPARATUS').toUpperCase();
+        if (pills) {
+            pills.innerHTML = matching.map(a => {
+                const isSel = a.id === chosen.id;
+                return `
+                    <button class="lab-app-pill" data-id="${escapeHtml(a.id)}" style="
+                        font-size:9px; font-weight:700; font-family:monospace; padding:3px 7px; border-radius:3px; cursor:pointer;
+                        background:${isSel ? '#00E5FF' : '#111827'}; color:${isSel ? '#07090E' : '#94A3B8'};
+                        border:1px solid ${isSel ? '#00E5FF' : '#243144'};">
+                        ${escapeHtml(a.shortLabel || a.id)}
+                    </button>
+                `;
+            }).join('');
+            pills.querySelectorAll('.lab-app-pill').forEach(b => {
+                b.addEventListener('click', () => {
+                    labSelectedApparatusId = b.getAttribute('data-id');
+                    mountLabApparatusView();
+                });
+            });
+        }
+
+        labApparatusSpec = chosen;
+        labApparatusHandle = chosen.mount(host, activeNodeDetail, { mode: 'research_lab' });
+
+        // Bind Dual-PCAP Attack Console
+        const pcapCfg = typeof chosen.getPcapConfig === 'function' ? chosen.getPcapConfig() : null;
+        if (!pcapCfg || !pcapCfg.apiBase) return;
+
+        if (atkBtns) {
+            atkBtns.innerHTML = (pcapCfg.attacks || []).map((a, idx) => `
+                <button class="lab-btn lab-btn-danger lab-pcap-quick-btn" data-idx="${idx}" style="padding:7px 10px; font-size:10px; text-align:left;">
+                    ${escapeHtml(a.label)}
+                </button>
+            `).join('');
+
+            atkBtns.querySelectorAll('.lab-pcap-quick-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const atk = pcapCfg.attacks[Number(btn.getAttribute('data-idx'))];
+                    fireApparatusPcapAttack(pcapCfg.apiBase, atk.pcap, atk.attack_type, atk.mode, atk.duration_sec);
+                });
+            });
+        }
+
+        const fireBtn = document.getElementById('btn-lab-pcap-fire');
+        const stopBtn = document.getElementById('btn-lab-pcap-stop');
+        if (fireBtn) {
+            fireBtn.onclick = () => {
+                const pcap = document.getElementById('lab-pcap-select')?.value || '';
+                const mode = document.getElementById('lab-pcap-mode')?.value || 'overlay';
+                const dur = Number(document.getElementById('lab-pcap-dur')?.value || 12);
+                const inferred = pcap.includes('dazzle') ? 'laser_dazzle' : (pcap.includes('replay') ? 'stanag_replay' : 'gps_teleport');
+                fireApparatusPcapAttack(pcapCfg.apiBase, pcap, inferred, mode, dur);
+            };
+        }
+        if (stopBtn) {
+            stopBtn.onclick = () => stopApparatusPcapAttack(pcapCfg.apiBase);
+        }
+
+        const pollStats = async () => {
+            try {
+                const r = await fetch(`${pcapCfg.apiBase}/telemetry`, { cache: 'no-store' });
+                if (!r.ok) return;
+                const d = await r.json();
+                const s = d.stats || {};
+                const elNom = document.getElementById('lp-nom-tx');
+                const elAtk = document.getElementById('lp-atk-tx');
+                const elBr = document.getElementById('lp-breaches');
+                const elRep = document.getElementById('lp-replays');
+                const modeBadge = document.getElementById('lab-pcap-mode-badge');
+
+                if (elNom) elNom.textContent = String(s.nominal_packets_tx || 0);
+                if (elAtk) elAtk.textContent = String(s.attack_packets_tx || 0);
+                if (elBr) elBr.textContent = String(s.kinematic_breaches_observed || 0);
+                if (elRep) elRep.textContent = String(s.replays_observed || 0);
+
+                if (modeBadge) {
+                    const active = d.active_attack?.active;
+                    modeBadge.textContent = active
+                        ? `ATTACK: ${(d.active_attack.attack_type || 'ACTIVE').toUpperCase()} (${(d.active_attack.mode || '').toUpperCase()})`
+                        : `NOMINAL (${(s.nominal_source || 'pcap').toUpperCase()})`;
+                    modeBadge.style.color = active ? '#FF3366' : '#00FFA3';
+                    modeBadge.style.borderColor = active ? '#FF3366' : '#00FFA3';
+                }
+
+                const sel = document.getElementById('lab-pcap-select');
+                if (sel && Array.isArray(d.available_pcaps) && sel.options.length !== d.available_pcaps.length) {
+                    sel.innerHTML = d.available_pcaps.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+                }
+            } catch (_) {}
+        };
+
+        pollStats();
+        apparatusStatTimer = setInterval(pollStats, 500);
+    }
+
+    async function fireApparatusPcapAttack(apiBase, pcap, attackType, mode, durationSec) {
+        const fb = document.getElementById('lab-pcap-feedback');
+        if (fb) fb.textContent = `[*] Injecting ${pcap || attackType} (${mode.toUpperCase()}, ${durationSec}s) -> ${apiBase}...`;
+
+        try {
+            const res = await fetch(`${apiBase}/attack/inject`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pcap, attack_type: attackType, mode, duration_sec: durationSec })
+            });
+            const d = await res.json();
+            if (fb) fb.textContent = `[+] ACTIVE: ${pcap || attackType} injected (${mode.toUpperCase()}, ${durationSec}s). Watch live apparatus!`;
+            const term = document.getElementById('labTerminalBody');
+            if (term) {
+                term.textContent += `\n[${new Date().toLocaleTimeString()}] [APPARATUS-PCAP] Injected ${pcap || attackType} (${mode}) -> ${apiBase} (${d.status})`;
+                term.scrollTop = term.scrollHeight;
+            }
+        } catch (e) {
+            if (fb) fb.textContent = `[-] Injection error: ${e.message}`;
+        }
+    }
+
+    async function stopApparatusPcapAttack(apiBase) {
+        const fb = document.getElementById('lab-pcap-feedback');
+        try {
+            await fetch(`${apiBase}/attack/stop`, { method: 'POST' });
+            if (fb) fb.textContent = `[+] Attack stopped -> Nominal PCAP baseline restored.`;
+        } catch (e) {
+            if (fb) fb.textContent = `[-] Stop error: ${e.message}`;
         }
     }
 
@@ -175,19 +432,32 @@
 
         const sensorBar = document.getElementById('lab-sensor-tabs-bar');
         const viewPhysics = document.getElementById('view-lab-physics');
+        const viewApparatus = document.getElementById('view-lab-apparatus');
         const viewTiming = document.getElementById('view-lab-timing');
         const viewNetwork = document.getElementById('view-lab-network');
         const deckContainer = document.querySelector('#tab-lab-cockpit .lab-stage-deck');
 
         if (activeMainWorkspaceTab === 'tab_sensors') {
+            unmountLabApparatus();
             if (sensorBar) sensorBar.style.display = 'flex';
             if (viewPhysics) viewPhysics.style.display = 'grid';
+            if (viewApparatus) viewApparatus.style.display = 'none';
             if (viewTiming) viewTiming.style.display = 'none';
             if (viewNetwork) viewNetwork.style.display = 'none';
             if (deckContainer) deckContainer.style.display = 'grid';
-        } else {
+        } else if (activeMainWorkspaceTab === 'tab_apparatus') {
             if (sensorBar) sensorBar.style.display = 'none';
             if (viewPhysics) viewPhysics.style.display = 'none';
+            if (viewApparatus) viewApparatus.style.display = 'grid';
+            if (viewTiming) viewTiming.style.display = 'none';
+            if (viewNetwork) viewNetwork.style.display = 'none';
+            if (deckContainer) deckContainer.style.display = 'grid';
+            mountLabApparatusView();
+        } else {
+            unmountLabApparatus();
+            if (sensorBar) sensorBar.style.display = 'none';
+            if (viewPhysics) viewPhysics.style.display = 'none';
+            if (viewApparatus) viewApparatus.style.display = 'none';
             if (viewTiming) viewTiming.style.display = 'grid';
             if (viewNetwork) viewNetwork.style.display = 'grid';
             if (deckContainer) deckContainer.style.display = 'grid';
@@ -223,9 +493,7 @@
 
             if (railEl) {
                 railEl.innerHTML = '';
-                if (!activeNodeId && labNodes.length > 0) {
-                    activeNodeId = labNodes[0].node_id || labNodes[0].id;
-                }
+                if (!activeNodeId && labNodes.length > 0) activeNodeId = labNodes[0].node_id || labNodes[0].id;
 
                 labNodes.forEach(node => {
                     const nid = node.node_id || node.id;
@@ -253,9 +521,7 @@
                     railEl.appendChild(card);
                 });
 
-                if (activeNodeId) {
-                    await selectLabNode(activeNodeId);
-                }
+                if (activeNodeId) await selectLabNode(activeNodeId);
             }
         } catch (e) {
             console.warn('[LabCockpit] Fleet discovery paused:', e);
@@ -291,16 +557,14 @@
                 if (hostEl) hostEl.textContent = `${activeNodeDetail.hostname || nodeId} | ${activeNodeDetail.kernel || 'eBPF-CORE'}`;
             }
 
-            if (catRes && catRes.ok) {
-                labCatalog = await catRes.json();
-            }
+            if (catRes && catRes.ok) labCatalog = await catRes.json();
 
-            // Sync node's real attached sensors
             const sensors = Array.isArray(activeNodeDetail?.sensors) ? activeNodeDetail.sensors : [];
             if (!activeSensorId || !sensors.some(s => s.sensor_id === activeSensorId)) {
                 activeSensorId = sensors.length > 0 ? sensors[0].sensor_id : null;
             }
 
+            labSelectedApparatusId = null; // Auto-pick default apparatus for new node
             renderSensorTabsBar(sensors);
             renderTargetedSensorAttacks();
             resetRollingBuffers();
@@ -312,12 +576,11 @@
     }
 
     // =========================================================================
-    // 3. SENSOR TABS BAR (LEVEL 3) & METADATA STRIP
+    // 3. SENSOR TABS BAR, PLOT SUB-TABS & TARGETED ATTACKS (PRESERVED)
     // =========================================================================
     function renderSensorTabsBar(sensors) {
         const bar = document.getElementById('lab-sensor-tabs-bar');
         if (!bar) return;
-
         if (sensors.length === 0) {
             bar.innerHTML = `<div style="font-size:10.5px; color:#94A3B8; font-family:monospace;">[!] No physical sensors reported for this sentry node.</div>`;
             return;
@@ -338,10 +601,8 @@
 
         const curSensor = sensors.find(s => s.sensor_id === activeSensorId) || sensors[0];
         const cat = (curSensor.category || 'generic').toLowerCase();
-        const catDef = labCatalog.categories?.[cat] || {};
-        const archetype = catDef.plot_archetype || 'spatial_kinematic';
-
-        const plotTabs = getPlotTabsForDomain(archetype, curSensor);
+        const archetype = labCatalog.categories?.[cat]?.plot_archetype || 'spatial_kinematic';
+        const plotTabs = getPlotTabsForDomain(archetype);
 
         const plotTabsHtml = plotTabs.map(p => {
             const isSel = p.id === activePlotSubTab;
@@ -395,54 +656,22 @@
         });
     }
 
-    function getPlotTabsForDomain(archetype, sensor) {
-        if (archetype === 'spectral_harmonic') {
-            return [
-                { id: 'plot_a', label: '📊 02: FFT Harmonic Spectrum' },
-                { id: 'plot_b', label: '🔄 03: 2D Phase Limit Cycle' }
-            ];
-        }
-        if (archetype === 'shockwave_transient') {
-            return [
-                { id: 'plot_a', label: '⚡ 02: Joukowsky dP/dt Impulse' },
-                { id: 'plot_b', label: '🔄 03: 2D Pressure Phase Orbit' }
-            ];
-        }
-        if (archetype === 'thermal_runaway') {
-            return [
-                { id: 'plot_a', label: '🔄 02: 2D Thermal Phase Orbit' },
-                { id: 'plot_b', label: '⏱️ 03: Arrhenius Runaway Margin' }
-            ];
-        }
-        if (archetype === 'corridor_titration') {
-            return [
-                { id: 'plot_a', label: '📊 02: Corridor Boundary Deviation' },
-                { id: 'plot_b', label: '🔄 03: Reaction Rate Orbit' }
-            ];
-        }
-        if (archetype === 'coherence_snr' || archetype === 'discrete_divergence') {
-            return [
-                { id: 'plot_a', label: '📊 02: Error & Jitter Histogram' },
-                { id: 'plot_b', label: '🛡️ 03: Stability Invariant Margin' }
-            ];
-        }
-        return [
-            { id: 'plot_a', label: '📊 02: Measured vs Ground Truth' },
-            { id: 'plot_b', label: '🔄 03: Kinematic Phase Orbit' }
-        ];
+    function getPlotTabsForDomain(archetype) {
+        if (archetype === 'spectral_harmonic') return [{ id: 'plot_a', label: '📊 02: FFT Harmonic Spectrum' }, { id: 'plot_b', label: '🔄 03: 2D Phase Limit Cycle' }];
+        if (archetype === 'shockwave_transient') return [{ id: 'plot_a', label: '⚡ 02: Joukowsky dP/dt Impulse' }, { id: 'plot_b', label: '🔄 03: 2D Pressure Phase Orbit' }];
+        if (archetype === 'thermal_runaway') return [{ id: 'plot_a', label: '🔄 02: 2D Thermal Phase Orbit' }, { id: 'plot_b', label: '⏱️ 03: Arrhenius Runaway Margin' }];
+        if (archetype === 'corridor_titration') return [{ id: 'plot_a', label: '📊 02: Corridor Boundary Deviation' }, { id: 'plot_b', label: '🔄 03: Reaction Rate Orbit' }];
+        if (archetype === 'coherence_snr' || archetype === 'discrete_divergence') return [{ id: 'plot_a', label: '📊 02: Error & Jitter Histogram' }, { id: 'plot_b', label: '🛡️ 03: Stability Invariant Margin' }];
+        return [{ id: 'plot_a', label: '📊 02: Measured vs Ground Truth' }, { id: 'plot_b', label: '🔄 03: Kinematic Phase Orbit' }];
     }
 
-    // =========================================================================
-    // 4. SENSOR-SPECIFIC ATTACK DECK
-    // =========================================================================
     function renderTargetedSensorAttacks() {
         const deckContainer = document.querySelector('.lab-stage-deck .lab-card:first-child > div:last-child');
         if (!deckContainer) return;
 
         const curSensor = (activeNodeDetail?.sensors || []).find(s => s.sensor_id === activeSensorId);
         const cat = curSensor ? (curSensor.category || '').toLowerCase() : '';
-        const catDef = labCatalog.categories?.[cat] || {};
-        const attacks = Array.isArray(catDef?.attacks) ? catDef.attacks : [];
+        const attacks = Array.isArray(labCatalog.categories?.[cat]?.attacks) ? labCatalog.categories[cat].attacks : [];
 
         deckContainer.innerHTML = `
             <div>
@@ -461,233 +690,98 @@
 
         const grid = document.getElementById('lab-targeted-atk-grid');
         if (grid) {
-            if (attacks.length === 0) {
-                grid.innerHTML = `<div style="color:#64748B; font-size:10px; font-family:monospace; padding:6px;">No targeted exploits registered for ${escapeHtml(cat || 'this channel')}.</div>`;
-            } else {
-                grid.innerHTML = attacks.map(a => `
+            grid.innerHTML = attacks.length === 0
+                ? `<div style="color:#64748B; font-size:10px; font-family:monospace; padding:6px;">No targeted exploits for ${escapeHtml(cat || 'this channel')}.</div>`
+                : attacks.map(a => `
                     <button class="lab-btn lab-targeted-btn" data-slug="${escapeHtml(a.slug)}" title="${escapeHtml(a.name)}"
                         style="padding: 6px; font-size: 9px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         [!] ${escapeHtml(a.name)}
                     </button>
                 `).join('');
 
-                grid.querySelectorAll('.lab-targeted-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        injectLabAction('inject', {
-                            category: cat,
-                            attack: btn.getAttribute('data-slug'),
-                            sensor_id: curSensor ? curSensor.sensor_id : ''
-                        });
-                    });
+            grid.querySelectorAll('.lab-targeted-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    injectLabAction('inject', { category: cat, attack: btn.getAttribute('data-slug'), sensor_id: curSensor ? curSensor.sensor_id : '' });
                 });
-            }
+            });
         }
 
-        document.getElementById('btn-sensor-safe')?.addEventListener('click', () => {
-            injectLabAction('safe', { category: cat, sensor_id: curSensor ? curSensor.sensor_id : '' });
-        });
-        document.getElementById('btn-sensor-reset')?.addEventListener('click', () => {
-            injectLabAction('reset', {});
-        });
+        document.getElementById('btn-sensor-safe')?.addEventListener('click', () => injectLabAction('safe', { category: cat, sensor_id: curSensor ? curSensor.sensor_id : '' }));
+        document.getElementById('btn-sensor-reset')?.addEventListener('click', () => injectLabAction('reset', {}));
     }
 
-    function resetRollingBuffers() {
-        p1Buf = [];
-        truthBuf = [];
-        secBuf = [];
-        phaseOrbitBuf = [];
-        residualBuf = [];
-    }
+    function resetRollingBuffers() { p1Buf = []; truthBuf = []; secBuf = []; phaseOrbitBuf = []; residualBuf = []; }
 
-    // =========================================================================
-    // 5. PLOT RENDERERS: PHYSICAL WAVEFORM + DOMAIN-SPECIALIZED PLOTS
-    // =========================================================================
     function getOrInitChart(domId, currentInst, forceReset) {
         if (typeof echarts === 'undefined') return null;
         const el = document.getElementById(domId);
         if (!el || el.clientWidth === 0) return currentInst;
-
-        if (forceReset && currentInst && !currentInst.isDisposed()) {
-            currentInst.dispose();
-            currentInst = null;
-        }
-        if (!currentInst || currentInst.isDisposed()) {
-            currentInst = echarts.init(el, 'dark', { renderer: 'canvas' });
-        }
+        if (forceReset && currentInst && !currentInst.isDisposed()) { currentInst.dispose(); currentInst = null; }
+        if (!currentInst || currentInst.isDisposed()) currentInst = echarts.init(el, 'dark', { renderer: 'canvas' });
         return currentInst;
     }
 
     function renderPlot1Waveform(chart, viz, isSafe) {
         const color = isSafe ? '#00FFA3' : '#FF3366';
         chart.setOption({
-            animation: false,
-            backgroundColor: 'transparent',
+            animation: false, backgroundColor: 'transparent',
             grid: { top: 22, right: 16, bottom: 20, left: 48 },
             xAxis: { type: 'category', boundaryGap: false, data: p1Buf.map((_, i) => i), show: false },
-            yAxis: {
-                type: 'value',
-                min: viz.min_plot,
-                max: viz.max_plot,
-                splitLine: { lineStyle: { color: '#1a2232' } },
-                axisLabel: { color: '#8a99ad', fontSize: 9 }
-            },
+            yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
             series: [{
-                name: viz.primary_title || 'Measured Sensor Wave',
-                type: 'line',
-                smooth: 0.35,
-                showSymbol: false,
-                data: p1Buf,
-                lineStyle: { color, width: 2.4 },
+                type: 'line', smooth: 0.35, showSymbol: false, data: p1Buf, lineStyle: { color, width: 2.4 },
                 areaStyle: { color: isSafe ? 'rgba(0, 255, 163, 0.10)' : 'rgba(255, 51, 102, 0.18)' },
-                markLine: {
-                    silent: true,
-                    symbol: 'none',
-                    data: [
-                        {
-                            yAxis: viz.safe_high,
-                            lineStyle: { color: '#FF3366', type: 'dashed', width: 1.8 },
-                            label: { formatter: `Limit (${viz.safe_high} ${viz.unit})`, fontSize: 8.5 }
-                        },
-                        {
-                            yAxis: viz.safe_low,
-                            lineStyle: { color: '#FFB800', type: 'dotted', width: 1.2 },
-                            label: { formatter: `Min (${viz.safe_low} ${viz.unit})`, fontSize: 8.5 }
-                        }
-                    ]
-                }
+                markLine: { silent: true, symbol: 'none', data: [{ yAxis: viz.safe_high, lineStyle: { color: '#FF3366', type: 'dashed', width: 1.8 } }, { yAxis: viz.safe_low, lineStyle: { color: '#FFB800', type: 'dotted', width: 1.2 } }] }
             }]
         }, false);
     }
 
     function renderPlot2DomainDiagnostic(chart, viz, isSafe, archetype) {
         const color = isSafe ? '#00E5FF' : '#FF3366';
-
-        // Sub-Plot Option B: 2D Phase Orbit
-        if (activePlotSubTab === 'plot_b' && (archetype === 'spatial_kinematic' || archetype === 'spectral_harmonic' || archetype === 'shockwave_transient' || archetype === 'thermal_runaway')) {
+        if (activePlotSubTab === 'plot_b' && ['spatial_kinematic', 'spectral_harmonic', 'shockwave_transient', 'thermal_runaway'].includes(archetype)) {
             chart.setOption({
-                animation: false,
-                backgroundColor: 'transparent',
+                animation: false, backgroundColor: 'transparent',
                 grid: { top: 22, right: 16, bottom: 24, left: 48 },
                 xAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    name: '2D Phase Orbit (x vs dx/dt)',
-                    type: 'line',
-                    smooth: 0.3,
-                    showSymbol: false,
-                    data: phaseOrbitBuf,
-                    lineStyle: { color, width: 2.2 }
-                }]
+                series: [{ type: 'line', smooth: 0.3, showSymbol: false, data: phaseOrbitBuf, lineStyle: { color, width: 2.2 } }]
             }, false);
             return;
         }
 
-        // Sub-Plot Option A: Domain Diagnostic
-        if (archetype === 'spectral_harmonic') {
-            const sec = Array.isArray(viz.secondary_series) && viz.secondary_series.length > 0
+        if (archetype === 'spectral_harmonic' || archetype === 'coherence_snr' || archetype === 'discrete_divergence') {
+            const bars = Array.isArray(viz.secondary_series) && viz.secondary_series.length > 0
                 ? viz.secondary_series
                 : [{ label: '1x', value: 1.2 }, { label: '2x', value: 0.4 }, { label: '3x', value: 0.2 }, { label: '5x', value: 0.1 }];
             chart.setOption({
-                animation: false,
-                backgroundColor: 'transparent',
+                animation: false, backgroundColor: 'transparent',
                 grid: { top: 22, right: 16, bottom: 24, left: 42 },
-                xAxis: { type: 'category', data: sec.map(s => s.label), axisLabel: { color: '#8a99ad', fontSize: 9 } },
+                xAxis: { type: 'category', data: bars.map(b => b.label), axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    type: 'bar',
-                    barWidth: '45%',
-                    data: sec.map((s, idx) => ({
-                        value: s.value,
-                        itemStyle: { color: (!isSafe && idx > 0) ? '#FF3366' : '#00E5FF' }
-                    }))
-                }]
+                series: [{ type: 'bar', barWidth: '45%', data: bars.map(b => ({ value: b.value, itemStyle: { color: isSafe ? '#00E5FF' : '#FF3366' } })) }]
             }, false);
         } else if (archetype === 'shockwave_transient') {
             chart.setOption({
-                animation: false,
-                backgroundColor: 'transparent',
+                animation: false, backgroundColor: 'transparent',
                 grid: { top: 22, right: 16, bottom: 20, left: 48 },
                 xAxis: { type: 'category', boundaryGap: false, data: secBuf.map((_, i) => i), show: false },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    name: 'dP/dt Shockwave',
-                    type: 'line',
-                    showSymbol: false,
-                    data: secBuf,
-                    lineStyle: { color: isSafe ? '#FFB800' : '#FF3366', width: 2 },
-                    areaStyle: { color: isSafe ? 'rgba(255,184,0,0.12)' : 'rgba(255,51,102,0.2)' }
-                }]
-            }, false);
-        } else if (archetype === 'corridor_titration') {
-            const mid = (viz.safe_low + viz.safe_high) * 0.5;
-            const dev = p1Buf.map(v => +Math.abs(v - mid).toFixed(3));
-            chart.setOption({
-                animation: false,
-                backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 20, left: 48 },
-                xAxis: { type: 'category', boundaryGap: false, data: dev.map((_, i) => i), show: false },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    name: 'Corridor Deviation',
-                    type: 'line',
-                    showSymbol: false,
-                    data: dev,
-                    lineStyle: { color, width: 2 },
-                    areaStyle: { color: isSafe ? 'rgba(0,229,255,0.12)' : 'rgba(255,51,102,0.2)' }
-                }]
-            }, false);
-        } else if (archetype === 'coherence_snr' || archetype === 'discrete_divergence') {
-            const bins = Array.isArray(viz.secondary_series) && viz.secondary_series.length > 0
-                ? viz.secondary_series
-                : [{ label: 'SYN', value: 2 }, { label: 'CRC', value: 1 }, { label: 'SEQ', value: 1 }, { label: 'SPI', value: 0 }];
-            chart.setOption({
-                animation: false,
-                backgroundColor: 'transparent',
-                grid: { top: 22, right: 16, bottom: 24, left: 42 },
-                xAxis: { type: 'category', data: bins.map(b => b.label), axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    type: 'bar',
-                    barWidth: '45%',
-                    data: bins.map(b => ({
-                        value: b.value,
-                        itemStyle: { color: isSafe ? '#00FFA3' : '#FF3366' }
-                    }))
-                }]
+                series: [{ type: 'line', showSymbol: false, data: secBuf, lineStyle: { color: isSafe ? '#FFB800' : '#FF3366', width: 2 } }]
             }, false);
         } else {
-            // Default spatial_kinematic: Measured vs Ground Truth overlay
             chart.setOption({
-                animation: false,
-                backgroundColor: 'transparent',
+                animation: false, backgroundColor: 'transparent',
                 grid: { top: 22, right: 16, bottom: 20, left: 48 },
                 xAxis: { type: 'category', boundaryGap: false, data: p1Buf.map((_, i) => i), show: false },
                 yAxis: { type: 'value', min: viz.min_plot, max: viz.max_plot, splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
                 series: [
-                    {
-                        name: 'Measured Signal',
-                        type: 'line',
-                        smooth: 0.25,
-                        showSymbol: false,
-                        data: p1Buf,
-                        lineStyle: { color, width: 2.4 }
-                    },
-                    {
-                        name: 'Physical Ground Truth',
-                        type: 'line',
-                        smooth: 0.3,
-                        showSymbol: false,
-                        data: truthBuf,
-                        lineStyle: { color: '#00FFA3', width: 1.8, type: 'dashed' }
-                    }
+                    { name: 'Measured', type: 'line', smooth: 0.25, showSymbol: false, data: p1Buf, lineStyle: { color, width: 2.4 } },
+                    { name: 'Ground Truth', type: 'line', smooth: 0.3, showSymbol: false, data: truthBuf, lineStyle: { color: '#00FFA3', width: 1.8, type: 'dashed' } }
                 ]
             }, false);
         }
     }
 
-    // =========================================================================
-    // 6. TELEMETRY POLLING LOOP
-    // =========================================================================
     function startTelemetryLoop() {
         if (telemetryTimer) clearInterval(telemetryTimer);
         telemetryTimer = setInterval(() => {
@@ -701,7 +795,6 @@
         try {
             const curSensor = (activeNodeDetail?.sensors || []).find(s => s.sensor_id === activeSensorId);
             const cat = curSensor ? (curSensor.category || '').toLowerCase() : '';
-
             let url = '/api/v1/lab/telemetry';
             const qs = [];
             if (activeNodeId) qs.push(`node_id=${encodeURIComponent(activeNodeId)}`);
@@ -711,12 +804,10 @@
             const resp = await fetch(url);
             if (!resp.ok) return;
             const data = await resp.json();
-
             const viz = data.visualization || {};
             const ps = data.physical_state || {};
             const isSafe = Boolean(ps.is_safe !== false);
 
-            // Buffer rolling
             if (p1Buf.length === 0) {
                 for (let i = 0; i < MAX_POINTS; i++) {
                     p1Buf.push(viz.primary_val ?? 0);
@@ -735,7 +826,6 @@
             phaseOrbitBuf.push([viz.primary_val ?? 0, viz.derivative_val ?? 0]);
             if (phaseOrbitBuf.length > 40) phaseOrbitBuf.shift();
 
-            // DOM Indicators
             const valBar = document.getElementById('val-barrier');
             if (valBar) {
                 const h = Number(ps.cbf_barrier_h || 0);
@@ -748,7 +838,6 @@
             if (valTcrit) valTcrit.textContent = `${Number(ps.t_crit_ms || 0).toFixed(1)} ms`;
             const valVel = document.getElementById('val-velocity');
             if (valVel) valVel.textContent = `${Number(ps.dx_dt || 0) >= 0 ? '+' : ''}${Number(ps.dx_dt || 0).toFixed(3)} /s`;
-
             const lblTemp = document.getElementById('lbl-temp');
             if (lblTemp) lblTemp.textContent = `${curSensor?.name || viz.primary_title || 'Measured'} (${viz.unit || ''})`;
             const valTemp = document.getElementById('val-temp');
@@ -762,19 +851,20 @@
                 badgeCBF.style.borderColor = isSafe ? 'var(--kernel)' : 'var(--threat)';
             }
 
-            const archetype = viz.plot_archetype || 'spatial_kinematic';
-            const plotModeKey = `${archetype}::${activePlotSubTab}`;
-            const modeChanged = (lastPlotMode !== null && lastPlotMode !== plotModeKey);
-            lastPlotMode = plotModeKey;
+            if (activeMainWorkspaceTab === 'tab_sensors') {
+                const archetype = viz.plot_archetype || 'spatial_kinematic';
+                const plotModeKey = `${archetype}::${activePlotSubTab}`;
+                const modeChanged = (lastPlotMode !== null && lastPlotMode !== plotModeKey);
+                lastPlotMode = plotModeKey;
+                plot1Chart = getOrInitChart('cbfEchart', plot1Chart, false);
+                plot2Chart = getOrInitChart('phaseEchart', plot2Chart, modeChanged);
+                if (plot1Chart) renderPlot1Waveform(plot1Chart, viz, isSafe);
+                if (plot2Chart) renderPlot2DomainDiagnostic(plot2Chart, viz, isSafe, archetype);
+            }
 
-            plot1Chart = getOrInitChart('cbfEchart', plot1Chart, false);
-            plot2Chart = getOrInitChart('phaseEchart', plot2Chart, modeChanged);
-
-            if (plot1Chart) renderPlot1Waveform(plot1Chart, viz, isSafe);
-            if (plot2Chart) renderPlot2DomainDiagnostic(plot2Chart, viz, isSafe, archetype);
-
-            // Update Tab 2 (Node Health) Charts in background
-            updateHardwareMetrics(data, isSafe);
+            if (activeMainWorkspaceTab === 'tab_hardware') {
+                updateHardwareMetrics(data, isSafe);
+            }
         } catch (_) {}
     }
 
@@ -841,42 +931,25 @@
                 grid: { top: 20, right: 15, bottom: 20, left: 42 },
                 xAxis: { type: 'category', data: residualBuf.map((_, i) => i), show: false },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1a2232' } }, axisLabel: { color: '#8a99ad', fontSize: 9 } },
-                series: [{
-                    type: 'line', showSymbol: false, data: residualBuf,
-                    lineStyle: { color: data.sensor_fusion.chi2_alarm ? '#ff3366' : '#ffb800', width: 2 }
-                }]
+                series: [{ type: 'line', showSymbol: false, data: residualBuf, lineStyle: { color: data.sensor_fusion.chi2_alarm ? '#ff3366' : '#ffb800', width: 2 } }]
             }, false);
         }
     }
 
-    // =========================================================================
-    // 7. SAFE INJECTION DISPATCH & LOG POLLER
-    // =========================================================================
     async function injectLabAction(action, extra = {}) {
         const statusBadge = document.getElementById('deck-status');
         if (statusBadge) statusBadge.textContent = `DISPATCH: ${action.toUpperCase()}`;
-
         try {
             const res = await fetch('/api/v1/lab/inject', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action,
-                    node_id: activeNodeId,
-                    category: extra.category || '',
-                    attack: extra.attack || '',
-                    sensor_id: extra.sensor_id || activeSensorId || ''
-                })
+                body: JSON.stringify({ action, node_id: activeNodeId, category: extra.category || '', attack: extra.attack || '', sensor_id: extra.sensor_id || activeSensorId || '' })
             });
             const data = await res.json();
             if (statusBadge) statusBadge.textContent = `ACTIVE: ${(data.action || action).toUpperCase()}`;
-        } catch (_) {
-            if (statusBadge) statusBadge.textContent = 'DISPATCHED';
-        }
-
+        } catch (_) {}
         await tickTelemetryOnce();
         setTimeout(pollLabLogs, 250);
-        setTimeout(pollLabLogs, 800);
     }
 
     async function pollLabLogs() {
@@ -887,10 +960,7 @@
             if (data.logs && data.logs !== lastLogContent) {
                 lastLogContent = data.logs;
                 const term = document.getElementById('labTerminalBody');
-                if (term) {
-                    term.textContent = data.logs;
-                    term.scrollTop = term.scrollHeight;
-                }
+                if (term) { term.textContent = data.logs; term.scrollTop = term.scrollHeight; }
                 const statusEl = document.getElementById('lab-log-status');
                 if (statusEl) statusEl.textContent = `UPDATED ${new Date().toLocaleTimeString()}`;
             }
@@ -899,9 +969,7 @@
 
     function resizeAllCharts() {
         [plot1Chart, plot2Chart, evtChart, pmuChart, rssChart, fusionChart].forEach(c => {
-            if (c && !c.isDisposed()) {
-                try { c.resize(); } catch (_) {}
-            }
+            if (c && !c.isDisposed()) { try { c.resize(); } catch (_) {} }
         });
     }
 
@@ -909,7 +977,6 @@
         const modal = document.getElementById('modal-latex-export');
         const area = document.getElementById('latex-code-area');
         if (!modal || !area) return;
-
         const site = activeNodeDetail?.site || activeNodeId || 'Aryorithm Edge Sentry';
         area.value = `% ARYORITHM TECHNOLOGIES B.V. — SENTINEL LAB SCORECARD (${site}) | DOI: 10.5281/zenodo.23598779\n% Active Sensor: ${activeSensorId || 'N/A'}\n`;
         modal.style.display = 'flex';

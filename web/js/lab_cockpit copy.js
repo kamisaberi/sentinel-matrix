@@ -1,7 +1,7 @@
 // File: /home/kami/sentinel-nexus/web/js/lab_cockpit.js
 // ==============================================================================
 // ARYORITHM SENTINEL NEXUS: SENSOR-CENTRIC & DOMAIN-DRIVEN LAB COCKPIT
-// Zero Hardcoding: Strict Sensor Tabs -> Category Plot Tabs -> Targeted Attacks
+// Strict 50/50 Grid Balance, Zero-Overflow Viewport Bounds, Zero Hardcoding
 // ==============================================================================
 
 (function () {
@@ -36,15 +36,17 @@
     let residualBuf = [];
 
     // =========================================================================
-    // 1. INITIALIZATION & RESIZE OBSERVER (0x0 PROTECTION)
+    // 1. INITIALIZATION & STRICT VIEWPORT BOUNDING
     // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
         injectWorkspaceStructure();
+        enforceStrictViewportBounds();
         loadLabFleetRail();
 
         document.querySelectorAll('.admin-nav-item, .nav-tab').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (btn.getAttribute('data-tab') === 'tab-lab-cockpit') {
+                    enforceStrictViewportBounds();
                     loadLabFleetRail();
                     setTimeout(resizeAllCharts, 50);
                 }
@@ -57,7 +59,10 @@
                 if (el) new ResizeObserver(() => resizeAllCharts()).observe(el);
             });
         }
-        window.addEventListener('resize', resizeAllCharts);
+        window.addEventListener('resize', () => {
+            enforceStrictViewportBounds();
+            resizeAllCharts();
+        });
 
         startTelemetryLoop();
         if (!logPollTimer) {
@@ -65,7 +70,57 @@
         }
     });
 
-    // Injects the clean 2-Tab bar and Sensor Selector Bar dynamically
+    // Enforces strict 50/50 CSS Grid bounds and stops horizontal flexbox stretching
+    function enforceStrictViewportBounds() {
+        const twoPane = document.querySelector('#tab-lab-cockpit .two-pane-cockpit');
+        if (twoPane) {
+            twoPane.style.width = '100%';
+            twoPane.style.maxWidth = '100%';
+            twoPane.style.overflow = 'hidden';
+            twoPane.style.boxSizing = 'border-box';
+        }
+
+        const ws = document.getElementById('lab-sentry-workspace');
+        if (ws) {
+            ws.style.flex = '1 1 0';
+            ws.style.minWidth = '0';
+            ws.style.maxWidth = 'calc(100% - 294px)'; // 280px rail + 14px gap
+            ws.style.overflow = 'hidden';
+            ws.style.boxSizing = 'border-box';
+        }
+
+        ['view-lab-physics', 'view-lab-timing', 'view-lab-network'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.width = '100%';
+                el.style.maxWidth = '100%';
+                el.style.boxSizing = 'border-box';
+                el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+                el.style.gap = '12px';
+                el.querySelectorAll('.lab-card').forEach(card => {
+                    card.style.minWidth = '0';
+                    card.style.maxWidth = '100%';
+                    card.style.overflow = 'hidden';
+                    card.style.boxSizing = 'border-box';
+                });
+            }
+        });
+
+        const deck = document.querySelector('#tab-lab-cockpit .lab-stage-deck');
+        if (deck) {
+            deck.style.width = '100%';
+            deck.style.maxWidth = '100%';
+            deck.style.boxSizing = 'border-box';
+            deck.style.gridTemplateColumns = '1.15fr 1fr 1.35fr';
+            deck.querySelectorAll('.lab-card').forEach(card => {
+                card.style.minWidth = '0';
+                card.style.maxWidth = '100%';
+                card.style.overflow = 'hidden';
+                card.style.boxSizing = 'border-box';
+            });
+        }
+    }
+
     function injectWorkspaceStructure() {
         const stageTabs = document.querySelector('#tab-lab-cockpit .lab-stage-tabs');
         if (!stageTabs) return;
@@ -110,12 +165,14 @@
         if (!document.getElementById('lab-sensor-tabs-bar')) {
             const bar = document.createElement('div');
             bar.id = 'lab-sensor-tabs-bar';
-            bar.style.cssText = 'display:flex; flex-direction:column; gap:6px; padding:10px 12px; background:rgba(13,17,26,0.9); border:1px solid var(--hairline); border-radius:4px;';
+            bar.style.cssText = 'display:flex; flex-direction:column; gap:6px; padding:10px 12px; background:rgba(13,17,26,0.9); border:1px solid var(--hairline); border-radius:4px; box-sizing:border-box; width:100%; max-width:100%; overflow:hidden;';
             stageTabs.parentElement.insertBefore(bar, stageTabs.nextSibling);
         }
     }
 
     function updateWorkspaceVisibility() {
+        enforceStrictViewportBounds();
+
         const sensorBar = document.getElementById('lab-sensor-tabs-bar');
         const viewPhysics = document.getElementById('view-lab-physics');
         const viewTiming = document.getElementById('view-lab-timing');
@@ -284,7 +341,6 @@
         const catDef = labCatalog.categories?.[cat] || {};
         const archetype = catDef.plot_archetype || 'spatial_kinematic';
 
-        // Render Plot Sub-Tabs based on this specific sensor's domain!
         const plotTabs = getPlotTabsForDomain(archetype, curSensor);
 
         const plotTabsHtml = plotTabs.map(p => {
@@ -339,7 +395,6 @@
         });
     }
 
-    // Returns the exact plots tailored for that sensor's domain!
     function getPlotTabsForDomain(archetype, sensor) {
         if (archetype === 'spectral_harmonic') {
             return [
@@ -371,7 +426,6 @@
                 { id: 'plot_b', label: '🛡️ 03: Stability Invariant Margin' }
             ];
         }
-        // Default for spatial_kinematic (avionics, kinematic, lidar, optical)
         return [
             { id: 'plot_a', label: '📊 02: Measured vs Ground Truth' },
             { id: 'plot_b', label: '🔄 03: Kinematic Phase Orbit' }
@@ -379,7 +433,7 @@
     }
 
     // =========================================================================
-    // 4. SENSOR-SPECIFIC ATTACK DECK (ONLY ATTACKS FOR THIS SENSOR!)
+    // 4. SENSOR-SPECIFIC ATTACK DECK
     // =========================================================================
     function renderTargetedSensorAttacks() {
         const deckContainer = document.querySelector('.lab-stage-deck .lab-card:first-child > div:last-child');
@@ -602,7 +656,7 @@
                 }]
             }, false);
         } else {
-            // Default spatial_kinematic: Measured vs Ground Truth overlay (exposes flatline sensor freezes!)
+            // Default spatial_kinematic: Measured vs Ground Truth overlay
             chart.setOption({
                 animation: false,
                 backgroundColor: 'transparent',
@@ -721,7 +775,7 @@
 
             // Update Tab 2 (Node Health) Charts in background
             updateHardwareMetrics(data, isSafe);
-        } catch (_) { }
+        } catch (_) {}
     }
 
     function updateHardwareMetrics(data, isSafe) {
@@ -840,13 +894,13 @@
                 const statusEl = document.getElementById('lab-log-status');
                 if (statusEl) statusEl.textContent = `UPDATED ${new Date().toLocaleTimeString()}`;
             }
-        } catch (_) { }
+        } catch (_) {}
     }
 
     function resizeAllCharts() {
         [plot1Chart, plot2Chart, evtChart, pmuChart, rssChart, fusionChart].forEach(c => {
             if (c && !c.isDisposed()) {
-                try { c.resize(); } catch (_) { }
+                try { c.resize(); } catch (_) {}
             }
         });
     }
