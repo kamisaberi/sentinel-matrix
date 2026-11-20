@@ -272,7 +272,7 @@
             apparatusStatTimer = null;
         }
         if (labApparatusSpec && labApparatusHandle && typeof labApparatusSpec.unmount === 'function') {
-            try { labApparatusSpec.unmount(labApparatusHandle); } catch (_) {}
+            try { labApparatusSpec.unmount(labApparatusHandle); } catch (_) { }
         }
         labApparatusSpec = null;
         labApparatusHandle = null;
@@ -284,11 +284,21 @@
         const pills = document.getElementById('lab-app-pills');
         const titleEl = document.getElementById('lab-app-title');
         const atkBtns = document.getElementById('lab-app-attack-btns');
+        const pcapSel = document.getElementById('lab-pcap-select');
         if (!host || !activeNodeDetail) return;
 
-        const matching = (window.SentinelUI && typeof window.SentinelUI.getMatchingApparatuses === 'function')
+        let matching = (window.SentinelUI && typeof window.SentinelUI.getMatchingApparatuses === "function")
             ? window.SentinelUI.getMatchingApparatuses(activeNodeDetail)
             : [];
+
+        // Fallback: If no plugin matched, resolve built-in by primary_instrument.type
+        if (matching.length === 0 && window.SentinelUI && typeof window.SentinelUI.getApparatusById === "function") {
+            const pType = (activeNodeDetail.primary_instrument?.type || "grid").toLowerCase();
+            const fallbackId = pType === "video" ? "industrial_radiometric_vision"
+                : (pType === "reactor" ? "industrial_exothermic_reactor" : "industrial_synchrophasor_scope");
+            const fbApp = window.SentinelUI.getApparatusById(fallbackId);
+            if (fbApp) matching = [fbApp];
+        }
 
         if (matching.length === 0) {
             host.innerHTML = `<div style="padding:30px; text-align:center; color:#64748B; font-family:monospace; font-size:11px;">No apparatus plugin registered for this node.</div>`;
@@ -300,7 +310,7 @@
         const chosen = matching.find(a => a.id === labSelectedApparatusId) || matching[0];
         labSelectedApparatusId = chosen.id;
 
-        if (titleEl) titleEl.textContent = (chosen.title || 'APPARATUS').toUpperCase();
+        if (titleEl) titleEl.textContent = (chosen.title || activeNodeDetail.primary_instrument?.title || 'APPARATUS').toUpperCase();
         if (pills) {
             pills.innerHTML = matching.map(a => {
                 const isSel = a.id === chosen.id;
@@ -324,12 +334,27 @@
         labApparatusSpec = chosen;
         labApparatusHandle = chosen.mount(host, activeNodeDetail, { mode: 'research_lab' });
 
-        // Bind Dual-PCAP Attack Console
-        const pcapCfg = typeof chosen.getPcapConfig === 'function' ? chosen.getPcapConfig() : null;
-        if (!pcapCfg || !pcapCfg.apiBase) return;
+        // Populate PCAP selector from real scenario vault inventory
+        if (pcapSel) {
+            fetch('/api/v1/vault/inventory').then(r => r.json()).then(items => {
+                const pcaps = (Array.isArray(items) ? items : []).filter(i => i.type === 'pcap').map(i => i.id);
+                if (pcaps.length > 0) {
+                    pcapSel.innerHTML = pcaps.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+                }
+            }).catch(() => { });
+        }
 
+        const pcapCfg = typeof chosen.getPcapConfig === 'function' ? chosen.getPcapConfig() : null;
         if (atkBtns) {
-            atkBtns.innerHTML = (pcapCfg.attacks || []).map((a, idx) => `
+            const attackList = (pcapCfg && Array.isArray(pcapCfg.attacks) && pcapCfg.attacks.length > 0)
+                ? pcapCfg.attacks
+                : [
+                    { label: "[!] Replay Industroyer2 IEC-104 PCAP", pcap: "industroyer2_substation.pcap", attack_type: "industroyer", mode: "overlay", duration_sec: 15 },
+                    { label: "[!] Replay Stuxnet S7Comm PCAP", pcap: "stuxnet_s7comm.pcap", attack_type: "stuxnet", mode: "overlay", duration_sec: 15 },
+                    { label: "[!] Replay Triton TriStation PCAP", pcap: "triton_trisis_sis.pcap", attack_type: "triton", mode: "overlay", duration_sec: 15 }
+                ];
+
+            atkBtns.innerHTML = attackList.map((a, idx) => `
                 <button class="lab-btn lab-btn-danger lab-pcap-quick-btn" data-idx="${idx}" style="padding:7px 10px; font-size:10px; text-align:left;">
                     ${escapeHtml(a.label)}
                 </button>
@@ -337,8 +362,9 @@
 
             atkBtns.querySelectorAll('.lab-pcap-quick-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const atk = pcapCfg.attacks[Number(btn.getAttribute('data-idx'))];
-                    fireApparatusPcapAttack(pcapCfg.apiBase, atk.pcap, atk.attack_type, atk.mode, atk.duration_sec);
+                    const atk = attackList[Number(btn.getAttribute('data-idx'))];
+                    const apiBase = (pcapCfg && pcapCfg.apiBase) ? pcapCfg.apiBase : "";
+                    fireApparatusPcapAttack(apiBase, atk.pcap, atk.attack_type, atk.mode, atk.duration_sec);
                 });
             });
         }
@@ -350,50 +376,50 @@
                 const pcap = document.getElementById('lab-pcap-select')?.value || '';
                 const mode = document.getElementById('lab-pcap-mode')?.value || 'overlay';
                 const dur = Number(document.getElementById('lab-pcap-dur')?.value || 12);
-                const inferred = pcap.includes('dazzle') ? 'laser_dazzle' : (pcap.includes('replay') ? 'stanag_replay' : 'gps_teleport');
-                fireApparatusPcapAttack(pcapCfg.apiBase, pcap, inferred, mode, dur);
+                const apiBase = (pcapCfg && pcapCfg.apiBase) ? pcapCfg.apiBase : "";
+                fireApparatusPcapAttack(apiBase, pcap, 'pcap_replay', mode, dur);
             };
         }
         if (stopBtn) {
-            stopBtn.onclick = () => stopApparatusPcapAttack(pcapCfg.apiBase);
+            stopBtn.onclick = () => {
+                const apiBase = (pcapCfg && pcapCfg.apiBase) ? pcapCfg.apiBase : "";
+                stopApparatusPcapAttack(apiBase);
+            };
         }
 
-        const pollStats = async () => {
-            try {
-                const r = await fetch(`${pcapCfg.apiBase}/telemetry`, { cache: 'no-store' });
-                if (!r.ok) return;
-                const d = await r.json();
-                const s = d.stats || {};
-                const elNom = document.getElementById('lp-nom-tx');
-                const elAtk = document.getElementById('lp-atk-tx');
-                const elBr = document.getElementById('lp-breaches');
-                const elRep = document.getElementById('lp-replays');
-                const modeBadge = document.getElementById('lab-pcap-mode-badge');
+        if (pcapCfg && pcapCfg.apiBase) {
+            const pollStats = async () => {
+                try {
+                    const r = await fetch(`${pcapCfg.apiBase}/telemetry`, { cache: 'no-store' });
+                    if (!r.ok) return;
+                    const d = await r.json();
+                    const s = d.stats || {};
+                    const elNom = document.getElementById('lp-nom-tx');
+                    const elAtk = document.getElementById('lp-atk-tx');
+                    const elBr = document.getElementById('lp-breaches');
+                    const elRep = document.getElementById('lp-replays');
+                    const modeBadge = document.getElementById('lab-pcap-mode-badge');
 
-                if (elNom) elNom.textContent = String(s.nominal_packets_tx || 0);
-                if (elAtk) elAtk.textContent = String(s.attack_packets_tx || 0);
-                if (elBr) elBr.textContent = String(s.kinematic_breaches_observed || 0);
-                if (elRep) elRep.textContent = String(s.replays_observed || 0);
+                    if (elNom) elNom.textContent = String(s.nominal_packets_tx || 0);
+                    if (elAtk) elAtk.textContent = String(s.attack_packets_tx || 0);
+                    if (elBr) elBr.textContent = String(s.kinematic_breaches_observed || 0);
+                    if (elRep) elRep.textContent = String(s.replays_observed || 0);
 
-                if (modeBadge) {
-                    const active = d.active_attack?.active;
-                    modeBadge.textContent = active
-                        ? `ATTACK: ${(d.active_attack.attack_type || 'ACTIVE').toUpperCase()} (${(d.active_attack.mode || '').toUpperCase()})`
-                        : `NOMINAL (${(s.nominal_source || 'pcap').toUpperCase()})`;
-                    modeBadge.style.color = active ? '#FF3366' : '#00FFA3';
-                    modeBadge.style.borderColor = active ? '#FF3366' : '#00FFA3';
-                }
-
-                const sel = document.getElementById('lab-pcap-select');
-                if (sel && Array.isArray(d.available_pcaps) && sel.options.length !== d.available_pcaps.length) {
-                    sel.innerHTML = d.available_pcaps.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
-                }
-            } catch (_) {}
-        };
-
-        pollStats();
-        apparatusStatTimer = setInterval(pollStats, 500);
+                    if (modeBadge) {
+                        const active = d.active_attack?.active;
+                        modeBadge.textContent = active
+                            ? `ATTACK: ${(d.active_attack.attack_type || 'ACTIVE').toUpperCase()} (${(d.active_attack.mode || '').toUpperCase()})`
+                            : `NOMINAL (${(s.nominal_source || 'pcap').toUpperCase()})`;
+                        modeBadge.style.color = active ? '#FF3366' : '#00FFA3';
+                        modeBadge.style.borderColor = active ? '#FF3366' : '#00FFA3';
+                    }
+                } catch (_) { }
+            };
+            pollStats();
+            apparatusStatTimer = setInterval(pollStats, 500);
+        }
     }
+
 
     async function fireApparatusPcapAttack(apiBase, pcap, attackType, mode, durationSec) {
         const fb = document.getElementById('lab-pcap-feedback');
@@ -865,7 +891,7 @@
             if (activeMainWorkspaceTab === 'tab_hardware') {
                 updateHardwareMetrics(data, isSafe);
             }
-        } catch (_) {}
+        } catch (_) { }
     }
 
     function updateHardwareMetrics(data, isSafe) {
@@ -947,7 +973,7 @@
             });
             const data = await res.json();
             if (statusBadge) statusBadge.textContent = `ACTIVE: ${(data.action || action).toUpperCase()}`;
-        } catch (_) {}
+        } catch (_) { }
         await tickTelemetryOnce();
         setTimeout(pollLabLogs, 250);
     }
@@ -964,12 +990,12 @@
                 const statusEl = document.getElementById('lab-log-status');
                 if (statusEl) statusEl.textContent = `UPDATED ${new Date().toLocaleTimeString()}`;
             }
-        } catch (_) {}
+        } catch (_) { }
     }
 
     function resizeAllCharts() {
         [plot1Chart, plot2Chart, evtChart, pmuChart, rssChart, fusionChart].forEach(c => {
-            if (c && !c.isDisposed()) { try { c.resize(); } catch (_) {} }
+            if (c && !c.isDisposed()) { try { c.resize(); } catch (_) { } }
         });
     }
 

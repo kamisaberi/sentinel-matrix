@@ -1,7 +1,7 @@
 // File: /home/kami/sentinel-nexus/web/js/sentinel_ui.js
 // ==============================================================================
 // ARYORITHM SENTINEL NEXUS: MICRO-FRONTEND PLUGIN & APPARATUS REGISTRY
-// Zero-Copy Extensibility: registerNodeAdapter, registerApparatus, registerTab
+// Zero-Copy Extensibility: Built-In Industrial & External Plugin Apparatuses
 // ==============================================================================
 
 (function () {
@@ -100,32 +100,169 @@
         async initPlugins() {
             try {
                 const resp = await fetch("/plugins/manifest.json");
-                if (!resp.ok) return;
-                const data = await resp.json();
-                if (!data || !Array.isArray(data.plugins)) return;
-
-                for (const p of data.plugins) {
-                    if (p.style) {
-                        const link = document.createElement("link");
-                        link.rel = "stylesheet";
-                        link.href = `/plugins/${p.style}`;
-                        document.head.appendChild(link);
-                    }
-                    if (p.vendor) {
-                        await this.loadScript(`/plugins/${p.vendor}`);
-                    }
-                    if (p.script) {
-                        await this.loadScript(`/plugins/${p.script}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && Array.isArray(data.plugins)) {
+                        for (const p of data.plugins) {
+                            if (p.style) {
+                                const link = document.createElement("link");
+                                link.rel = "stylesheet";
+                                link.href = `/plugins/${p.style}`;
+                                document.head.appendChild(link);
+                            }
+                            if (p.vendor) await this.loadScript(`/plugins/${p.vendor}`);
+                            if (p.script) await this.loadScript(`/plugins/${p.script}`);
+                        }
+                        console.log(`[SentinelUI] Loaded ${data.plugins.length} external UI plugin(s).`);
                     }
                 }
-                this.pluginsLoaded = true;
-                console.log(`[SentinelUI] Loaded ${data.plugins.length} external UI plugin(s).`);
-                window.dispatchEvent(new CustomEvent("sentinel:plugins-ready"));
-            } catch (err) {
-                // Silently skip if /plugins/manifest.json is not present
-            }
+            } catch (_) {}
+
+            this.pluginsLoaded = true;
+            window.dispatchEvent(new CustomEvent("sentinel:plugins-ready"));
         }
     };
+
+    // =========================================================================
+    // BUILT-IN INDUSTRIAL APPARATUS PLUGINS (For Generic Scenarios)
+    // =========================================================================
+
+    // Helper: Industrial Canvas Canvas Creation
+    function createIndustrialCanvasMount(drawFn) {
+        return function mount(container, node) {
+            container.innerHTML = `
+                <div style="position:relative; width:100%; height:100%; background:#05080C; border-radius:4px; overflow:hidden; aspect-ratio:1.25;">
+                    <canvas width="750" height="600" style="width:100%; height:100%; object-fit:cover; display:block;"></canvas>
+                </div>
+            `;
+            const canvas = container.querySelector("canvas");
+            const state = { animId: null, alive: true, tick: 0 };
+
+            function loop() {
+                if (!state.alive) return;
+                state.tick += 0.035;
+                drawFn(canvas, node, state);
+                state.animId = requestAnimationFrame(loop);
+            }
+            loop();
+            return state;
+        };
+    }
+
+    function unmountIndustrialCanvas(handle) {
+        if (!handle) return;
+        handle.alive = false;
+        if (handle.animId) cancelAnimationFrame(handle.animId);
+    }
+
+    // 1. Radiometric Thermal Camera
+    SentinelUI.registerApparatus({
+        id: "industrial_radiometric_vision",
+        title: "RADIOMETRIC THERMAL VISION CAMERA",
+        shortLabel: "📷 THERMAL CAM",
+        aspectRatio: 1.25,
+        protocol: "WHEP / RTSP :8554",
+        defaultForTypes: ["video"],
+        matches: (node) => (node?.primary_instrument?.type || "").toLowerCase() === "video",
+        mount: createIndustrialCanvasMount((canvas, node, state) => {
+            const ctx = canvas.getContext("2d");
+            const w = canvas.width, h = canvas.height;
+            const grad = ctx.createRadialGradient(w / 2, h / 2, 12, w / 2, h / 2, w / 1.5);
+            grad.addColorStop(0, "#00FFA3");
+            grad.addColorStop(1, "#05080C");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.font = "bold 11px monospace";
+            ctx.fillStyle = "#00FFA3";
+            ctx.fillText(`[+] ${node?.primary_instrument?.title || 'RADIOMETRIC THERMAL CAMERA'}`, 14, 24);
+            ctx.font = "10px monospace";
+            ctx.fillStyle = "#94A3B8";
+            ctx.fillText("STREAM: RTSP :8554 / WHEP | ROI TEMP: 74.5°C [NORMAL]", 14, 42);
+        }),
+        unmount: unmountIndustrialCanvas,
+        getPcapConfig: () => ({
+            apiBase: "",
+            attacks: [
+                { label: "[!] Replay Triton TriStation PCAP", pcap: "triton_trisis_sis.pcap", attack_type: "triton", mode: "overlay", duration_sec: 15 }
+            ]
+        })
+    });
+
+    // 2. 50 Hz AC Synchrophasor Scope
+    SentinelUI.registerApparatus({
+        id: "industrial_synchrophasor_scope",
+        title: "POWER QUALITY & SYNCHROPHASOR SCOPE",
+        shortLabel: "⚡ GRID SCOPE",
+        aspectRatio: 1.25,
+        protocol: "IEEE C37.118 / MODBUS :15501",
+        defaultForTypes: ["grid"],
+        matches: (node) => (node?.primary_instrument?.type || "").toLowerCase() === "grid",
+        mount: createIndustrialCanvasMount((canvas, node, state) => {
+            const ctx = canvas.getContext("2d");
+            const w = canvas.width, h = canvas.height;
+            ctx.fillStyle = "#05080C";
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = "#00F0FF";
+            ctx.lineWidth = 2.0;
+            ctx.beginPath();
+            for (let x = 0; x < w; x++) {
+                const y = (h / 2) + Math.sin((x * 0.015) + (state.tick * 3.5)) * 42;
+                if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            ctx.font = "bold 11px monospace";
+            ctx.fillStyle = "#00E5FF";
+            ctx.fillText(`[+] ${node?.primary_instrument?.title || 'SYNCHROPHASOR SCOPE'}`, 14, 24);
+            ctx.font = "10px monospace";
+            ctx.fillStyle = "#94A3B8";
+            ctx.fillText("GRID FREQ: 50.00 Hz | THD: 1.4% | VOLTAGE: 220.4 kV", 14, 42);
+        }),
+        unmount: unmountIndustrialCanvas,
+        getPcapConfig: () => ({
+            apiBase: "",
+            attacks: [
+                { label: "[!] Replay Industroyer2 IEC-104 PCAP", pcap: "industroyer2_substation.pcap", attack_type: "industroyer", mode: "overlay", duration_sec: 15 },
+                { label: "[!] Replay UIUC Modbus SCADA PCAP", pcap: "modbus_uiuc_scada_attack.pcap", attack_type: "modbus", mode: "overlay", duration_sec: 15 }
+            ]
+        })
+    });
+
+    // 3. Exothermic Reaction Vessel
+    SentinelUI.registerApparatus({
+        id: "industrial_exothermic_reactor",
+        title: "EXOTHERMIC REACTION VESSEL CORE",
+        shortLabel: "☢️ REACTOR CORE",
+        aspectRatio: 1.25,
+        protocol: "S7COMM :102 / HART-IP",
+        defaultForTypes: ["reactor"],
+        matches: (node) => (node?.primary_instrument?.type || "").toLowerCase() === "reactor",
+        mount: createIndustrialCanvasMount((canvas, node, state) => {
+            const ctx = canvas.getContext("2d");
+            const w = canvas.width, h = canvas.height;
+            const grad = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 1.5);
+            grad.addColorStop(0, "#A855F7");
+            grad.addColorStop(1, "#05080C");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.font = "bold 11px monospace";
+            ctx.fillStyle = "#A855F7";
+            ctx.fillText(`[+] ${node?.primary_instrument?.title || 'EXOTHERMIC REACTOR VESSEL'}`, 14, 24);
+            ctx.font = "10px monospace";
+            ctx.fillStyle = "#94A3B8";
+            ctx.fillText("PRESSURE: 100.2 PSI | CORE TEMP: 85.4°C | S7COMM :102", 14, 42);
+        }),
+        unmount: unmountIndustrialCanvas,
+        getPcapConfig: () => ({
+            apiBase: "",
+            attacks: [
+                { label: "[!] Replay Stuxnet S7Comm PCAP", pcap: "stuxnet_s7comm.pcap", attack_type: "stuxnet", mode: "overlay", duration_sec: 15 }
+            ]
+        })
+    });
 
     window.SentinelUI = SentinelUI;
     document.addEventListener("DOMContentLoaded", () => {
