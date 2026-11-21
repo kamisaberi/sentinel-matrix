@@ -17,7 +17,8 @@ RED     := \033[31m
 BOLD    := \033[1m
 RESET   := \033[0m
 
-DEFAULT_DYNAMIC_SCENARIO := scenarios/reference_minimal/scenario.yaml
+DEFAULT_DYNAMIC_SCENARIO := scenarios/reference_minimal
+
 
 help:
 	@echo -e "${CYAN}${BOLD}SENTINEL-MATRIX: DOMAIN-AGNOSTIC CYBER-PHYSICAL SIMULATION ENGINE${RESET}\n"
