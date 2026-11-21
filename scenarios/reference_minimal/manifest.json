@@ -1,10 +1,10 @@
 {
-  "name": "reference_minimal",
-  "slug": "reference_minimal",
-  "title": "Sentinel-Matrix Minimal Framework Smoke Scenario",
-  "version": "1.0.0",
-  "asset_type": "scenario",
-  "target_sector": "GENERIC_FRAMEWORK",
-  "category": "FRAMEWORK_SMOKE_TEST",
-  "description": "Minimal domain-agnostic 3-container topology (Nexus + 1 Edge Sentry + 1 Generic Device) for CI verification."
+    "name": "reference_minimal",
+    "slug": "reference_minimal",
+    "title": "Sentinel-Matrix Minimal Framework Smoke Scenario",
+    "version": "1.0.0",
+    "asset_type": "scenario",
+    "target_sector": "GENERIC_FRAMEWORK",
+    "category": "FRAMEWORK_SMOKE_TEST",
+    "description": "Minimal domain-agnostic 3-container topology (Nexus + 1 Edge Sentry + 1 Generic Device) for CI verification."
 }
