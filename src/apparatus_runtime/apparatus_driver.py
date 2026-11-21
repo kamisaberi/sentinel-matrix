@@ -505,6 +505,7 @@ class ApparatusEngine:
             return []
         return sorted([f.name for f in self.pcap_dir.iterdir() if f.is_file() and f.suffix in (".pcap", ".pcapng")])
 
+
     def trigger_attack(self, attack_type: str = "gps_teleport", pcap_name: str = "", mode: str = "overlay", duration_sec: float = 12.0):
         resolved_pcap = ""
         if pcap_name:
@@ -523,8 +524,24 @@ class ApparatusEngine:
                 "expires_at": time.time() + max(1.0, min(300.0, float(duration_sec))),
                 "packets_injected": 0,
             }
+            # Immediate state mutation so Frame 1 instantly reflects attack
+            atk = (attack_type or "").lower()
+            if "stuxnet" in atk or "reactor" in atk or "s7" in atk or "chemical" in atk:
+                self.reactor["pressure_psi"] = 168.5
+                self.reactor["temp_c"] = 134.2
+                self.reactor["agitator_rpm"] = 3600
+                self.reactor["status"] = "EXOTHERMIC_RUNAWAY_DANGER"
+            elif "dazzle" in atk or "optical" in atk or "thermal" in atk or "triton" in atk:
+                self.flir["laser_dazzle"] = True
+                self.flir["saturation_pct"] = 94.8
+                self.flir["peak_temp_c"] = 146.5
+            elif "harmonic" in atk or "grid" in atk or "industroyer" in atk:
+                self.synchrophasor["freq_hz"] = 49.42
+                self.synchrophasor["thd_pct"] = 21.8
+
         print(f"[ApparatusEngine] Attack triggered: type={attack_type} mode={mode} pcap={resolved_pcap or 'synthetic'} ({duration_sec}s)", flush=True)
         return dict(self.active_attack)
+
 
     def stop_attack(self):
         with self.lock:
