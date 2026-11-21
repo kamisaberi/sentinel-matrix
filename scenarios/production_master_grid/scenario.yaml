@@ -45,6 +45,7 @@ services:
       - ./shared/lib:/usr/local/lib/matrix-deps:ro
       - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
       - ./web:/opt/sentinel-nexus/web:ro
+      - ./pcaps:/opt/sentinel-nexus/pcaps:ro
     environment:
       - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
       - VMWARE_ENVIRONMENT=true
