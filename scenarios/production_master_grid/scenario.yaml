@@ -360,3 +360,76 @@ services:
     environment:
       - NEXUS_REST_URL=http://10.240.0.10:9443
       - TARGET_NODES=10.240.0.101,10.240.0.102,10.240.0.103
+
+
+  # ============================================================================
+  # DEDICATED REAL-WORLD APPARATUS & DUAL-PCAP RUNTIME CONTAINERS
+  # ============================================================================
+  apparatus-synchrophasor:
+    image: sentinel-matrix/apparatus-runtime:latest
+    container_name: matrix-apparatus-synchrophasor
+    hostname: apparatus-synchrophasor.matrix.internal
+    restart: unless-stopped
+    depends_on:
+      nexus: { condition: service_healthy }
+    networks:
+      sentinel-grid-net:
+        ipv4_address: "10.240.0.131"
+    ports:
+      - "18093:8090"
+    volumes:
+      - ./pcaps:/app/pcaps:ro
+    command: [
+      "--type", "synchrophasor",
+      "--name", "Substation-Synchrophasor-PMU",
+      "--attack-pcap", "/app/pcaps/industroyer2_substation.pcap",
+      "--target-ip", "10.240.0.101",
+      "--target-port", "15501",
+      "--api-port", "8090"
+    ]
+
+  apparatus-thermal:
+    image: sentinel-matrix/apparatus-runtime:latest
+    container_name: matrix-apparatus-thermal
+    hostname: apparatus-thermal.matrix.internal
+    restart: unless-stopped
+    depends_on:
+      nexus: { condition: service_healthy }
+    networks:
+      sentinel-grid-net:
+        ipv4_address: "10.240.0.132"
+    ports:
+      - "18094:8090"
+    volumes:
+      - ./pcaps:/app/pcaps:ro
+    command: [
+      "--type", "flir_thermal",
+      "--name", "Hospital-Radiometric-Thermal-Camera",
+      "--attack-pcap", "/app/pcaps/triton_trisis_sis.pcap",
+      "--target-ip", "10.240.0.102",
+      "--target-port", "8554",
+      "--api-port", "8090"
+    ]
+
+  apparatus-reactor:
+    image: sentinel-matrix/apparatus-runtime:latest
+    container_name: matrix-apparatus-reactor
+    hostname: apparatus-reactor.matrix.internal
+    restart: unless-stopped
+    depends_on:
+      nexus: { condition: service_healthy }
+    networks:
+      sentinel-grid-net:
+        ipv4_address: "10.240.0.133"
+    ports:
+      - "18095:8090"
+    volumes:
+      - ./pcaps:/app/pcaps:ro
+    command: [
+      "--type", "reactor_core",
+      "--name", "Refinery-Exothermic-Reaction-Vessel",
+      "--attack-pcap", "/app/pcaps/stuxnet_s7comm_injected.pcap",
+      "--target-ip", "10.240.0.103",
+      "--target-port", "102",
+      "--api-port", "8090"
+    ]
