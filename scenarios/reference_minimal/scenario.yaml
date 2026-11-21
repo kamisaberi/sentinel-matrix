@@ -1,0 +1,84 @@
+# File: /home/kami/sentinel-matrix/scenarios/reference_minimal/scenario.yaml
+
+version: "1.0"
+scenario:
+  name: "reference_minimal"
+  description: "Minimal domain-agnostic Sentinel-Matrix smoke test (Nexus + 1 Edge Node + 1 Device)"
+
+networks:
+  ref-smoke-net:
+    driver: bridge
+    subnet: "10.240.99.0/24"
+    gateway: "10.240.99.1"
+    internal: false
+
+volumes:
+  shared-logs: { driver: local }
+
+services:
+  nexus:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nexus
+    container_name: matrix-nexus
+    hostname: nexus.matrix.internal
+    restart: unless-stopped
+    privileged: true
+    networks:
+      ref-smoke-net: { ipv4_address: "10.240.99.10" }
+    ports:
+      - "50051:50051"
+      - "9443:9443"
+      - "9444:9444"
+    volumes:
+      - ./configs:/opt/sentinel-nexus/configs:ro
+      - ./shared/models:/opt/sentinel-nexus/models
+      - shared-logs:/var/log/sentinel-nexus
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel-nexus:/usr/local/bin/sentinel-nexus:ro
+      - ./web:/opt/sentinel-nexus/web:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NEXUS_ENV=simulation
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9443/api/v1/fleet/nodes"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  sentinel-edge-01:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sentinel
+    container_name: matrix-edge-reference-01
+    hostname: reference-01.matrix.internal
+    restart: unless-stopped
+    privileged: true
+    cap_add: [NET_ADMIN, SYS_ADMIN, BPF]
+    depends_on:
+      nexus: { condition: service_healthy }
+    networks:
+      ref-smoke-net: { ipv4_address: "10.240.99.101" }
+    volumes:
+      - ./configs/nodes/node_01_reference.yaml:/etc/sentinel/sentinel.yaml:ro
+      - ./shared/models:/etc/sentinel/models:rw
+      - shared-logs:/var/log/sentinel
+      - ./shared/lib:/usr/local/lib/matrix-deps:ro
+      - ./shared/bin/sentinel:/usr/local/bin/sentinel:ro
+    environment:
+      - LD_LIBRARY_PATH=/usr/local/lib/matrix-deps
+      - NODE_IDENTIFIER=Edge-Reference-01
+      - SITE_IDENTIFIER=Framework-Smoke-Site
+      - PRIMARY_BACKEND=INTEL_OPENVINO
+      - NEXUS_HOST=10.240.99.10
+      - NEXUS_PORT=50051
+
+  device-ref-01:
+    image: sentinel-matrix/device-runtime:latest
+    container_name: matrix-device-ref-01
+    restart: unless-stopped
+    networks:
+      ref-smoke-net: { ipv4_address: "10.240.99.141" }
+    ports: ["15501:502"]
+    command: ["--archetype", "sensor", "--protocol", "modbus", "--port", "502", "--name", "Reference-Generic-Sensor"]
