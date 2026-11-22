@@ -230,6 +230,11 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
         if svc_conf.get("tty", False):
             service["tty"] = True
 
+        for extra_key in ("ipc", "shm_size", "devices", "network_mode", "pid"):
+            if extra_key in svc_conf:
+                service[extra_key] = svc_conf[extra_key]
+
+
         # Network Bindings Normalization: Convert 'ip' -> 'ipv4_address'
         if "networks" in svc_conf:
             raw_node_nets = svc_conf["networks"]
