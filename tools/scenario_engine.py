@@ -55,6 +55,9 @@ def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
         search_candidates = [
             MATRIX_ROOT / "scenarios" / target_input / "scenario.yaml",
             MATRIX_ROOT / "scenarios" / f"{target_input}.yaml",
+            Path.home() / ".sentinel" / "scenarios" / target_input / "scenario.yaml",
+            Path("/var/lib/sentinel/scenarios") / target_input / "scenario.yaml",
+            Path("/opt/sentinel/scenarios") / target_input / "scenario.yaml",
             Path.home() / ".cache" / "sentinel" / "scenarios" / f"scenario_{target_input}.tar.gz",
             Path.home() / ".cache" / "sentinel" / "scenarios" / f"{target_input}.tar.gz",
             Path("/var/cache/sentinel/scenarios") / f"scenario_{target_input}.tar.gz",
@@ -217,8 +220,13 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
         # Preserve & Anchor Volume Mounts
         if "volumes" in svc_conf:
             anchored_volumes = []
+
             for v in svc_conf["volumes"]:
-                if isinstance(v, str) and (v.startswith("./") or v.startswith("../")):
+                if isinstance(v, str) and v.startswith("pack://"):
+                    parts = v.split(":")
+                    parts[0] = resolve_pack_path(parts[0])
+                    anchored_volumes.append(":".join(parts))
+                elif isinstance(v, str) and (v.startswith("./") or v.startswith("../")):
                     parts = v.split(":")
                     rel_candidate = (working_dir / parts[0]).resolve()
                     if rel_candidate.exists():
