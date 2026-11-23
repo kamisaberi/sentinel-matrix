@@ -17,6 +17,15 @@ MATRIX_ROOT = Path(__file__).resolve().parent.parent
 CACHE_DIR = MATRIX_ROOT / ".matrix_cache"
 STAGED_DIR = CACHE_DIR / "staged"
 
+def resolve_pack_path(src_part: str) -> str:
+    """Resolves pack://<cartridge>/<subpath> to /opt/sentinel/packs/<cartridge>/<subpath> or /home/kami/<cartridge>/<subpath>."""
+    rel = src_part[len("pack://"):]
+    for base in (Path("/opt/sentinel/packs"), Path("/home/kami")):
+        cand = (base / rel).resolve()
+        if cand.exists():
+            return str(cand)
+    return str((Path("/opt/sentinel/packs") / rel).resolve())
+
 
 def ensure_cache_dir():
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
