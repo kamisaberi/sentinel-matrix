@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# File: /home/kami/sentinel-matrix/tools/scenario_engine.py
+# ==============================================================================
+# ARYORITHM SENTINEL-MATRIX: UNIVERSAL SCENARIO COMPILER & ORCHESTRATOR
+# ==============================================================================
+
 import argparse
 import os
 import shutil
@@ -17,15 +22,6 @@ MATRIX_ROOT = Path(__file__).resolve().parent.parent
 CACHE_DIR = MATRIX_ROOT / ".matrix_cache"
 STAGED_DIR = CACHE_DIR / "staged"
 
-def resolve_pack_path(src_part: str) -> str:
-    """Resolves pack://<cartridge>/<subpath> to /opt/sentinel/packs/<cartridge>/<subpath> or /home/kami/<cartridge>/<subpath>."""
-    rel = src_part[len("pack://"):]
-    for base in (Path("/opt/sentinel/packs"), Path("/home/kami")):
-        cand = (base / rel).resolve()
-        if cand.exists():
-            return str(cand)
-    return str((Path("/opt/sentinel/packs") / rel).resolve())
-
 
 def ensure_cache_dir():
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -42,6 +38,16 @@ def safe_clean_dir(target_path: Path):
         subprocess.run(["sudo", "rm", "-rf", str(target_path)], check=False)
 
 
+def resolve_pack_path(src_part: str) -> str:
+    """Resolves pack://<cartridge>/<subpath> to /opt/sentinel/packs/<cartridge>/<subpath> or /home/kami/<cartridge>/<subpath>."""
+    rel = src_part[len("pack://"):]
+    for base in (Path("/opt/sentinel/packs"), Path("/home/kami")):
+        cand = (base / rel).resolve()
+        if cand.exists():
+            return str(cand)
+    return str((Path("/opt/sentinel/packs") / rel).resolve())
+
+
 def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
     """
     Resolves input (tar.gz, directory, yaml file, or slug name) into a valid scenario.yaml.
@@ -50,7 +56,7 @@ def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
     ensure_cache_dir()
     p = Path(target_input)
 
-    # 1. Check if input is a slug name matching cached archives or local directories
+    # 1. Check if input is a slug name matching cached archives, system paths, or local directories
     if not p.exists():
         search_candidates = [
             MATRIX_ROOT / "scenarios" / target_input / "scenario.yaml",
@@ -93,7 +99,6 @@ def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
         with tarfile.open(p, "r:*") as tar:
             tar.extractall(path=extract_target)
 
-        # Locate scenario.yaml inside extracted directory
         yaml_candidates = list(extract_target.rglob("scenario.yaml"))
         if not yaml_candidates:
             yaml_candidates = list(extract_target.rglob("*.yaml"))
@@ -121,16 +126,19 @@ def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
 
     # CASE C: Input is a direct .yaml file
     if p.is_file():
-        slug = p.stem
-        if slug.endswith(".scenario"):
-            slug = slug[:-9]
+        if p.name in ("scenario.yaml", "scenario.yml"):
+            slug = p.parent.name
+        else:
+            slug = p.stem
+            if slug.endswith(".scenario"):
+                slug = slug[:-9]
         return slug, p, p.parent
 
     print(f"\033[1;31m[-] Error: Unsupported scenario format: {p}\033[0m")
     sys.exit(1)
 
 
-def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario_name: str) -> Path:
+def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario_name: str) -> tuple[Path, str]:
     ensure_cache_dir()
 
     with open(scenario_path, "r") as f:
@@ -217,10 +225,9 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
         if "environment" in svc_conf:
             service["environment"] = svc_conf["environment"]
 
-        # Preserve & Anchor Volume Mounts
+        # Preserve & Anchor Volume Mounts (Resolving pack:// and relative paths)
         if "volumes" in svc_conf:
             anchored_volumes = []
-
             for v in svc_conf["volumes"]:
                 if isinstance(v, str) and v.startswith("pack://"):
                     rest = v[len("pack://"):]
@@ -248,10 +255,10 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
         if svc_conf.get("tty", False):
             service["tty"] = True
 
+        # Docker Compose Hardware, IPC & Device Passthrough
         for extra_key in ("ipc", "shm_size", "devices", "network_mode", "pid"):
             if extra_key in svc_conf:
                 service[extra_key] = svc_conf[extra_key]
-
 
         # Network Bindings Normalization: Convert 'ip' -> 'ipv4_address'
         if "networks" in svc_conf:
@@ -285,15 +292,15 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
     with open(out_compose_file, "w") as f:
         yaml.dump(standalone_compose, f, default_flow_style=False, sort_keys=False)
 
-    return out_compose_file
+    return out_compose_file, actual_name
 
 
 def load_scenario(target_input: str):
     scenario_name, yaml_path, working_dir = resolve_scenario_yaml(target_input)
-    compose_file = compile_scenario_to_compose(yaml_path, working_dir, scenario_name)
+    compose_file, actual_name = compile_scenario_to_compose(yaml_path, working_dir, scenario_name)
 
     print("\033[1;36m================================================================================\033[0m")
-    print(f"\033[1;37m        LAUNCHING SOVEREIGN SCENARIO: {scenario_name}                           \033[0m")
+    print(f"\033[1;37m        LAUNCHING SOVEREIGN SCENARIO: {actual_name}                           \033[0m")
     print("\033[1;36m================================================================================\033[0m")
     print(f"[*] Resolved Topology : {yaml_path}")
     print(f"[*] Compiled Manifest : {compose_file}")
@@ -301,14 +308,14 @@ def load_scenario(target_input: str):
     cmd = [
         "docker", "compose",
         "--project-directory", str(MATRIX_ROOT),
-        "-p", f"matrix_{scenario_name}",
+        "-p", f"matrix_{actual_name}",
         "-f", str(compose_file),
         "up", "-d"
     ]
 
     res = subprocess.run(cmd, cwd=str(MATRIX_ROOT))
     if res.returncode == 0:
-        print(f"\n\033[1;32m[+] Scenario '{scenario_name}' is LIVE across custom networks & volumes!\033[0m")
+        print(f"\n\033[1;32m[+] Scenario '{actual_name}' is LIVE across custom networks & volumes!\033[0m")
         print("\033[1;36m================================================================================\033[0m")
     else:
         print(f"\033[1;31m[-] Launch failed with code {res.returncode}\033[0m")
@@ -333,7 +340,9 @@ def teardown_scenario(scenario_name: str = None):
             safe_clean_dir(STAGED_DIR)
         return
 
+    print(f"[*] Dismantling scenario project: matrix_{scenario_name}...")
     compose_file = CACHE_DIR / f"docker-compose.{scenario_name}.yml"
+
     if compose_file.exists():
         subprocess.run([
             "docker", "compose",
@@ -343,10 +352,31 @@ def teardown_scenario(scenario_name: str = None):
             "down", "--remove-orphans"
         ], cwd=str(MATRIX_ROOT))
         compose_file.unlink(missing_ok=True)
+    else:
+        # Fallback: re-resolve scenario YAML to reconstruct manifest for clean teardown
+        try:
+            resolved_slug, yaml_path, working_dir = resolve_scenario_yaml(scenario_name)
+            temp_compose, actual_name = compile_scenario_to_compose(yaml_path, working_dir, resolved_slug)
+            subprocess.run([
+                "docker", "compose",
+                "--project-directory", str(MATRIX_ROOT),
+                "-p", f"matrix_{actual_name}",
+                "-f", str(temp_compose),
+                "down", "--remove-orphans"
+            ], cwd=str(MATRIX_ROOT))
+            temp_compose.unlink(missing_ok=True)
+        except Exception:
+            subprocess.run([
+                "docker", "compose",
+                "--project-directory", str(MATRIX_ROOT),
+                "-p", f"matrix_{scenario_name}",
+                "down", "--remove-orphans"
+            ], cwd=str(MATRIX_ROOT))
 
     staged_folder = STAGED_DIR / scenario_name
     if staged_folder.exists():
         safe_clean_dir(staged_folder)
+    print(f"\033[1;32m[+] Scenario '{scenario_name}' dismantled successfully.\033[0m")
 
 
 def status_scenario(scenario_name: str = None):
