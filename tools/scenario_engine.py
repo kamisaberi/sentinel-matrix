@@ -223,8 +223,9 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
 
             for v in svc_conf["volumes"]:
                 if isinstance(v, str) and v.startswith("pack://"):
-                    parts = v.split(":")
-                    parts[0] = resolve_pack_path(parts[0])
+                    rest = v[len("pack://"):]
+                    parts = rest.split(":")
+                    parts[0] = resolve_pack_path("pack://" + parts[0])
                     anchored_volumes.append(":".join(parts))
                 elif isinstance(v, str) and (v.startswith("./") or v.startswith("../")):
                     parts = v.split(":")
