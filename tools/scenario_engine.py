@@ -2,6 +2,7 @@
 # File: /home/kami/sentinel-matrix/tools/scenario_engine.py
 # ==============================================================================
 # ARYORITHM SENTINEL-MATRIX: UNIVERSAL SCENARIO COMPILER & ORCHESTRATOR
+# Tier 3 Matrix Apparatus Engine linked against Tier 0 sentinel_fs
 # ==============================================================================
 
 import argparse
@@ -18,14 +19,23 @@ except ImportError:
     os.system("pip install --quiet pyyaml 2>/dev/null || true")
     import yaml
 
+# Authoritative Sovereign Sentinel Filesystem (SSFS) Substrate
+from sentinel_fs import SentinelPathResolver, ObjectClass
+
 MATRIX_ROOT = Path(__file__).resolve().parent.parent
-CACHE_DIR = MATRIX_ROOT / ".matrix_cache"
-STAGED_DIR = CACHE_DIR / "staged"
+
+# Decoupled Workspaces & Staging (Zero git repository pollution)
+WORKSPACE_BASE = SentinelPathResolver.resolve_dir(ObjectClass.SCENARIO_WORKSPACE)
+CATALOG_BASE = SentinelPathResolver.resolve_dir(ObjectClass.SCENARIO_CATALOG)
 
 
-def ensure_cache_dir():
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    STAGED_DIR.mkdir(parents=True, exist_ok=True)
+def ensure_workspace_dir(scenario_name: str) -> tuple[Path, Path]:
+    """Ensures dedicated runtime and staging directories inside SSFS."""
+    scenario_workspace = SentinelPathResolver.resolve_scenario_workspace(scenario_name)
+    staged_dir = scenario_workspace / "staged"
+    scenario_workspace.mkdir(parents=True, exist_ok=True)
+    staged_dir.mkdir(parents=True, exist_ok=True)
+    return scenario_workspace, staged_dir
 
 
 def safe_clean_dir(target_path: Path):
@@ -39,35 +49,25 @@ def safe_clean_dir(target_path: Path):
 
 
 def resolve_pack_path(src_part: str) -> str:
-    """Resolves pack://<cartridge>/<subpath> to /opt/sentinel/packs/<cartridge>/<subpath> or /home/kami/<cartridge>/<subpath>."""
-    rel = src_part[len("pack://"):]
-    for base in (Path("/opt/sentinel/packs"), Path("/home/kami")):
-        cand = (base / rel).resolve()
-        if cand.exists():
-            return str(cand)
-    return str((Path("/opt/sentinel/packs") / rel).resolve())
+    """Delegates symbolic pack:// resolution to the canonical SSFS resolver."""
+    return str(SentinelPathResolver.resolve_pack_uri(src_part))
 
 
 def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
     """
-    Resolves input (tar.gz, directory, yaml file, or slug name) into a valid scenario.yaml.
+    Resolves input (tar.gz, directory, yaml file, or catalog slug) into a valid scenario.yaml.
     Returns: (scenario_name, path_to_yaml, working_directory)
     """
-    ensure_cache_dir()
     p = Path(target_input)
 
-    # 1. Check if input is a slug name matching cached archives, system paths, or local directories
+    # 1. Check if input is a catalog slug matching the sovereign SSFS catalog
     if not p.exists():
         search_candidates = [
+            CATALOG_BASE / target_input / "scenario.yaml",
+            CATALOG_BASE / f"{target_input}.yaml",
+            CATALOG_BASE / target_input,
             MATRIX_ROOT / "scenarios" / target_input / "scenario.yaml",
-            MATRIX_ROOT / "scenarios" / f"{target_input}.yaml",
-            Path.home() / ".sentinel" / "scenarios" / target_input / "scenario.yaml",
-            Path("/var/lib/sentinel/scenarios") / target_input / "scenario.yaml",
-            Path("/opt/sentinel/scenarios") / target_input / "scenario.yaml",
-            Path.home() / ".cache" / "sentinel" / "scenarios" / f"scenario_{target_input}.tar.gz",
-            Path.home() / ".cache" / "sentinel" / "scenarios" / f"{target_input}.tar.gz",
-            Path("/var/cache/sentinel/scenarios") / f"scenario_{target_input}.tar.gz",
-            Path("/var/cache/sentinel/scenarios") / f"{target_input}.tar.gz"
+            MATRIX_ROOT / "scenarios" / f"{target_input}.yaml"
         ]
         for candidate in search_candidates:
             if candidate.exists():
@@ -75,10 +75,11 @@ def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
                 break
 
     if not p.is_absolute():
-        p = (MATRIX_ROOT / p).resolve()
+        p = p.resolve()
 
     if not p.exists():
         print(f"\033[1;31m[-] Error: Scenario target not found: {target_input}\033[0m")
+        print(f"[*] Searched authoritative SSFS catalog: {CATALOG_BASE}")
         sys.exit(1)
 
     # CASE A: Input is a Compressed Archive (.tar.gz, .tgz, .tar)
@@ -90,7 +91,7 @@ def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
         if slug.startswith("scenario_"):
             slug = slug[9:]
 
-        extract_target = STAGED_DIR / slug
+        workspace_dir, extract_target = ensure_workspace_dir(slug)
         if extract_target.exists():
             safe_clean_dir(extract_target)
         extract_target.mkdir(parents=True, exist_ok=True)
@@ -139,14 +140,14 @@ def resolve_scenario_yaml(target_input: str) -> tuple[str, Path, Path]:
 
 
 def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario_name: str) -> tuple[Path, str]:
-    ensure_cache_dir()
+    workspace_dir, _ = ensure_workspace_dir(scenario_name)
 
     with open(scenario_path, "r") as f:
         data = yaml.safe_load(f)
 
     scenario_meta = data.get("scenario", {})
     actual_name = scenario_meta.get("name", scenario_name)
-    out_compose_file = CACHE_DIR / f"docker-compose.{actual_name}.yml"
+    out_compose_file = workspace_dir / f"docker-compose.{actual_name}.yml"
 
     # 1. Compile Networks
     networks_def = {}
@@ -204,11 +205,7 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
         elif "image" in svc_conf:
             service["image"] = svc_conf["image"]
 
-        if "container_name" in svc_conf:
-            service["container_name"] = svc_conf["container_name"]
-        else:
-            service["container_name"] = f"matrix-{svc_key}"
-
+        service["container_name"] = svc_conf.get("container_name", f"matrix-{svc_key}")
         if "hostname" in svc_conf:
             service["hostname"] = svc_conf["hostname"]
 
@@ -225,22 +222,18 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
         if "environment" in svc_conf:
             service["environment"] = svc_conf["environment"]
 
-        # Preserve & Anchor Volume Mounts (Resolving pack:// and relative paths)
+        # Preserve & Anchor Volume Mounts (SSFS pack:// resolution)
         if "volumes" in svc_conf:
             anchored_volumes = []
             for v in svc_conf["volumes"]:
                 if isinstance(v, str) and v.startswith("pack://"):
-                    rest = v[len("pack://"):]
-                    parts = rest.split(":")
-                    parts[0] = resolve_pack_path("pack://" + parts[0])
+                    parts = v.split(":")
+                    parts[0] = resolve_pack_path(parts[0])
                     anchored_volumes.append(":".join(parts))
                 elif isinstance(v, str) and (v.startswith("./") or v.startswith("../")):
                     parts = v.split(":")
                     rel_candidate = (working_dir / parts[0]).resolve()
-                    if rel_candidate.exists():
-                        parts[0] = str(rel_candidate)
-                    else:
-                        parts[0] = str((MATRIX_ROOT / parts[0]).resolve())
+                    parts[0] = str(rel_candidate if rel_candidate.exists() else (MATRIX_ROOT / parts[0]).resolve())
                     anchored_volumes.append(":".join(parts))
                 else:
                     anchored_volumes.append(v)
@@ -255,18 +248,16 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
         if svc_conf.get("tty", False):
             service["tty"] = True
 
-        # Docker Compose Hardware, IPC & Device Passthrough
         for extra_key in ("ipc", "shm_size", "devices", "network_mode", "pid"):
             if extra_key in svc_conf:
                 service[extra_key] = svc_conf[extra_key]
 
-        # Network Bindings Normalization: Convert 'ip' -> 'ipv4_address'
         if "networks" in svc_conf:
             raw_node_nets = svc_conf["networks"]
-            normalized_nets = {}
             if isinstance(raw_node_nets, list):
                 service["networks"] = raw_node_nets
             elif isinstance(raw_node_nets, dict):
+                normalized_nets = {}
                 for net_k, net_v in raw_node_nets.items():
                     if isinstance(net_v, dict):
                         net_entry = {}
@@ -303,7 +294,7 @@ def load_scenario(target_input: str):
     print(f"\033[1;37m        LAUNCHING SOVEREIGN SCENARIO: {actual_name}                           \033[0m")
     print("\033[1;36m================================================================================\033[0m")
     print(f"[*] Resolved Topology : {yaml_path}")
-    print(f"[*] Compiled Manifest : {compose_file}")
+    print(f"[*] SSFS Manifest     : {compose_file}")
 
     cmd = [
         "docker", "compose",
@@ -323,25 +314,25 @@ def load_scenario(target_input: str):
 
 
 def teardown_scenario(scenario_name: str = None):
-    ensure_cache_dir()
     if not scenario_name:
-        for f in CACHE_DIR.glob("docker-compose.*.yml"):
-            s_name = f.stem.replace("docker-compose.", "")
-            print(f"[*] Dismantling scenario project: matrix_{s_name}...")
-            subprocess.run([
-                "docker", "compose",
-                "--project-directory", str(MATRIX_ROOT),
-                "-p", f"matrix_{s_name}",
-                "-f", str(f),
-                "down", "--remove-orphans"
-            ], cwd=str(MATRIX_ROOT))
-            f.unlink(missing_ok=True)
-        if STAGED_DIR.exists():
-            safe_clean_dir(STAGED_DIR)
+        for ws in WORKSPACE_BASE.glob("*"):
+            if ws.is_dir():
+                for f in ws.glob("docker-compose.*.yml"):
+                    s_name = f.stem.replace("docker-compose.", "")
+                    print(f"[*] Dismantling scenario project: matrix_{s_name}...")
+                    subprocess.run([
+                        "docker", "compose",
+                        "--project-directory", str(MATRIX_ROOT),
+                        "-p", f"matrix_{s_name}",
+                        "-f", str(f),
+                        "down", "--remove-orphans"
+                    ], cwd=str(MATRIX_ROOT))
+                safe_clean_dir(ws)
         return
 
     print(f"[*] Dismantling scenario project: matrix_{scenario_name}...")
-    compose_file = CACHE_DIR / f"docker-compose.{scenario_name}.yml"
+    workspace_dir = SentinelPathResolver.resolve_scenario_workspace(scenario_name)
+    compose_file = workspace_dir / f"docker-compose.{scenario_name}.yml"
 
     if compose_file.exists():
         subprocess.run([
@@ -351,9 +342,7 @@ def teardown_scenario(scenario_name: str = None):
             "-f", str(compose_file),
             "down", "--remove-orphans"
         ], cwd=str(MATRIX_ROOT))
-        compose_file.unlink(missing_ok=True)
     else:
-        # Fallback: re-resolve scenario YAML to reconstruct manifest for clean teardown
         try:
             resolved_slug, yaml_path, working_dir = resolve_scenario_yaml(scenario_name)
             temp_compose, actual_name = compile_scenario_to_compose(yaml_path, working_dir, resolved_slug)
@@ -364,7 +353,6 @@ def teardown_scenario(scenario_name: str = None):
                 "-f", str(temp_compose),
                 "down", "--remove-orphans"
             ], cwd=str(MATRIX_ROOT))
-            temp_compose.unlink(missing_ok=True)
         except Exception:
             subprocess.run([
                 "docker", "compose",
@@ -373,16 +361,15 @@ def teardown_scenario(scenario_name: str = None):
                 "down", "--remove-orphans"
             ], cwd=str(MATRIX_ROOT))
 
-    staged_folder = STAGED_DIR / scenario_name
-    if staged_folder.exists():
-        safe_clean_dir(staged_folder)
+    if workspace_dir.exists():
+        safe_clean_dir(workspace_dir)
     print(f"\033[1;32m[+] Scenario '{scenario_name}' dismantled successfully.\033[0m")
 
 
 def status_scenario(scenario_name: str = None):
-    ensure_cache_dir()
     if scenario_name:
-        compose_file = CACHE_DIR / f"docker-compose.{scenario_name}.yml"
+        workspace_dir = SentinelPathResolver.resolve_scenario_workspace(scenario_name)
+        compose_file = workspace_dir / f"docker-compose.{scenario_name}.yml"
         if compose_file.exists():
             subprocess.run([
                 "docker", "compose",
@@ -393,16 +380,15 @@ def status_scenario(scenario_name: str = None):
             ], cwd=str(MATRIX_ROOT))
             return
 
-    # List all active matrix containers
     subprocess.run(["docker", "ps", "--filter", "name=matrix-", "--format", "table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Networks}}"])
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Sentinel-Matrix Universal Scenario Orchestrator")
+    parser = argparse.ArgumentParser(description="Sentinel-Matrix Universal Scenario Orchestrator (SSFS Connected)")
     sub = parser.add_subparsers(dest="action")
 
-    load_p = sub.add_parser("load", help="Load scenario (supports .tar.gz, directory, or .yaml)")
-    load_p.add_argument("target", help="Scenario .tar.gz, folder path, yaml file, or slug name")
+    load_p = sub.add_parser("load", help="Load scenario (supports slug, directory, or .yaml)")
+    load_p.add_argument("target", help="Scenario slug name, folder path, or yaml file")
 
     down_p = sub.add_parser("down", help="Tear down scenario")
     down_p.add_argument("--name", default=None, help="Scenario name to tear down")
