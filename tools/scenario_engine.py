@@ -227,9 +227,11 @@ def compile_scenario_to_compose(scenario_path: Path, working_dir: Path, scenario
             anchored_volumes = []
             for v in svc_conf["volumes"]:
                 if isinstance(v, str) and v.startswith("pack://"):
-                    parts = v.split(":")
-                    parts[0] = resolve_pack_path(parts[0])
-                    anchored_volumes.append(":".join(parts))
+                    # Strip 'pack://' prefix first to avoid splitting on the scheme colon
+                    sub_str = v[len("pack://"):]
+                    pack_path, *mount_opts = sub_str.split(":")
+                    resolved_host_path = resolve_pack_path(f"pack://{pack_path}")
+                    anchored_volumes.append(":".join([resolved_host_path] + mount_opts))
                 elif isinstance(v, str) and (v.startswith("./") or v.startswith("../")):
                     parts = v.split(":")
                     rel_candidate = (working_dir / parts[0]).resolve()
